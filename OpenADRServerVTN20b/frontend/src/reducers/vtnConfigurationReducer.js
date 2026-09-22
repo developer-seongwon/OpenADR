@@ -93,7 +93,11 @@ export default function vtnConfigurationReducer( state = initialState.vtnConfigu
         return state;
       }
       else {
-        return initialState.event;
+        // 예전에는 여기서 initialState.event 를 돌려줬다. 복사해 온 자리를 안 고친 것이다.
+        // 그러면 이 슬라이스의 모양이 event 모양으로 바뀌어서, 원래 있던 키가 사라진다.
+        // 화면은 그 키를 배열로 알고 map 을 돌리다가 undefined 로 죽는다.
+        // (로그인 리다이렉트가 한 번 끼면 이 경로를 그대로 탄다)
+        return initialState.vtnConfiguration;
       }
       
 

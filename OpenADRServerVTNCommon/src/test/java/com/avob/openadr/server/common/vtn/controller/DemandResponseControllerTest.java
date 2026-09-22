@@ -8,11 +8,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.annotation.Resource;
-import javax.servlet.Filter;
-import javax.servlet.ServletContext;
+import jakarta.annotation.Resource;
+import jakarta.servlet.Filter;
+import jakarta.servlet.ServletContext;
 
-import org.eclipse.jetty.http.HttpStatus;
+import jakarta.servlet.http.HttpServletResponse;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -116,7 +116,7 @@ public class DemandResponseControllerTest {
 	private VenMarketContextService venMarketContextService;
 
 	@Resource
-	private DtoMapper dozerMapper;
+	private DtoMapper dtoMapper;
 
 	private UserRequestPostProcessor adminSession = SecurityMockMvcRequestPostProcessors.user("admin").roles("ADMIN");
 	private UserRequestPostProcessor venSession = SecurityMockMvcRequestPostProcessors.user(VEN1).roles("VEN");
@@ -255,7 +255,7 @@ public class DemandResponseControllerTest {
 						.content(mapper.writeValueAsString(DemandResponseEventFilter.builder()
 								.addVenId(DemandResponseControllerTest.VEN1).build()))
 						.header("Content-Type", "application/json").with(adminSession))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK)).andReturn();
 
 		List<DemandResponseEventReadDto> readValue = convertMvcResultToDemandResponseDtoList(andReturn);
 		assertNotNull(readValue);
@@ -276,7 +276,7 @@ public class DemandResponseControllerTest {
 		andReturn = this.mockMvc
 				.perform(MockMvcRequestBuilders.post(DEMAND_RESPONSE_EVENT_URL).content(content)
 						.header(CONTENT_TYPE_HEADER_NAME, APPLICATION_JSON_HEADER_VALUE).with(adminSession))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.CREATED_201)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_CREATED)).andReturn();
 
 		DemandResponseEventReadDto res = convertMvcResultToDemandResponseDto(andReturn);
 
@@ -299,7 +299,7 @@ public class DemandResponseControllerTest {
 						.content(mapper.writeValueAsString(DemandResponseEventFilter.builder()
 								.addVenId(DemandResponseControllerTest.VEN1).build()))
 						.header("Content-Type", "application/json").with(adminSession))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK)).andReturn();
 
 		readValue = convertMvcResultToDemandResponseDtoList(andReturn);
 		assertNotNull(readValue);
@@ -322,7 +322,7 @@ public class DemandResponseControllerTest {
 		this.mockMvc
 		.perform(MockMvcRequestBuilders.post(DEMAND_RESPONSE_EVENT_URL).content(contentStr)
 				.header(CONTENT_TYPE_HEADER_NAME, APPLICATION_JSON_HEADER_VALUE).with(adminSession))
-		.andExpect(MockMvcResultMatchers.status().is(HttpStatus.BAD_REQUEST_400));
+		.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_BAD_REQUEST));
 
 		// perform invalid create: null profile
 		toCreate = createValidEvent();
@@ -331,7 +331,7 @@ public class DemandResponseControllerTest {
 		this.mockMvc
 		.perform(MockMvcRequestBuilders.post(DEMAND_RESPONSE_EVENT_URL).content(contentStr)
 				.header(CONTENT_TYPE_HEADER_NAME, APPLICATION_JSON_HEADER_VALUE).with(adminSession))
-		.andExpect(MockMvcResultMatchers.status().is(HttpStatus.BAD_REQUEST_400));
+		.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_BAD_REQUEST));
 
 		// perform invalid create: null response required
 		toCreate = createValidEvent();
@@ -340,7 +340,7 @@ public class DemandResponseControllerTest {
 		this.mockMvc
 		.perform(MockMvcRequestBuilders.post(DEMAND_RESPONSE_EVENT_URL).content(contentStr)
 				.header(CONTENT_TYPE_HEADER_NAME, APPLICATION_JSON_HEADER_VALUE).with(adminSession))
-		.andExpect(MockMvcResultMatchers.status().is(HttpStatus.BAD_REQUEST_400));
+		.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_BAD_REQUEST));
 
 		// perform invalid create: unknown market context
 		toCreate = createValidEvent();
@@ -349,7 +349,7 @@ public class DemandResponseControllerTest {
 		this.mockMvc
 		.perform(MockMvcRequestBuilders.post(DEMAND_RESPONSE_EVENT_URL).content(contentStr)
 				.header(CONTENT_TYPE_HEADER_NAME, APPLICATION_JSON_HEADER_VALUE).with(adminSession))
-		.andExpect(MockMvcResultMatchers.status().is(HttpStatus.BAD_REQUEST_400));
+		.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_BAD_REQUEST));
 
 		// perform invalid create: modification number present
 		toCreate = createValidEvent();
@@ -359,7 +359,7 @@ public class DemandResponseControllerTest {
 		this.mockMvc
 		.perform(MockMvcRequestBuilders.post(DEMAND_RESPONSE_EVENT_URL).content(contentStr)
 				.header(CONTENT_TYPE_HEADER_NAME, APPLICATION_JSON_HEADER_VALUE).with(adminSession))
-		.andExpect(MockMvcResultMatchers.status().is(HttpStatus.BAD_REQUEST_400));
+		.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_BAD_REQUEST));
 
 		// perform invalid create: invalid priority
 		toCreate = createValidEvent();
@@ -368,7 +368,7 @@ public class DemandResponseControllerTest {
 		this.mockMvc
 		.perform(MockMvcRequestBuilders.post(DEMAND_RESPONSE_EVENT_URL).content(contentStr)
 				.header(CONTENT_TYPE_HEADER_NAME, APPLICATION_JSON_HEADER_VALUE).with(adminSession))
-		.andExpect(MockMvcResultMatchers.status().is(HttpStatus.BAD_REQUEST_400));
+		.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_BAD_REQUEST));
 
 		// perform invalid create: no signal configured
 		toCreate = createValidEvent();
@@ -377,7 +377,7 @@ public class DemandResponseControllerTest {
 		this.mockMvc
 		.perform(MockMvcRequestBuilders.post(DEMAND_RESPONSE_EVENT_URL).content(contentStr)
 				.header(CONTENT_TYPE_HEADER_NAME, APPLICATION_JSON_HEADER_VALUE).with(adminSession))
-		.andExpect(MockMvcResultMatchers.status().is(HttpStatus.BAD_REQUEST_400));
+		.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_BAD_REQUEST));
 
 		// perform invalid create: start MUST be set
 		toCreate = createValidEvent();
@@ -386,7 +386,7 @@ public class DemandResponseControllerTest {
 		this.mockMvc
 		.perform(MockMvcRequestBuilders.post(DEMAND_RESPONSE_EVENT_URL).content(contentStr)
 				.header(CONTENT_TYPE_HEADER_NAME, APPLICATION_JSON_HEADER_VALUE).with(adminSession))
-		.andExpect(MockMvcResultMatchers.status().is(HttpStatus.BAD_REQUEST_400));
+		.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_BAD_REQUEST));
 
 		// perform invalid create: duration MUST be set
 		toCreate = createValidEvent();
@@ -395,7 +395,7 @@ public class DemandResponseControllerTest {
 		this.mockMvc
 		.perform(MockMvcRequestBuilders.post(DEMAND_RESPONSE_EVENT_URL).content(contentStr)
 				.header(CONTENT_TYPE_HEADER_NAME, APPLICATION_JSON_HEADER_VALUE).with(adminSession))
-		.andExpect(MockMvcResultMatchers.status().is(HttpStatus.BAD_REQUEST_400));
+		.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_BAD_REQUEST));
 
 		// perform invalid create: duration MUST be a valid xml duration
 		toCreate = createValidEvent();
@@ -404,11 +404,11 @@ public class DemandResponseControllerTest {
 		this.mockMvc
 		.perform(MockMvcRequestBuilders.post(DEMAND_RESPONSE_EVENT_URL).content(contentStr)
 				.header(CONTENT_TYPE_HEADER_NAME, APPLICATION_JSON_HEADER_VALUE).with(adminSession))
-		.andExpect(MockMvcResultMatchers.status().is(HttpStatus.BAD_REQUEST_400));
+		.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_BAD_REQUEST));
 
 		// clean
 		this.mockMvc.perform(MockMvcRequestBuilders.delete(DEMAND_RESPONSE_EVENT_URL + toDeleteId).with(adminSession))
-		.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200));
+		.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK));
 
 		// create and publish
 		// expect modificationNumber = 0 because event published
@@ -418,7 +418,7 @@ public class DemandResponseControllerTest {
 		andReturn = this.mockMvc
 				.perform(MockMvcRequestBuilders.post(DEMAND_RESPONSE_EVENT_URL).content(content)
 						.header(CONTENT_TYPE_HEADER_NAME, APPLICATION_JSON_HEADER_VALUE).with(adminSession))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.CREATED_201)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_CREATED)).andReturn();
 
 		res = convertMvcResultToDemandResponseDto(andReturn);
 
@@ -437,7 +437,7 @@ public class DemandResponseControllerTest {
 
 		// clean
 		this.mockMvc.perform(MockMvcRequestBuilders.delete(DEMAND_RESPONSE_EVENT_URL + toDeleteId).with(adminSession))
-		.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200));
+		.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK));
 
 	}
 
@@ -446,7 +446,7 @@ public class DemandResponseControllerTest {
 		// read exists
 		MvcResult andReturn = this.mockMvc
 				.perform(MockMvcRequestBuilders.get(DEMAND_RESPONSE_EVENT_URL + event1.getId()).with(adminSession))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK)).andReturn();
 
 		DemandResponseEventReadDto dto = convertMvcResultToDemandResponseDto(andReturn);
 		assertNotNull(dto);
@@ -463,7 +463,7 @@ public class DemandResponseControllerTest {
 		// read do not exists
 		andReturn = this.mockMvc
 				.perform(MockMvcRequestBuilders.get(DEMAND_RESPONSE_EVENT_URL + "999").with(adminSession))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.NOT_FOUND_404)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_NOT_FOUND)).andReturn();
 
 		MockHttpServletResponse mockHttpServletResponse = andReturn.getResponse();
 
@@ -478,7 +478,7 @@ public class DemandResponseControllerTest {
 				.perform(MockMvcRequestBuilders.post(DEMAND_RESPONSE_EVENT_URL + "search")
 						.content(mapper.writeValueAsString(filters))
 						.header(CONTENT_TYPE_HEADER_NAME, APPLICATION_JSON_HEADER_VALUE).with(adminSession))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK)).andReturn();
 		List<DemandResponseEventReadDto> list = convertMvcResultToDemandResponseDtoList(andReturn);
 		assertEquals(2, list.size());
 
@@ -487,14 +487,14 @@ public class DemandResponseControllerTest {
 				.perform(MockMvcRequestBuilders.post(DEMAND_RESPONSE_EVENT_URL + "search")
 						.content(mapper.writeValueAsString(filters))
 						.header(CONTENT_TYPE_HEADER_NAME, APPLICATION_JSON_HEADER_VALUE).with(adminSession))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK)).andReturn();
 		list = convertMvcResultToDemandResponseDtoList(andReturn);
 		assertEquals(2, list.size());
 
 		// check event exists
 		andReturn = this.mockMvc
 				.perform(MockMvcRequestBuilders.get(DEMAND_RESPONSE_EVENT_URL + event1.getId()).with(adminSession))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK)).andReturn();
 
 		DemandResponseEventReadDto dto = convertMvcResultToDemandResponseDto(andReturn);
 		Long modificationNumber = dto.getDescriptor().getModificationNumber();
@@ -524,7 +524,7 @@ public class DemandResponseControllerTest {
 		String contentStr = mapper.writeValueAsString(updateDto);
 		this.mockMvc.perform(MockMvcRequestBuilders.put(DEMAND_RESPONSE_EVENT_URL + event1.getId())
 				.header(CONTENT_TYPE_HEADER_NAME, APPLICATION_JSON_HEADER_VALUE).content(contentStr).with(adminSession))
-		.andExpect(MockMvcResultMatchers.status().is(HttpStatus.BAD_REQUEST_400));
+		.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_BAD_REQUEST));
 
 		// valid update: target not set
 		updateDto = new DemandResponseEventUpdateDto();
@@ -535,7 +535,7 @@ public class DemandResponseControllerTest {
 		contentStr = mapper.writeValueAsString(updateDto);
 		this.mockMvc.perform(MockMvcRequestBuilders.put(DEMAND_RESPONSE_EVENT_URL + event1.getId())
 				.header(CONTENT_TYPE_HEADER_NAME, APPLICATION_JSON_HEADER_VALUE).content(contentStr).with(adminSession))
-		.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200));
+		.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK));
 
 		// invalid update: published null
 		updateDto = new DemandResponseEventUpdateDto();
@@ -546,7 +546,7 @@ public class DemandResponseControllerTest {
 		contentStr = mapper.writeValueAsString(updateDto);
 		this.mockMvc.perform(MockMvcRequestBuilders.put(DEMAND_RESPONSE_EVENT_URL + event1.getId())
 				.header(CONTENT_TYPE_HEADER_NAME, APPLICATION_JSON_HEADER_VALUE).content(contentStr).with(adminSession))
-		.andExpect(MockMvcResultMatchers.status().is(HttpStatus.BAD_REQUEST_400));
+		.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_BAD_REQUEST));
 
 		// update but don't publish
 		updateDto = new DemandResponseEventUpdateDto();
@@ -557,11 +557,11 @@ public class DemandResponseControllerTest {
 		contentStr = mapper.writeValueAsString(updateDto);
 		this.mockMvc.perform(MockMvcRequestBuilders.put(DEMAND_RESPONSE_EVENT_URL + event1.getId())
 				.header(CONTENT_TYPE_HEADER_NAME, APPLICATION_JSON_HEADER_VALUE).content(contentStr).with(adminSession))
-		.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200));
+		.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK));
 
 		andReturn = this.mockMvc
 				.perform(MockMvcRequestBuilders.get(DEMAND_RESPONSE_EVENT_URL + event1.getId()).with(adminSession))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK)).andReturn();
 
 		dto = convertMvcResultToDemandResponseDto(andReturn);
 
@@ -582,7 +582,7 @@ public class DemandResponseControllerTest {
 				.perform(MockMvcRequestBuilders.post(DEMAND_RESPONSE_EVENT_URL + "search")
 						.content(mapper.writeValueAsString(filters))
 						.header(CONTENT_TYPE_HEADER_NAME, APPLICATION_JSON_HEADER_VALUE).with(adminSession))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK)).andReturn();
 		list = convertMvcResultToDemandResponseDtoList(andReturn);
 		assertEquals(1, list.size());
 
@@ -591,7 +591,7 @@ public class DemandResponseControllerTest {
 				.perform(MockMvcRequestBuilders.post(DEMAND_RESPONSE_EVENT_URL + "search")
 						.content(mapper.writeValueAsString(filters))
 						.header(CONTENT_TYPE_HEADER_NAME, APPLICATION_JSON_HEADER_VALUE).with(adminSession))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK)).andReturn();
 		list = convertMvcResultToDemandResponseDtoList(andReturn);
 		assertEquals(2, list.size());
 
@@ -610,11 +610,11 @@ public class DemandResponseControllerTest {
 		contentStr = mapper.writeValueAsString(updateDto);
 		this.mockMvc.perform(MockMvcRequestBuilders.put(DEMAND_RESPONSE_EVENT_URL + event1.getId())
 				.header(CONTENT_TYPE_HEADER_NAME, APPLICATION_JSON_HEADER_VALUE).content(contentStr).with(adminSession))
-		.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200));
+		.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK));
 
 		andReturn = this.mockMvc
 				.perform(MockMvcRequestBuilders.get(DEMAND_RESPONSE_EVENT_URL + event1.getId()).with(adminSession))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK)).andReturn();
 
 		dto = convertMvcResultToDemandResponseDto(andReturn);
 
@@ -631,7 +631,7 @@ public class DemandResponseControllerTest {
 				.perform(MockMvcRequestBuilders.post(DEMAND_RESPONSE_EVENT_URL + "search")
 						.content(mapper.writeValueAsString(filters))
 						.header(CONTENT_TYPE_HEADER_NAME, APPLICATION_JSON_HEADER_VALUE).with(adminSession))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK)).andReturn();
 		list = convertMvcResultToDemandResponseDtoList(andReturn);
 		assertEquals(2, list.size());
 
@@ -640,19 +640,19 @@ public class DemandResponseControllerTest {
 				.perform(MockMvcRequestBuilders.post(DEMAND_RESPONSE_EVENT_URL + "search")
 						.content(mapper.writeValueAsString(filters))
 						.header(CONTENT_TYPE_HEADER_NAME, APPLICATION_JSON_HEADER_VALUE).with(adminSession))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK)).andReturn();
 		list = convertMvcResultToDemandResponseDtoList(andReturn);
 		assertEquals(1, list.size());
 
 		// update id not Long
 		this.mockMvc.perform(MockMvcRequestBuilders.put(DEMAND_RESPONSE_EVENT_URL + UNKNOWN_MARKETCONTEXT_NAME)
 				.header(CONTENT_TYPE_HEADER_NAME, APPLICATION_JSON_HEADER_VALUE).content(contentStr).with(adminSession))
-		.andExpect(MockMvcResultMatchers.status().is(HttpStatus.BAD_REQUEST_400));
+		.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_BAD_REQUEST));
 
 		// update unknown
 		this.mockMvc.perform(MockMvcRequestBuilders.put(DEMAND_RESPONSE_EVENT_URL + "999")
 				.header(CONTENT_TYPE_HEADER_NAME, APPLICATION_JSON_HEADER_VALUE).content(contentStr).with(adminSession))
-		.andExpect(MockMvcResultMatchers.status().is(HttpStatus.NOT_FOUND_404));
+		.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_NOT_FOUND));
 
 	}
 
@@ -661,7 +661,7 @@ public class DemandResponseControllerTest {
 		// check event exists
 		MvcResult andReturn = this.mockMvc
 				.perform(MockMvcRequestBuilders.get(DEMAND_RESPONSE_EVENT_URL + event1.getId()).with(adminSession))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK)).andReturn();
 
 		DemandResponseEventReadDto dto = convertMvcResultToDemandResponseDto(andReturn);
 		Long modificationNumber = dto.getDescriptor().getModificationNumber();
@@ -684,11 +684,11 @@ public class DemandResponseControllerTest {
 		String contentStr = mapper.writeValueAsString(updateDto);
 		this.mockMvc.perform(MockMvcRequestBuilders.put(DEMAND_RESPONSE_EVENT_URL + event1.getId())
 				.header(CONTENT_TYPE_HEADER_NAME, APPLICATION_JSON_HEADER_VALUE).content(contentStr).with(adminSession))
-		.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200));
+		.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK));
 
 		andReturn = this.mockMvc
 				.perform(MockMvcRequestBuilders.get(DEMAND_RESPONSE_EVENT_URL + event1.getId()).with(adminSession))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK)).andReturn();
 
 		dto = convertMvcResultToDemandResponseDto(andReturn);
 
@@ -706,12 +706,12 @@ public class DemandResponseControllerTest {
 		this.mockMvc
 		.perform(MockMvcRequestBuilders.post(DEMAND_RESPONSE_EVENT_URL + "120/publish")
 				.header(CONTENT_TYPE_HEADER_NAME, APPLICATION_JSON_HEADER_VALUE).with(adminSession))
-		.andExpect(MockMvcResultMatchers.status().is(HttpStatus.NOT_FOUND_404));
+		.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_NOT_FOUND));
 
 		this.mockMvc
 		.perform(MockMvcRequestBuilders.post(DEMAND_RESPONSE_EVENT_URL + "mouaiccool/publish")
 				.header(CONTENT_TYPE_HEADER_NAME, APPLICATION_JSON_HEADER_VALUE).with(adminSession))
-		.andExpect(MockMvcResultMatchers.status().is(HttpStatus.BAD_REQUEST_400));
+		.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_BAD_REQUEST));
 
 		// publish
 		// expect modificatioNumber to be incremented
@@ -719,11 +719,11 @@ public class DemandResponseControllerTest {
 		this.mockMvc
 		.perform(MockMvcRequestBuilders.post(DEMAND_RESPONSE_EVENT_URL + event1.getId() + "/publish")
 				.header(CONTENT_TYPE_HEADER_NAME, APPLICATION_JSON_HEADER_VALUE).with(adminSession))
-		.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200));
+		.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK));
 
 		andReturn = this.mockMvc
 				.perform(MockMvcRequestBuilders.get(DEMAND_RESPONSE_EVENT_URL + event1.getId()).with(adminSession))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK)).andReturn();
 
 		dto = convertMvcResultToDemandResponseDto(andReturn);
 
@@ -738,11 +738,11 @@ public class DemandResponseControllerTest {
 		this.mockMvc
 		.perform(MockMvcRequestBuilders.post(DEMAND_RESPONSE_EVENT_URL + event1.getId() + "/publish")
 				.header(CONTENT_TYPE_HEADER_NAME, APPLICATION_JSON_HEADER_VALUE).with(adminSession))
-		.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200));
+		.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK));
 
 		andReturn = this.mockMvc
 				.perform(MockMvcRequestBuilders.get(DEMAND_RESPONSE_EVENT_URL + event1.getId()).with(adminSession))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK)).andReturn();
 
 		dto = convertMvcResultToDemandResponseDto(andReturn);
 
@@ -759,7 +759,7 @@ public class DemandResponseControllerTest {
 		// check event exists
 		MvcResult andReturn = this.mockMvc
 				.perform(MockMvcRequestBuilders.get(DEMAND_RESPONSE_EVENT_URL + event1.getId()).with(adminSession))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK)).andReturn();
 
 		DemandResponseEventReadDto dto = convertMvcResultToDemandResponseDto(andReturn);
 		Long modificationNumber = dto.getDescriptor().getModificationNumber();
@@ -783,12 +783,12 @@ public class DemandResponseControllerTest {
 		String contentStr = mapper.writeValueAsString(updateDto);
 		this.mockMvc.perform(MockMvcRequestBuilders.put(DEMAND_RESPONSE_EVENT_URL + event1.getId())
 				.header(CONTENT_TYPE_HEADER_NAME, APPLICATION_JSON_HEADER_VALUE).content(contentStr).with(adminSession))
-		.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200));
+		.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK));
 
 		// check update but don't published
 		andReturn = this.mockMvc
 				.perform(MockMvcRequestBuilders.get(DEMAND_RESPONSE_EVENT_URL + event1.getId()).with(adminSession))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK)).andReturn();
 
 		dto = convertMvcResultToDemandResponseDto(andReturn);
 
@@ -803,11 +803,11 @@ public class DemandResponseControllerTest {
 		this.mockMvc
 		.perform(MockMvcRequestBuilders.post(DEMAND_RESPONSE_EVENT_URL + event1.getId() + "/active")
 				.header(CONTENT_TYPE_HEADER_NAME, APPLICATION_JSON_HEADER_VALUE).with(adminSession))
-		.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200));
+		.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK));
 
 		andReturn = this.mockMvc
 				.perform(MockMvcRequestBuilders.get(DEMAND_RESPONSE_EVENT_URL + event1.getId()).with(adminSession))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK)).andReturn();
 
 		dto = convertMvcResultToDemandResponseDto(andReturn);
 
@@ -825,11 +825,11 @@ public class DemandResponseControllerTest {
 		this.mockMvc
 		.perform(MockMvcRequestBuilders.post(DEMAND_RESPONSE_EVENT_URL + event1.getId() + "/cancel")
 				.header(CONTENT_TYPE_HEADER_NAME, APPLICATION_JSON_HEADER_VALUE).with(adminSession))
-		.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200));
+		.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK));
 
 		andReturn = this.mockMvc
 				.perform(MockMvcRequestBuilders.get(DEMAND_RESPONSE_EVENT_URL + event1.getId()).with(adminSession))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK)).andReturn();
 
 		dto = convertMvcResultToDemandResponseDto(andReturn);
 
@@ -845,11 +845,11 @@ public class DemandResponseControllerTest {
 		this.mockMvc
 		.perform(MockMvcRequestBuilders.post(DEMAND_RESPONSE_EVENT_URL + event1.getId() + "/cancel")
 				.header(CONTENT_TYPE_HEADER_NAME, APPLICATION_JSON_HEADER_VALUE).with(adminSession))
-		.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200));
+		.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK));
 
 		andReturn = this.mockMvc
 				.perform(MockMvcRequestBuilders.get(DEMAND_RESPONSE_EVENT_URL + event1.getId()).with(adminSession))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK)).andReturn();
 
 		dto = convertMvcResultToDemandResponseDto(andReturn);
 
@@ -867,11 +867,11 @@ public class DemandResponseControllerTest {
 		this.mockMvc
 		.perform(MockMvcRequestBuilders.post(DEMAND_RESPONSE_EVENT_URL + event1.getId() + "/active")
 				.header(CONTENT_TYPE_HEADER_NAME, APPLICATION_JSON_HEADER_VALUE).with(adminSession))
-		.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200));
+		.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK));
 
 		andReturn = this.mockMvc
 				.perform(MockMvcRequestBuilders.get(DEMAND_RESPONSE_EVENT_URL + event1.getId()).with(adminSession))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK)).andReturn();
 
 		dto = convertMvcResultToDemandResponseDto(andReturn);
 
@@ -887,25 +887,25 @@ public class DemandResponseControllerTest {
 		this.mockMvc
 		.perform(MockMvcRequestBuilders.post(DEMAND_RESPONSE_EVENT_URL + "mouaiccool/active")
 				.header(CONTENT_TYPE_HEADER_NAME, APPLICATION_JSON_HEADER_VALUE).with(adminSession))
-		.andExpect(MockMvcResultMatchers.status().is(HttpStatus.BAD_REQUEST_400));
+		.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_BAD_REQUEST));
 
 		// activate unknown
 		this.mockMvc
 		.perform(MockMvcRequestBuilders.post(DEMAND_RESPONSE_EVENT_URL + "999/active")
 				.header(CONTENT_TYPE_HEADER_NAME, APPLICATION_JSON_HEADER_VALUE).with(adminSession))
-		.andExpect(MockMvcResultMatchers.status().is(HttpStatus.NOT_FOUND_404));
+		.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_NOT_FOUND));
 
 		// cancel id not long
 		this.mockMvc
 		.perform(MockMvcRequestBuilders.post(DEMAND_RESPONSE_EVENT_URL + "mouaiccool/cancel")
 				.header(CONTENT_TYPE_HEADER_NAME, APPLICATION_JSON_HEADER_VALUE).with(adminSession))
-		.andExpect(MockMvcResultMatchers.status().is(HttpStatus.BAD_REQUEST_400));
+		.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_BAD_REQUEST));
 
 		// cancel unknown
 		this.mockMvc
 		.perform(MockMvcRequestBuilders.post(DEMAND_RESPONSE_EVENT_URL + "999/cancel")
 				.header(CONTENT_TYPE_HEADER_NAME, APPLICATION_JSON_HEADER_VALUE).with(adminSession))
-		.andExpect(MockMvcResultMatchers.status().is(HttpStatus.NOT_FOUND_404));
+		.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_NOT_FOUND));
 
 	}
 
@@ -914,7 +914,7 @@ public class DemandResponseControllerTest {
 		// check event exists
 		MvcResult andReturn = this.mockMvc
 				.perform(MockMvcRequestBuilders.get(DEMAND_RESPONSE_EVENT_URL + event1.getId()).with(adminSession))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK)).andReturn();
 
 		DemandResponseEventReadDto dto = convertMvcResultToDemandResponseDto(andReturn);
 		assertNotNull(dto);
@@ -922,17 +922,17 @@ public class DemandResponseControllerTest {
 		// perform delete exists
 		this.mockMvc
 		.perform(MockMvcRequestBuilders.delete(DEMAND_RESPONSE_EVENT_URL + event1.getId()).with(adminSession))
-		.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200));
+		.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK));
 
 		// check event has been deleted
 		this.mockMvc
 		.perform(MockMvcRequestBuilders.delete(DEMAND_RESPONSE_EVENT_URL + event1.getId()).with(adminSession))
-		.andExpect(MockMvcResultMatchers.status().is(HttpStatus.NOT_FOUND_404));
+		.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_NOT_FOUND));
 
 		// perform delete do not exists
 		andReturn = this.mockMvc
 				.perform(MockMvcRequestBuilders.delete(DEMAND_RESPONSE_EVENT_URL + "999").with(adminSession))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.NOT_FOUND_404)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_NOT_FOUND)).andReturn();
 
 		MockHttpServletResponse mockHttpServletResponse = andReturn.getResponse();
 
@@ -945,7 +945,7 @@ public class DemandResponseControllerTest {
 				.perform(MockMvcRequestBuilders.post(DEMAND_RESPONSE_EVENT_URL + "search")
 						.content(mapper.writeValueAsString(filters))
 						.header(CONTENT_TYPE_HEADER_NAME, APPLICATION_JSON_HEADER_VALUE).with(adminSession))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK)).andReturn();
 		List<DemandResponseEventReadDto> list = convertMvcResultToDemandResponseDtoList(andReturn);
 		assertEquals(expected, list.size());
 	}
@@ -968,7 +968,7 @@ public class DemandResponseControllerTest {
 		MvcResult andReturn = this.mockMvc
 				.perform(MockMvcRequestBuilders.post(url).content(mapper.writeValueAsString(filters))
 						.header(CONTENT_TYPE_HEADER_NAME, APPLICATION_JSON_HEADER_VALUE).with(adminSession))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK)).andReturn();
 		List<DemandResponseEventReadDto> list = convertMvcResultToDemandResponseDtoList(andReturn);
 		assertEquals(expected, list.size());
 	}
@@ -1107,16 +1107,16 @@ public class DemandResponseControllerTest {
 
 		this.mockMvc.perform(
 				MockMvcRequestBuilders.get(DEMAND_RESPONSE_EVENT_URL + "mouaiccool/venResponse").with(adminSession))
-		.andExpect(MockMvcResultMatchers.status().is(HttpStatus.BAD_REQUEST_400));
+		.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_BAD_REQUEST));
 
 		this.mockMvc
 		.perform(MockMvcRequestBuilders.get(DEMAND_RESPONSE_EVENT_URL + "12/venResponse").with(adminSession))
-		.andExpect(MockMvcResultMatchers.status().is(HttpStatus.NOT_FOUND_404));
+		.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_NOT_FOUND));
 
 		MvcResult andReturn = this.mockMvc
 				.perform(MockMvcRequestBuilders.get(DEMAND_RESPONSE_EVENT_URL + event1.getId() + "/venResponse")
 						.with(adminSession))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK)).andReturn();
 		List<VenDemandResponseEventDto> convertMvcResultToVenDemandResponseEventDtoList = convertMvcResultToVenDemandResponseEventDtoList(
 				andReturn);
 		assertEquals(2, convertMvcResultToVenDemandResponseEventDtoList.size());
@@ -1127,17 +1127,17 @@ public class DemandResponseControllerTest {
 		this.mockMvc
 		.perform(MockMvcRequestBuilders.get(DEMAND_RESPONSE_EVENT_URL)
 				.param("ven", DemandResponseControllerTest.VEN1).with(adminSession))
-		.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200));
+		.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK));
 
 		this.mockMvc
 		.perform(MockMvcRequestBuilders.get(DEMAND_RESPONSE_EVENT_URL)
 				.param("ven", DemandResponseControllerTest.VEN1).with(userSession))
-		.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200));
+		.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK));
 
 		this.mockMvc
 		.perform(MockMvcRequestBuilders.get(DEMAND_RESPONSE_EVENT_URL)
 				.param("ven", DemandResponseControllerTest.VEN1).with(venSession))
-		.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200));
+		.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK));
 	}
 
 	private DemandResponseEventReadDto convertMvcResultToDemandResponseDto(MvcResult result)

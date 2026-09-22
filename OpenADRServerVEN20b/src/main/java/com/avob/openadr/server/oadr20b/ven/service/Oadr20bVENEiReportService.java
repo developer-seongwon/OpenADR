@@ -6,9 +6,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
-import org.eclipse.jetty.http.HttpStatus;
+import jakarta.servlet.http.HttpServletResponse;
 import org.jivesoftware.smack.SmackException.NotConnectedException;
 import org.jxmpp.stringprep.XmppStringprepException;
 import org.slf4j.Logger;
@@ -146,7 +146,7 @@ public class Oadr20bVENEiReportService implements Oadr20bVENEiService {
 			});
 
 			return Oadr20bEiReportBuilders
-					.newOadr20bCreatedReportBuilder(requestID, HttpStatus.OK_200,
+					.newOadr20bCreatedReportBuilder(requestID, HttpServletResponse.SC_OK,
 							vtnConfig.getVenId())
 					.addPendingReportRequestId(getExistingVenReportRequest(vtnConfig)).build();
 
@@ -187,7 +187,7 @@ public class Oadr20bVENEiReportService implements Oadr20bVENEiService {
 		});
 
 		return Oadr20bEiReportBuilders
-				.newOadr20bCanceledReportBuilder(requestID, HttpStatus.OK_200,
+				.newOadr20bCanceledReportBuilder(requestID, HttpServletResponse.SC_OK,
 						vtnConfig.getVenId())
 				.addPendingReportRequestId(getExistingVenReportRequest(vtnConfig)).build();
 
@@ -201,7 +201,7 @@ public class Oadr20bVENEiReportService implements Oadr20bVENEiService {
 		});
 
 		return Oadr20bResponseBuilders
-				.newOadr20bResponseBuilder(oadrRegisteredReportType.getEiResponse().getRequestID(), HttpStatus.OK_200)
+				.newOadr20bResponseBuilder(oadrRegisteredReportType.getEiResponse().getRequestID(), HttpServletResponse.SC_OK)
 				.build();
 	}
 
@@ -212,7 +212,7 @@ public class Oadr20bVENEiReportService implements Oadr20bVENEiService {
 		});
 
 		return Oadr20bResponseBuilders
-				.newOadr20bResponseBuilder(oadrUpdatedReportType.getEiResponse().getRequestID(), HttpStatus.OK_200)
+				.newOadr20bResponseBuilder(oadrUpdatedReportType.getEiResponse().getRequestID(), HttpServletResponse.SC_OK)
 				.build();
 	}
 
@@ -227,7 +227,7 @@ public class Oadr20bVENEiReportService implements Oadr20bVENEiService {
 			listener.onRegisterReport(vtnConfig, oadrRegisterReportType);
 		});
 
-		return Oadr20bEiReportBuilders.newOadr20bRegisteredReportBuilder(requestID, HttpStatus.OK_200,
+		return Oadr20bEiReportBuilders.newOadr20bRegisteredReportBuilder(requestID, HttpServletResponse.SC_OK,
 				vtnConfig.getVenId()).build();
 
 	}
@@ -241,7 +241,7 @@ public class Oadr20bVENEiReportService implements Oadr20bVENEiService {
 			listener.onUpdateReport(vtnConfig, oadrUpdateReportType);
 		});
 
-		return Oadr20bEiReportBuilders.newOadr20bUpdatedReportBuilder(requestID, HttpStatus.OK_200,
+		return Oadr20bEiReportBuilders.newOadr20bUpdatedReportBuilder(requestID, HttpServletResponse.SC_OK,
 				vtnConfig.getVenId()).build();
 	}
 
@@ -253,7 +253,7 @@ public class Oadr20bVENEiReportService implements Oadr20bVENEiService {
 		});
 
 		return Oadr20bResponseBuilders
-				.newOadr20bResponseBuilder(oadrCreatedReportType.getEiResponse().getRequestID(), HttpStatus.OK_200)
+				.newOadr20bResponseBuilder(oadrCreatedReportType.getEiResponse().getRequestID(), HttpServletResponse.SC_OK)
 				.build();
 	}
 
@@ -264,7 +264,7 @@ public class Oadr20bVENEiReportService implements Oadr20bVENEiService {
 		});
 
 		return Oadr20bResponseBuilders
-				.newOadr20bResponseBuilder(oadrCanceledReportType.getEiResponse().getRequestID(), HttpStatus.OK_200)
+				.newOadr20bResponseBuilder(oadrCanceledReportType.getEiResponse().getRequestID(), HttpServletResponse.SC_OK)
 				.build();
 	}
 

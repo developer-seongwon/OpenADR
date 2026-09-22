@@ -3,10 +3,10 @@ package com.avob.openadr.server.oadr20b.vtn.controller;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletResponse;
 
-import org.eclipse.jetty.http.HttpStatus;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -64,7 +64,7 @@ public class ReportController {
 		} else if (venID != null && reportSpecifierId != null) {
 			report = otherReportCapabilityService.findBySourceUsernameInAndReportSpecifierId(venID, reportSpecifierId);
 		} else {
-			response.setStatus(HttpStatus.BAD_REQUEST_400);
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 		}
 
 		return oadr20bDtoMapper.mapList(report, OtherReportCapabilityDto.class);

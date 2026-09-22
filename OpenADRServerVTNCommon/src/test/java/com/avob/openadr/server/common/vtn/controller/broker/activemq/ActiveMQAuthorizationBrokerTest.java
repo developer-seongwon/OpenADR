@@ -4,8 +4,8 @@ import static org.junit.Assert.assertTrue;
 
 import java.security.cert.X509Certificate;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.Resource;
 
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;

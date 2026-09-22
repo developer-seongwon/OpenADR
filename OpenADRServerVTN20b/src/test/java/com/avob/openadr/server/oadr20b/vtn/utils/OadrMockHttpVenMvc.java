@@ -4,9 +4,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.List;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
-import org.eclipse.jetty.http.HttpStatus;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.UserRequestPostProcessor;
 import org.springframework.stereotype.Service;
 import org.springframework.test.web.servlet.MvcResult;
@@ -47,7 +47,7 @@ public class OadrMockHttpVenMvc {
 
 	public VenDto getVen(UserRequestPostProcessor authSession, String venId, int status) throws Exception {
 		Class<VenDto> klass = VenDto.class;
-		if (HttpStatus.OK_200 != status) {
+		if (HttpServletResponse.SC_OK != status) {
 			klass = null;
 		}
 		return oadrMockHttpMvc.getRestJsonControllerAndExpect(authSession, VEN_ENDPOINT + venId, status, klass);
@@ -133,7 +133,7 @@ public class OadrMockHttpVenMvc {
 	public List<OtherReportDataFloatDto> getVenReportRequestedFloatData(UserRequestPostProcessor authSession,
 			String venId, String reportSpecifierId, int status) throws Exception {
 		Class<OtherReportDataFloatDto> klass = OtherReportDataFloatDto.class;
-		if (HttpStatus.OK_200 != status) {
+		if (HttpServletResponse.SC_OK != status) {
 			klass = null;
 		}
 		return oadrMockHttpMvc.getRestJsonControllerAndExpectList(authSession,
@@ -143,7 +143,7 @@ public class OadrMockHttpVenMvc {
 	public List<OtherReportDataFloatDto> getVenReportRequestedSpecifierFloatData(UserRequestPostProcessor authSession,
 			String venId, String reportSpecifierId, String rid, int status) throws Exception {
 		Class<OtherReportDataFloatDto> klass = OtherReportDataFloatDto.class;
-		if (HttpStatus.OK_200 != status) {
+		if (HttpServletResponse.SC_OK != status) {
 			klass = null;
 		}
 		return oadrMockHttpMvc.getRestJsonControllerAndExpectList(authSession,
@@ -153,7 +153,7 @@ public class OadrMockHttpVenMvc {
 	public List<OtherReportDataPayloadResourceStatusDto> getVenReportRequestedResourceStatusData(
 			UserRequestPostProcessor authSession, String venId, String reportSpecifierId, int status) throws Exception {
 		Class<OtherReportDataPayloadResourceStatusDto> klass = OtherReportDataPayloadResourceStatusDto.class;
-		if (HttpStatus.OK_200 != status) {
+		if (HttpServletResponse.SC_OK != status) {
 			klass = null;
 		}
 		return oadrMockHttpMvc.getRestJsonControllerAndExpectList(authSession,
@@ -164,7 +164,7 @@ public class OadrMockHttpVenMvc {
 			UserRequestPostProcessor authSession, String venId, String reportSpecifierId, String rid, int status)
 			throws Exception {
 		Class<OtherReportDataPayloadResourceStatusDto> klass = OtherReportDataPayloadResourceStatusDto.class;
-		if (HttpStatus.OK_200 != status) {
+		if (HttpServletResponse.SC_OK != status) {
 			klass = null;
 		}
 		return oadrMockHttpMvc.getRestJsonControllerAndExpectList(authSession,
@@ -220,7 +220,7 @@ public class OadrMockHttpVenMvc {
 	public List<VenOptDto> getVenOpt(UserRequestPostProcessor authSession, String venId,
 			LinkedMultiValueMap<String, String> params, int status) throws Exception {
 		Class<VenOptDto> klass = VenOptDto.class;
-		if (HttpStatus.OK_200 != status) {
+		if (HttpServletResponse.SC_OK != status) {
 			klass = null;
 		}
 		return oadrMockHttpMvc.getRestJsonControllerAndExpectList(authSession, VEN_ENDPOINT + venId + "/opt", status,
@@ -230,7 +230,7 @@ public class OadrMockHttpVenMvc {
 	public List<VenOptDto> getVenResourceOpt(UserRequestPostProcessor authSession, String venId, String resourceId,
 			LinkedMultiValueMap<String, String> params, int status) throws Exception {
 		Class<VenOptDto> klass = VenOptDto.class;
-		if (HttpStatus.OK_200 != status) {
+		if (HttpServletResponse.SC_OK != status) {
 			klass = null;
 		}
 		return oadrMockHttpMvc.getRestJsonControllerAndExpectList(authSession,

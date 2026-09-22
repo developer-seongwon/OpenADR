@@ -3,9 +3,9 @@ package com.avob.openadr.server.oadr20b.vtn.service.ei;
 import java.util.List;
 import java.util.UUID;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
-import org.eclipse.jetty.http.HttpStatus;
+import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -141,7 +141,7 @@ public class Oadr20bVTNEiRegisterPartyService implements Oadr20bVTNEiService {
 
 		Oadr20bCreatedPartyRegistrationBuilder builder = Oadr20bEiRegisterPartyBuilders
 				.newOadr20bCreatedPartyRegistrationBuilder(
-						Oadr20bResponseBuilders.newOadr20bEiResponseBuilder(requestID, HttpStatus.OK_200).build(),
+						Oadr20bResponseBuilders.newOadr20bEiResponseBuilder(requestID, HttpServletResponse.SC_OK).build(),
 						venID, vtnConfig.getVtnId())
 				.addOadrProfile(Oadr20bEiRegisterPartyBuilders.newOadr20bOadrProfileBuilder(oadrProfileName)
 						.addTransport(oadrTransportName).build())
@@ -178,7 +178,7 @@ public class Oadr20bVTNEiRegisterPartyService implements Oadr20bVTNEiService {
 
 		venService.cleanRegistration(ven);
 
-		return Oadr20bResponseBuilders.newOadr20bResponseBuilder(requestID, HttpStatus.OK_200, venID).build();
+		return Oadr20bResponseBuilders.newOadr20bResponseBuilder(requestID, HttpServletResponse.SC_OK, venID).build();
 
 	}
 
@@ -213,7 +213,7 @@ public class Oadr20bVTNEiRegisterPartyService implements Oadr20bVTNEiService {
 
 		return Oadr20bEiRegisterPartyBuilders
 				.newOadr20bCreatedPartyRegistrationBuilder(Oadr20bResponseBuilders
-						.newOadr20bEiResponseBuilder(payload.getRequestID(), HttpStatus.OK_200).build(),
+						.newOadr20bEiResponseBuilder(payload.getRequestID(), HttpServletResponse.SC_OK).build(),
 						ven.getUsername(), vtnConfig.getVtnId())
 				.addOadrProfile(oadr20bVTNSupportedProfileService.getSupportedProfiles())
 				.withOadrRequestedOadrPollFreq(duration).withRegistrationId(ven.getRegistrationId()).build();
@@ -229,7 +229,7 @@ public class Oadr20bVTNEiRegisterPartyService implements Oadr20bVTNEiService {
 			return Oadr20bResponseBuilders.newOadr20bResponseBuilder(mismatchCredentialsVenIdResponse, venID).build();
 		}
 
-		return Oadr20bResponseBuilders.newOadr20bResponseBuilder(requestID, HttpStatus.OK_200, venID).build();
+		return Oadr20bResponseBuilders.newOadr20bResponseBuilder(requestID, HttpServletResponse.SC_OK, venID).build();
 	}
 
 	@Override

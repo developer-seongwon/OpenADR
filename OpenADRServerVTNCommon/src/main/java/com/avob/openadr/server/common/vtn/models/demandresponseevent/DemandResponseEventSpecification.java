@@ -2,8 +2,8 @@ package com.avob.openadr.server.common.vtn.models.demandresponseevent;
 
 import java.util.List;
 
-import javax.persistence.criteria.JoinType;
-import javax.persistence.criteria.ListJoin;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.ListJoin;
 
 import org.springframework.data.jpa.domain.Specification;
 

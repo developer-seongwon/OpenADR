@@ -2,9 +2,9 @@ package com.avob.openadr.server.oadr20b.vtn.service.report;
 
 import java.util.List;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
-import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 
 import com.avob.openadr.server.oadr20b.vtn.models.venreport.data.OtherReportDataKeyToken;
@@ -27,7 +27,7 @@ public class OtherReportDataKeyTokenService extends GenericService<OtherReportDa
 	}
 
 	@Override
-	public CrudRepository<OtherReportDataKeyToken, Long> getDao() {
+	public JpaRepository<OtherReportDataKeyToken, Long> getDao() {
 		return otherReportDataDao;
 	}
 }

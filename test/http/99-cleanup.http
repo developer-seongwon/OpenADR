@@ -1,0 +1,190 @@
+### 9. 정리
+#
+# 앞의 파일들을 다 돌린 다음에 실행해라.
+# 순서가 있다. 매달린 것부터 떼고 마지막에 VEN 을 지운다.
+
+### [정리] 9-1. VEN 이 등록을 해지한다 (oadrCancelPartyRegistration)
+# 확인: VENs > httpven > Settings 탭. Registration ID 가 비워지고 머리말이 Registered 가 아니게 된다
+# 스펙 Figure 16 의 한쪽 방향이다. 해지는 VEN 과 VTN 어느 쪽에서든 걸 수 있다.
+# registrationID 가 01-registration.http 에서 받은 것과 다르면 452 INVALID_ID 가 온다.
+POST {{baseUrl}}/OpenADR2/Simple/2.0b/EiRegisterParty
+Authorization: Basic {{venId}} {{venPassword}}
+Content-Type: application/xml
+
+<?xml version="1.0" encoding="UTF-8"?>
+<oadr:oadrCancelPartyRegistration ei:schemaVersion="2.0b"
+	xmlns:ei="http://docs.oasis-open.org/ns/energyinterop/201110"
+	xmlns:pyld="http://docs.oasis-open.org/ns/energyinterop/201110/payloads"
+	xmlns:oadr="http://openadr.org/oadr-2.0b/2012/07">
+	<pyld:requestID>REQ-CANCEL-REG</pyld:requestID>
+	<ei:registrationID>{{registrationId}}</ei:registrationID>
+	<ei:venID>{{venId}}</ei:venID>
+</oadr:oadrCancelPartyRegistration>
+
+> {%
+    var body = response.body.toString();
+    client.test("oadrCanceledPartyRegistration 200 이 온다", function() {
+        var rc = (body.match(/responseCode>([^<]*)</) || [])[1];
+        client.assert(rc === "200", "responseCode=" + rc);
+    });
+%}
+
+### [정리] 9-2. 다시 등록
+# 확인: VENs > httpven > Settings 탭. Registration ID 가 새 값으로 다시 채워진다
+# 반대 방향(VTN 발 해지)도 보려면 등록이 다시 있어야 한다.
+POST {{baseUrl}}/OpenADR2/Simple/2.0b/EiRegisterParty
+Authorization: Basic {{venId}} {{venPassword}}
+Content-Type: application/xml
+
+<?xml version="1.0" encoding="UTF-8"?>
+<oadr:oadrCreatePartyRegistration ei:schemaVersion="2.0b"
+	xmlns:ei="http://docs.oasis-open.org/ns/energyinterop/201110"
+	xmlns:pyld="http://docs.oasis-open.org/ns/energyinterop/201110/payloads"
+	xmlns:oadr="http://openadr.org/oadr-2.0b/2012/07">
+	<pyld:requestID>REQ-CREATE-REG-2</pyld:requestID>
+	<ei:venID>{{venId}}</ei:venID>
+	<oadr:oadrProfileName>2.0b</oadr:oadrProfileName>
+	<oadr:oadrTransportName>simpleHttp</oadr:oadrTransportName>
+	<oadr:oadrReportOnly>false</oadr:oadrReportOnly>
+	<oadr:oadrXmlSignature>false</oadr:oadrXmlSignature>
+	<oadr:oadrHttpPullModel>true</oadr:oadrHttpPullModel>
+	<oadr:oadrVenName>{{venName}}</oadr:oadrVenName>
+</oadr:oadrCreatePartyRegistration>
+
+> {%
+    var body = response.body.toString();
+    var m = body.match(/registrationID>([^<]*)</);
+    client.assert(m !== null, "registrationID 가 없다");
+    client.global.set("registrationId", m[1]);
+    client.log("새 registrationID=" + m[1]);
+%}
+
+### [정리] 9-3. VTN 이 해지를 건다
+# 확인: 화면에 안 남는다. 큐에 들어갈 뿐이라 9-4 로 받아서 확인한다
+# 관리 API 다. 프로토콜로는 oadrCancelPartyRegistration 이 큐로 나간다.
+POST {{baseUrl}}/Ven/{{venId}}/registerparty/cancelPartyRegistration
+Authorization: Basic {{adminUser}} {{adminPassword}}
+
+### [정리] 9-4. oadrPoll 로 해지 요청을 받는다
+# 확인: 화면에 안 남는다. 응답 XML 의 루트 요소로 본다
+POST {{baseUrl}}/OpenADR2/Simple/2.0b/OadrPoll
+Authorization: Basic {{venId}} {{venPassword}}
+Content-Type: application/xml
+
+<?xml version="1.0" encoding="UTF-8"?>
+<oadr:oadrPoll ei:schemaVersion="2.0b"
+	xmlns:ei="http://docs.oasis-open.org/ns/energyinterop/201110"
+	xmlns:oadr="http://openadr.org/oadr-2.0b/2012/07">
+	<ei:venID>{{venId}}</ei:venID>
+</oadr:oadrPoll>
+
+> {%
+    var root = (response.body.toString().match(/<oadr:(\w+)/) || [])[1];
+    client.log("받은 페이로드=" + root);
+    if (root !== "oadrCancelPartyRegistration") {
+        client.log("큐에 다른 게 먼저 있다. 몇 번 더 실행해라");
+    }
+%}
+
+### [정리] 9-5. oadrCanceledPartyRegistration (해지 받았다고 답)
+# 확인: VENs > httpven > Settings 탭. Registration ID 가 다시 비워진다
+# 이걸 보내면 등록이 실제로 풀린다.
+POST {{baseUrl}}/OpenADR2/Simple/2.0b/EiRegisterParty
+Authorization: Basic {{venId}} {{venPassword}}
+Content-Type: application/xml
+
+<?xml version="1.0" encoding="UTF-8"?>
+<oadr:oadrCanceledPartyRegistration ei:schemaVersion="2.0b"
+	xmlns:ei="http://docs.oasis-open.org/ns/energyinterop/201110"
+	xmlns:pyld="http://docs.oasis-open.org/ns/energyinterop/201110/payloads"
+	xmlns:oadr="http://openadr.org/oadr-2.0b/2012/07">
+	<ei:eiResponse>
+		<ei:responseCode>200</ei:responseCode>
+		<ei:responseDescription>OK</ei:responseDescription>
+		<pyld:requestID>REQ-CANCELED-REG</pyld:requestID>
+	</ei:eiResponse>
+	<ei:registrationID>{{registrationId}}</ei:registrationID>
+	<ei:venID>{{venId}}</ei:venID>
+</oadr:oadrCanceledPartyRegistration>
+
+> {%
+    var body = response.body.toString();
+    client.log("responseCode=" + (body.match(/responseCode>([^<]*)</) || [])[1]);
+%}
+
+### [정리] 9-6. 이벤트 삭제
+# 확인: Events 목록에서 사라진다
+DELETE {{baseUrl}}/DemandResponseEvent/{{eventId}}
+Authorization: Basic {{adminUser}} {{adminPassword}}
+
+### [정리] 9-7. 리소스 삭제
+# 확인: VENs > httpven > Enrollments 탭에서 사라진다
+DELETE {{baseUrl}}/Ven/{{venId}}/resource/HttpTestResource
+Authorization: Basic {{adminUser}} {{adminPassword}}
+
+### [정리] 9-8. 그룹 배정 해제
+# 확인: VENs > httpven > Groups 탭에서 사라진다
+POST {{baseUrl}}/Ven/{{venId}}/group/remove?groupId={{groupId}}
+Authorization: Basic {{adminUser}} {{adminPassword}}
+
+### [정리] 9-9. 마켓컨텍스트 배정 해제
+# 확인: VENs > httpven > Enrollments 탭에서 사라진다
+POST {{baseUrl}}/Ven/{{venId}}/marketContext/remove?marketContextId={{marketContextId}}
+Authorization: Basic {{adminUser}} {{adminPassword}}
+
+### [정리] 9-10. 등록 정보 초기화
+# 확인: VENs > httpven > Settings 탭. Registration ID 가 비워진다
+# registrationId 를 비운다. 관리 API 쪽에서 강제로 푸는 것이다.
+POST {{baseUrl}}/Ven/{{venId}}/cleanRegistration
+Authorization: Basic {{adminUser}} {{adminPassword}}
+
+### [정리] 9-11. VEN 삭제
+# 확인: VENs 목록에서 httpven 이 사라진다
+# 리포트 명세와 요청, opt, 쌓인 데이터까지 같이 지워진다.
+# VTNCommon 의 VenService 는 자기가 아는 테이블만 비우고,
+# VTN20b 쪽은 Oadr20bVenDeleteHandler 가 VenDeleteHandler 로 등록돼서 먼저 치운다.
+DELETE {{baseUrl}}/Ven/{{venId}}
+Authorization: Basic {{adminUser}} {{adminPassword}}
+
+> {%
+    client.test("200 이다", function() {
+        client.assert(response.status === 200, "status=" + response.status);
+    });
+%}
+
+### [정리] 9-12. 정말 지워졌나
+# 확인: VENs 목록에 없으면 된다
+# VEN 상세는 없으면 404 다. Ven 아래의 리포트나 opt 경로가 406 을 주는 것과 다르다.
+# 이건 VTNCommon 의 VenController 가 직접 SC_NOT_FOUND 를 세팅하고,
+# 그쪽은 VTN20b 의 Oadr20bVenController 가 checkVen 으로
+# OadrElementNotFoundException 을 던져서 406 으로 매핑되기 때문이다.
+# @expect 404
+GET {{baseUrl}}/Ven/{{venId}}
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Accept: application/json
+
+> {%
+    client.test("없는 VEN 이다", function() {
+        client.assert(response.status === 404, "status=" + response.status);
+    });
+%}
+
+### [정리] 9-13. 그룹 삭제
+# 확인: VTN Config > Groups 탭에서 사라진다
+DELETE {{baseUrl}}/Group/{{groupId}}
+Authorization: Basic {{adminUser}} {{adminPassword}}
+
+### [정리] 9-14. 마켓컨텍스트 삭제
+# 확인: VTN Config > Market Contexts 탭에서 사라진다
+DELETE {{baseUrl}}/MarketContext/{{marketContextId}}
+Authorization: Basic {{adminUser}} {{adminPassword}}
+
+### [정리] 9-15. 사용자 삭제
+# 확인: Accounts > Users 탭에서 사라진다
+DELETE {{baseUrl}}/Account/user/httptestuser
+Authorization: Basic {{adminUser}} {{adminPassword}}
+
+### [정리] 9-16. 앱 삭제
+# 확인: Accounts > Apps 탭에서 사라진다
+DELETE {{baseUrl}}/Account/app/httptestapp
+Authorization: Basic {{adminUser}} {{adminPassword}}

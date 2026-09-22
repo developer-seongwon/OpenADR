@@ -3,7 +3,7 @@ package com.avob.openadr.client.http.oadr20a;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-import javax.xml.bind.JAXBException;
+import jakarta.xml.bind.JAXBException;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;

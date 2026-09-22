@@ -19,17 +19,28 @@
 		<dependency>
 			<groupId>javax.activation</groupId>
 			<artifactId>activation</artifactId>
-			<version>1.1</version>
+		</dependency>
+		<dependency>
+			<groupId>jakarta.xml.bind</groupId>
+			<artifactId>jakarta.xml.bind-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.sun.xml.bind</groupId>
+			<artifactId>jaxb-impl</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.sun.xml.bind</groupId>
+			<artifactId>jaxb-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.sun.xml.bind</groupId>
+			<artifactId>jaxb-xjc</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.glassfish.jaxb</groupId>
 			<artifactId>jaxb-runtime</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>javax.xml.bind</groupId>
-			<artifactId>jaxb-api</artifactId>
-		</dependency>
-		
+
 	</dependencies>
 	<build>
 		<resources>
@@ -62,7 +73,13 @@
 				</executions>
 				<configuration>
 					<bindingDirectory>xsd/oadr20b_binding</bindingDirectory>
+					<bindingIncludes>
+						<include>**/*.xjb</include>
+					</bindingIncludes>
 					<schemaDirectory>xsd/oadr20b_schema</schemaDirectory>
+					<schemaIncludes>
+						<include>**/*.xsd</include>
+					</schemaIncludes>
 					<generateDirectory>${project.build.directory}/generated-sources/oadr20b</generateDirectory>
 
 					<args>
@@ -80,16 +97,48 @@
 						<dependency>
 							<groupId>org.jvnet.jaxb2_commons</groupId>
 							<artifactId>jaxb2-basics-annotate</artifactId>
-							<version>1.0.2</version>
+							<version>1.1.0</version>
 						</dependency>
 					</plugins>
 				</configuration>
+				<!-- 플러그인 자체의 클래스패스에 JAXB 4.x 를 올려야
+				     XJC 가 javax 가 아니라 jakarta 애노테이션으로 생성한다.
+				     maven-jaxb2-plugin 0.14.0 은 원래 javax 용이라 이 우회가 필요하다 -->
 				<dependencies>
-					<!-- https://mvnrepository.com/artifact/org.jvnet.jaxb2_commons/jaxb2-namespace-prefix -->
+					<dependency>
+						<groupId>org.glassfish.jaxb</groupId>
+						<artifactId>jaxb-runtime</artifactId>
+						<version>${jaxb.version}</version>
+					</dependency>
 					<dependency>
 						<groupId>org.jvnet.jaxb2_commons</groupId>
 						<artifactId>jaxb2-namespace-prefix</artifactId>
-						<version>1.2</version>
+						<version>2.0</version>
+					</dependency>
+					<dependency>
+						<groupId>javax.activation</groupId>
+						<artifactId>activation</artifactId>
+						<version>${activation.version}</version>
+					</dependency>
+					<dependency>
+						<groupId>jakarta.xml.bind</groupId>
+						<artifactId>jakarta.xml.bind-api</artifactId>
+						<version>${jakarta-xml-bind.version}</version>
+					</dependency>
+					<dependency>
+						<groupId>com.sun.xml.bind</groupId>
+						<artifactId>jaxb-impl</artifactId>
+						<version>${jaxb.version}</version>
+					</dependency>
+					<dependency>
+						<groupId>com.sun.xml.bind</groupId>
+						<artifactId>jaxb-core</artifactId>
+						<version>${jaxb.version}</version>
+					</dependency>
+					<dependency>
+						<groupId>com.sun.xml.bind</groupId>
+						<artifactId>jaxb-xjc</artifactId>
+						<version>${jaxb.version}</version>
 					</dependency>
 				</dependencies>
 			</plugin>

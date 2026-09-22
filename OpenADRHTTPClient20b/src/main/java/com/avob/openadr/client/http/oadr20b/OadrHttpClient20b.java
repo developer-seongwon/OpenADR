@@ -6,8 +6,8 @@ import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.UUID;
 
-import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBException;
+import jakarta.xml.bind.JAXBElement;
+import jakarta.xml.bind.JAXBException;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;

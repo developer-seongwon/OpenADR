@@ -3,11 +3,10 @@ package com.avob.openadr.server.common.vtn.controller;
 import java.util.List;
 import java.util.Optional;
 
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletResponse;
-import javax.validation.Valid;
+import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 
-import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -50,12 +49,12 @@ public class GroupController {
         VenGroup findOneByName = venGroupService.findByName(dto.getName());
 
         if (findOneByName != null) {
-            response.setStatus(HttpStatus.NOT_ACCEPTABLE_406);
+            response.setStatus(HttpServletResponse.SC_NOT_ACCEPTABLE);
             return null;
         }
         findOneByName = venGroupService.prepare(dto);
         venGroupService.save(findOneByName);
-        response.setStatus(HttpStatus.CREATED_201);
+        response.setStatus(HttpServletResponse.SC_CREATED);
 
         LOGGER.info("create Group: " + findOneByName.getName());
 
@@ -69,12 +68,12 @@ public class GroupController {
         VenGroup findOneByName = venGroupService.findByName(dto.getName());
 
         if (findOneByName == null) {
-            response.setStatus(HttpStatus.NOT_ACCEPTABLE_406);
+            response.setStatus(HttpServletResponse.SC_NOT_ACCEPTABLE);
             return null;
         }
         findOneByName.setDescription(dto.getDescription());
         venGroupService.save(findOneByName);
-        response.setStatus(HttpStatus.OK_200);
+        response.setStatus(HttpServletResponse.SC_OK);
 
         LOGGER.info("update Group: " + findOneByName.getName());
 
@@ -86,7 +85,7 @@ public class GroupController {
     public VenGroupDto findGroupByName(@PathVariable("groupName") String groupName, HttpServletResponse response) {
         VenGroup group = venGroupService.findByName(groupName);
         if (group == null) {
-            response.setStatus(HttpStatus.NOT_FOUND_404);
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             return null;
         }
         return dtoMapper.map(group, VenGroupDto.class);
@@ -97,7 +96,7 @@ public class GroupController {
     public void deleteGroupById(@PathVariable("groupId") Long groupId, HttpServletResponse response) {
         Optional<VenGroup> group = venGroupService.findById(groupId);
         if (!group.isPresent()) {
-            response.setStatus(HttpStatus.NOT_FOUND_404);
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
         venGroupService.delete(group.get());

@@ -11,11 +11,11 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import javax.annotation.Resource;
-import javax.xml.bind.JAXBElement;
+import jakarta.annotation.Resource;
+import jakarta.xml.bind.JAXBElement;
 import javax.xml.datatype.XMLGregorianCalendar;
 
-import org.eclipse.jetty.http.HttpStatus;
+import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -207,7 +207,7 @@ public class Oadr20bVTNEiReportService implements Oadr20bVTNEiService {
 		VenReportDto venReportDto = oadr20bDtoMapper.map(ven, VenReportDto.class);
 		List<VenReportCapabilityDto> capabilitiesDto = new ArrayList<>();
 
-		int responseCode = HttpStatus.OK_200;
+		int responseCode = HttpServletResponse.SC_OK;
 
 		List<OtherReportCapability> currentVenCapability = otherReportCapabilityService.findBySource(ven);
 		Map<String, OtherReportCapability> currentVenCapabilityMap = currentVenCapability.stream()
@@ -343,6 +343,18 @@ public class Oadr20bVTNEiReportService implements Oadr20bVTNEiService {
 		}
 		venReportDto.setCapabilities(capabilitiesDto);
 
+		oadr20bAppNotificationPublisher.notifyRegisterReport(venReportDto, venID);
+
+		// 새 상태를 먼저 저장하고, 더 이상 등록되지 않은 것들을 그다음에 지운다.
+		//
+		// 예전에는 순서가 반대였다. 그런데 OtherReportCapability 의 description 컬렉션이
+		// cascade = ALL 이라, 지운 뒤에 capability 를 저장하면 영속성 컨텍스트에 남아 있던
+		// description 들이 캐스케이드로 되살아난다. 재등록해도 옛 description 이 그대로
+		// 남아 있던 원인이 이것이다.
+		// 지울 대상은 위에서 이미 골라 놨으므로 순서를 바꿔도 결과는 같다.
+		otherReportCapabilityService.save(capabilities);
+		otherReportCapabilityDescriptionService.save(descriptions);
+
 		Collection<OtherReportCapabilityDescription> toDeleteDesc = currentVenCapabilityDescriptionMap.values();
 		toDeleteDesc.removeAll(descriptions);
 		if (!toDeleteDesc.isEmpty()) {
@@ -365,11 +377,6 @@ public class Oadr20bVTNEiReportService implements Oadr20bVTNEiService {
 			otherReportRequestService.deleteByOtherReportCapabilitySource(ven);
 		}
 
-		oadr20bAppNotificationPublisher.notifyRegisterReport(venReportDto, venID);
-
-		otherReportCapabilityService.save(capabilities);
-		otherReportCapabilityDescriptionService.save(descriptions);
-
 		return Oadr20bEiReportBuilders.newOadr20bRegisteredReportBuilder(requestID, responseCode, venID).build();
 
 	}
@@ -386,7 +393,7 @@ public class Oadr20bVTNEiReportService implements Oadr20bVTNEiService {
 //		}
 
 		return Oadr20bResponseBuilders
-				.newOadr20bResponseBuilder(payload.getEiResponse().getRequestID(), HttpStatus.OK_200, venID).build();
+				.newOadr20bResponseBuilder(payload.getEiResponse().getRequestID(), HttpServletResponse.SC_OK, venID).build();
 	}
 
 	public Object oadrCanceledReport(Ven ven, OadrCanceledReportType payload) {
@@ -401,7 +408,7 @@ public class Oadr20bVTNEiReportService implements Oadr20bVTNEiService {
 //		}
 
 		return Oadr20bResponseBuilders
-				.newOadr20bResponseBuilder(payload.getEiResponse().getRequestID(), HttpStatus.OK_200, venID).build();
+				.newOadr20bResponseBuilder(payload.getEiResponse().getRequestID(), HttpServletResponse.SC_OK, venID).build();
 	}
 
 	public Object oadrUpdatedReport(Ven ven, OadrUpdatedReportType payload) {
@@ -416,7 +423,7 @@ public class Oadr20bVTNEiReportService implements Oadr20bVTNEiService {
 //		}
 
 		return Oadr20bResponseBuilders
-				.newOadr20bResponseBuilder(payload.getEiResponse().getRequestID(), HttpStatus.OK_200, venID).build();
+				.newOadr20bResponseBuilder(payload.getEiResponse().getRequestID(), HttpServletResponse.SC_OK, venID).build();
 	}
 
 	/**
@@ -500,7 +507,7 @@ public class Oadr20bVTNEiReportService implements Oadr20bVTNEiService {
 					Integer.valueOf(mismatchCredentialsVenIdResponse.getResponseCode()), venID).build();
 		}
 
-		int responseCode = HttpStatus.OK_200;
+		int responseCode = HttpServletResponse.SC_OK;
 		List<SelfReportRequest> selfReportRequests = Lists.newArrayList();
 		for (OadrReportRequestType oadrReportRequestType : payload.getOadrReportRequest()) {
 			String reportRequestID = oadrReportRequestType.getReportRequestID();
@@ -591,7 +598,7 @@ public class Oadr20bVTNEiReportService implements Oadr20bVTNEiService {
 
 		otherReportRequestService.save(collect);
 
-		return Oadr20bResponseBuilders.newOadr20bResponseBuilder(requestID, HttpStatus.OK_200, venID).build();
+		return Oadr20bResponseBuilders.newOadr20bResponseBuilder(requestID, HttpServletResponse.SC_OK, venID).build();
 
 	}
 
@@ -623,7 +630,7 @@ public class Oadr20bVTNEiReportService implements Oadr20bVTNEiService {
 		List<String> pendingReportIds = pendings.stream().map(SelfReportRequest::getReportRequestId)
 				.collect(Collectors.toList());
 
-		int responseCode = HttpStatus.OK_200;
+		int responseCode = HttpServletResponse.SC_OK;
 		return Oadr20bEiReportBuilders.newOadr20bCanceledReportBuilder(requestID, responseCode, venID)
 				.addPendingReportRequestId(pendingReportIds).build();
 
@@ -673,7 +680,7 @@ public class Oadr20bVTNEiReportService implements Oadr20bVTNEiService {
 
 		Long now = System.currentTimeMillis();
 
-		int responseCode = HttpStatus.OK_200;
+		int responseCode = HttpServletResponse.SC_OK;
 
 		List<OtherReportDataFloat> listPayloadFloat = Lists.newArrayList();
 		List<OtherReportDataFloat> listPayloadFloatToSave = Lists.newArrayList();
@@ -1028,7 +1035,8 @@ public class Oadr20bVTNEiReportService implements Oadr20bVTNEiService {
 	 * @throws Oadr20bException
 	 */
 	public void subscribe(AbstractUser requestor, Ven ven,
-			List<OtherReportRequestDtoCreateSubscriptionDto> subscriptions) throws Oadr20bApplicationLayerException {
+			List<OtherReportRequestDtoCreateSubscriptionDto> subscriptions)
+			throws Oadr20bApplicationLayerException, OadrElementNotFoundException {
 
 		List<OtherReportRequest> requests = new ArrayList<>();
 		List<OtherReportRequestSpecifier> specifiers = new ArrayList<>();
@@ -1045,9 +1053,7 @@ public class Oadr20bVTNEiReportService implements Oadr20bVTNEiService {
 						"reportBackDuration and granularity must be valid xmlduration lexical representation (PnYnMnDTnHnMnS)");
 			}
 
-			OtherReportCapability reportCapability = otherReportCapabilityService
-					.findOneBySourceUsernameAndReportSpecifierId(ven.getUsername(),
-							subscription.getReportSpecifierId());
+			OtherReportCapability reportCapability = checkReportCapability(ven, subscription.getReportSpecifierId());
 
 			OtherReportRequest otherReportRequest = new OtherReportRequest();
 			otherReportRequest.setGranularity(subscription.getGranularity());
@@ -1055,7 +1061,17 @@ public class Oadr20bVTNEiReportService implements Oadr20bVTNEiService {
 			otherReportRequest.setSource(ven);
 			otherReportRequest.setOtherReportCapability(reportCapability);
 			otherReportRequest.setRequestor(requestor);
-			otherReportRequest.setReportRequestId(subscription.getReportRequestId());
+
+			// reportRequestId 는 VEN 이 데이터를 올릴 때 이 요청을 가리키는 유일한 키다.
+			// 화면에서 구독을 걸면 이 값을 안 보내는데, 예전에는 그대로 null 로 저장했다.
+			// 그러면 oadrCreateReport 도 null 로 나가고, VEN 이 oadrUpdateReport 를 올려도
+			// findOneBySourceAndReportRequestId 가 못 찾아서 데이터가 한 건도 안 쌓인다.
+			// request() 는 이미 직접 만들어 쓰고 있다. 없으면 여기서도 만든다.
+			String reportRequestId = subscription.getReportRequestId();
+			if (reportRequestId == null) {
+				reportRequestId = UUID.randomUUID().toString();
+			}
+			otherReportRequest.setReportRequestId(reportRequestId);
 
 			List<OtherReportCapabilityDescription> findByOtherReportCapability = otherReportCapabilityDescriptionService
 					.findByOtherReportCapability(reportCapability);
@@ -1095,13 +1111,12 @@ public class Oadr20bVTNEiReportService implements Oadr20bVTNEiService {
 	 * @throws Oadr20bException
 	 */
 	public void request(AbstractUser requestor, Ven ven, List<OtherReportRequestDtoCreateRequestDto> dto)
-			throws Oadr20bApplicationLayerException {
+			throws Oadr20bApplicationLayerException, OadrElementNotFoundException {
 		List<OtherReportRequest> requests = new ArrayList<>();
 		List<OtherReportRequestSpecifier> specifiers = new ArrayList<>();
 		for (OtherReportRequestDtoCreateRequestDto request : dto) {
 
-			OtherReportCapability reportCapability = otherReportCapabilityService
-					.findOneBySourceUsernameAndReportSpecifierId(ven.getUsername(), request.getReportSpecifierId());
+			OtherReportCapability reportCapability = checkReportCapability(ven, request.getReportSpecifierId());
 
 			String reportRequestId = UUID.randomUUID().toString();
 			OtherReportRequest otherReportRequest = new OtherReportRequest();
@@ -1118,7 +1133,16 @@ public class Oadr20bVTNEiReportService implements Oadr20bVTNEiService {
 					.findByOtherReportCapability(reportCapability);
 			Map<String, OtherReportCapabilityDescription> descriptions = findByOtherReportCapability.stream()
 					.collect(Collectors.toMap(OtherReportCapabilityDescription::getRid, Function.identity()));
-			for (String rid : request.getRid()) {
+
+			// rid 를 안 주면 그 명세의 전부를 뜻한다. subscribe 가 이미 그렇게 동작하는데
+			// 여기에는 빠져 있어서 그대로 iterator() 를 부르다가 NPE 로 500 이 났다.
+			// 화면에서 rid 를 전부 고르면 null 로 넘어오기 때문에 흔한 경우다.
+			List<String> rids = request.getRid();
+			if (rids == null) {
+				rids = findByOtherReportCapability.stream().map(OtherReportCapabilityDescription::getRid)
+						.collect(Collectors.toList());
+			}
+			for (String rid : rids) {
 
 				if (descriptions.containsKey(rid)) {
 					OtherReportRequestSpecifier otherReportRequestSpecifier = new OtherReportRequestSpecifier();
@@ -1135,6 +1159,26 @@ public class Oadr20bVTNEiReportService implements Oadr20bVTNEiService {
 
 		distributeRequestOadrCreatedReportPayload(ven, requests, specifiers);
 
+	}
+
+	/**
+	 * VEN 이 등록해 둔 리포트 명세를 찾는다. 없으면 406 으로 끊는다.
+	 *
+	 * 예전에는 못 찾아도 그냥 null 인 채로 OtherReportRequest 에 넣고 저장했다.
+	 * 그러면 그 행 때문에 distributeSubscriptionOadrCreatedReportPayload 가
+	 * getReportSpecifierId() 에서 NPE 를 내고, 그 뒤로는 멀쩡한 요청도 전부 500 이 된다.
+	 * 구독 취소까지 같이 죽어서 DB 를 직접 건드리지 않으면 그 VEN 을 되살릴 수 없었다.
+	 * 애초에 저장하지 않는 게 맞다.
+	 */
+	private OtherReportCapability checkReportCapability(Ven ven, String reportSpecifierId)
+			throws OadrElementNotFoundException {
+		OtherReportCapability reportCapability = otherReportCapabilityService
+				.findOneBySourceUsernameAndReportSpecifierId(ven.getUsername(), reportSpecifierId);
+		if (reportCapability == null) {
+			throw new OadrElementNotFoundException("ven: " + ven.getUsername() + " has no report capability with id: "
+					+ reportSpecifierId);
+		}
+		return reportCapability;
 	}
 
 	public void unsubscribe(Ven ven, String reportRequestID)

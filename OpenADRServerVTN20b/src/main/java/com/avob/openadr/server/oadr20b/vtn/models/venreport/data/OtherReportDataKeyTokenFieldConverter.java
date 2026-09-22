@@ -3,7 +3,7 @@ package com.avob.openadr.server.oadr20b.vtn.models.venreport.data;
 import java.io.IOException;
 import java.util.List;
 
-import javax.persistence.AttributeConverter;
+import jakarta.persistence.AttributeConverter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

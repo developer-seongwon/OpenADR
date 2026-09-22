@@ -12,14 +12,14 @@ import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.util.Arrays;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
-import javax.xml.bind.JAXBException;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.Resource;
+import jakarta.xml.bind.JAXBException;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
-import org.eclipse.jetty.http.HttpStatus;
+import jakarta.servlet.http.HttpServletResponse;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Value;
@@ -146,7 +146,7 @@ public class Oadr20bVTNSecurityTest {
 		// valid request
 		OadrRequestEventType event = Oadr20bEiEventBuilders.newOadrRequestEventBuilder(ven.getUsername(), "0").build();
 		OadrDistributeEventType oadrRequestEventType = client.oadrRequestEvent(event);
-		assertEquals(String.valueOf(HttpStatus.OK_200), oadrRequestEventType.getEiResponse().getResponseCode());
+		assertEquals(String.valueOf(HttpServletResponse.SC_OK), oadrRequestEventType.getEiResponse().getResponseCode());
 		assertEquals(0, oadrRequestEventType.getOadrEvent().size());
 
 		// mismatch request venId and username
@@ -299,7 +299,7 @@ public class Oadr20bVTNSecurityTest {
 		post.setEntity(stringEntity);
 
 		HttpResponse execute = userBasicHttpClient.execute(post, "");
-		assertEquals(HttpStatus.CREATED_201, execute.getStatusLine().getStatusCode());
+		assertEquals(HttpServletResponse.SC_CREATED, execute.getStatusLine().getStatusCode());
 
 		DemandResponseEventReadDto readdto = mapper.readValue(execute.getEntity().getContent(),
 				DemandResponseEventReadDto.class);
@@ -307,7 +307,7 @@ public class Oadr20bVTNSecurityTest {
 
 		OadrRequestEventType event = Oadr20bEiEventBuilders.newOadrRequestEventBuilder(ven.getUsername(), "0").build();
 		OadrDistributeEventType oadrRequestEventType = venBasicHttpClient.oadrRequestEvent(event);
-		assertEquals(String.valueOf(HttpStatus.OK_200), oadrRequestEventType.getEiResponse().getResponseCode());
+		assertEquals(String.valueOf(HttpServletResponse.SC_OK), oadrRequestEventType.getEiResponse().getResponseCode());
 		assertEquals(1, oadrRequestEventType.getOadrEvent().size());
 
 		demandResponseEventService.delete(readdto.getId());

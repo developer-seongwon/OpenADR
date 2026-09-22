@@ -6,9 +6,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
-import org.eclipse.jetty.http.HttpStatus;
+import jakarta.servlet.http.HttpServletResponse;
 import org.jivesoftware.smack.SmackException.NotConnectedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,7 +67,7 @@ public class Oadr20bVENEiRegisterPartyService implements Oadr20bVENEiService {
 
 		String requestId = "";
 		String venID = oadrRequestReregistrationType.getVenID();
-		int responseCode = HttpStatus.OK_200;
+		int responseCode = HttpServletResponse.SC_OK;
 		reinitRegistration(vtnConfiguration);
 
 		return Oadr20bResponseBuilders.newOadr20bResponseBuilder(requestId, responseCode, venID).build();
@@ -80,7 +80,7 @@ public class Oadr20bVENEiRegisterPartyService implements Oadr20bVENEiService {
 
 		String requestID = oadrCancelPartyRegistrationType.getRequestID();
 		String registrationID = oadrCancelPartyRegistrationType.getRegistrationID();
-		int responseCode = HttpStatus.OK_200;
+		int responseCode = HttpServletResponse.SC_OK;
 		if (getRegistration(vtnConfiguration).getRegistrationID().equals(registrationID)) {
 			clearRegistration(vtnConfiguration);
 			oadrPollService.cancelPoll(vtnConfiguration, false);

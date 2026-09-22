@@ -1,7 +1,7 @@
 package com.avob.openadr.server.common.vtn.service.push;
 
-import javax.annotation.Resource;
-import javax.jms.JMSException;
+import jakarta.annotation.Resource;
+import jakarta.jms.JMSException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +55,7 @@ public class OadrAppNotificationPublisher {
 						writeValueAsString, new MessagePostProcessor() {
 
 							@Override
-							public javax.jms.Message postProcessMessage(javax.jms.Message arg0) throws JMSException {
+							public jakarta.jms.Message postProcessMessage(jakarta.jms.Message arg0) throws JMSException {
 								arg0.setStringProperty("venID", venId);
 								return arg0;
 							}

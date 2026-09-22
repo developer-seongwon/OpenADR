@@ -6,11 +6,11 @@ import static org.junit.Assert.assertNotNull;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
-import javax.servlet.ServletContext;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.Resource;
+import jakarta.servlet.ServletContext;
 
-import org.eclipse.jetty.http.HttpStatus;
+import jakarta.servlet.http.HttpServletResponse;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -190,27 +190,27 @@ public class Oadr20bVENEiEventControllerTest {
 	public void requestTest() throws Exception {
 		// GET not allowed
 		this.oadrMockMvc.perform(MockMvcRequestBuilders.get(EIEVENT_ENDPOINT).with(VTN_SECURITY_SESSION))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.METHOD_NOT_ALLOWED_405));
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_METHOD_NOT_ALLOWED));
 
 		// PUT not allowed
 		this.oadrMockMvc.perform(MockMvcRequestBuilders.put(EIEVENT_ENDPOINT).with(VTN_SECURITY_SESSION))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.METHOD_NOT_ALLOWED_405));
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_METHOD_NOT_ALLOWED));
 
 		// DELETE not allowed
 		this.oadrMockMvc.perform(MockMvcRequestBuilders.delete(EIEVENT_ENDPOINT).with(VTN_SECURITY_SESSION))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.METHOD_NOT_ALLOWED_405));
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_METHOD_NOT_ALLOWED));
 
 		// POST without content
 		String content = "";
 		this.oadrMockMvc
 				.perform(MockMvcRequestBuilders.post(EIEVENT_ENDPOINT).with(VTN_SECURITY_SESSION).content(content))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.BAD_REQUEST_400));
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_BAD_REQUEST));
 
 		// POST without content
 		content = "mouaiccool";
 		MvcResult andReturn = this.oadrMockMvc
 				.perform(MockMvcRequestBuilders.post(EIEVENT_ENDPOINT).with(VTN_SECURITY_SESSION).content(content))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK)).andReturn();
 		OadrResponseType unmarshal = jaxbContext.unmarshal(andReturn.getResponse().getContentAsString(),
 				OadrResponseType.class);
 		assertEquals(String.valueOf(Oadr20bApplicationLayerErrorCode.NOT_RECOGNIZED_453),
@@ -253,7 +253,7 @@ public class Oadr20bVENEiEventControllerTest {
 
 		// push dr event to VEN
 		OadrResponseType postEiEventAndExpect = oadrMockMvc.postEiEventAndExpect(VTN_SECURITY_SESSION, build,
-				HttpStatus.OK_200, OadrResponseType.class);
+				HttpServletResponse.SC_OK, OadrResponseType.class);
 		assertNotNull(postEiEventAndExpect);
 
 		// assert event stored in service event list
@@ -271,7 +271,7 @@ public class Oadr20bVENEiEventControllerTest {
 				.newOadr20bDistributeEventBuilder(multiVtnConfig.getMultiConfig(vtnHttpId, venUrl).getVtnId(), "0")
 				.addOadrEvent(event).build();
 
-		postEiEventAndExpect = oadrMockMvc.postEiEventAndExpect(VTN_SECURITY_SESSION, build, HttpStatus.OK_200,
+		postEiEventAndExpect = oadrMockMvc.postEiEventAndExpect(VTN_SECURITY_SESSION, build, HttpServletResponse.SC_OK,
 				OadrResponseType.class);
 		assertNotNull(postEiEventAndExpect);
 
@@ -286,7 +286,7 @@ public class Oadr20bVENEiEventControllerTest {
 				.newOadr20bDistributeEventBuilder(multiVtnConfig.getMultiConfig(vtnHttpId, venUrl).getVtnId(), "0")
 				.build();
 
-		postEiEventAndExpect = oadrMockMvc.postEiEventAndExpect(VTN_SECURITY_SESSION, build, HttpStatus.OK_200,
+		postEiEventAndExpect = oadrMockMvc.postEiEventAndExpect(VTN_SECURITY_SESSION, build, HttpServletResponse.SC_OK,
 				OadrResponseType.class);
 		assertNotNull(postEiEventAndExpect);
 

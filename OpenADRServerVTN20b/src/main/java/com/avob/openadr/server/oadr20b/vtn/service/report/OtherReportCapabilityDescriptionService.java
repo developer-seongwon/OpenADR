@@ -2,10 +2,10 @@ package com.avob.openadr.server.oadr20b.vtn.service.report;
 
 import java.util.List;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,7 +40,7 @@ public class OtherReportCapabilityDescriptionService extends GenericService<Othe
 	@Transactional(readOnly = true)
 	public List<OtherReportCapabilityDescription> findByOtherReportCapability(
 			OtherReportCapability otherReportCapability) {
-		return otherReportCapabilityDescriptionDao.findByOtherReportCapability(otherReportCapability);
+		return otherReportCapabilityDescriptionDao.findByOtherReportCapabilityOrderByIdAsc(otherReportCapability);
 	}
 
 	@Transactional(readOnly = true)
@@ -50,7 +50,7 @@ public class OtherReportCapabilityDescriptionService extends GenericService<Othe
 	}
 
 	@Override
-	public CrudRepository<OtherReportCapabilityDescription, Long> getDao() {
+	public JpaRepository<OtherReportCapabilityDescription, Long> getDao() {
 		return otherReportCapabilityDescriptionDao;
 	}
 

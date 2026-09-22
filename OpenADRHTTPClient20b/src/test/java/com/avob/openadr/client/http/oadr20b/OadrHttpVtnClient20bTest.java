@@ -7,12 +7,12 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 
-import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBException;
+import jakarta.xml.bind.JAXBElement;
+import jakarta.xml.bind.JAXBException;
 
 import org.apache.http.HttpStatus;
 import org.junit.Test;
-import org.mockito.Matchers;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 
 import com.avob.openadr.client.http.oadr20b.vtn.OadrHttpVtnClient20b;
@@ -63,7 +63,7 @@ public class OadrHttpVtnClient20bTest {
 				.newOadr20bResponseBuilder("", HttpStatus.SC_OK, "venId").build();
 
 		when(OadrHttpClient20b.<OadrResponseType, JAXBElement<OadrDistributeEventType>>post(
-				Matchers.<JAXBElement<OadrDistributeEventType>>anyObject(), Matchers.any(), Matchers.any()))
+				ArgumentMatchers.<JAXBElement<OadrDistributeEventType>>any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
 						.thenReturn(mockOadrResponseType);
 
 		long timestampStart = 0L;
@@ -116,7 +116,7 @@ public class OadrHttpVtnClient20bTest {
 				.build();
 
 		when(OadrHttpClient20b.<OadrCanceledPartyRegistrationType, JAXBElement<OadrCanceledPartyRegistrationType>>post(
-				Matchers.<JAXBElement<OadrCanceledPartyRegistrationType>>anyObject(), Matchers.any(), Matchers.any()))
+				ArgumentMatchers.<JAXBElement<OadrCanceledPartyRegistrationType>>any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
 						.thenReturn(build);
 
 		OadrCancelPartyRegistrationType payload = new OadrCancelPartyRegistrationType();
@@ -135,7 +135,7 @@ public class OadrHttpVtnClient20bTest {
 				.newOadr20bResponseBuilder("", HttpStatus.SC_OK, "venId").build();
 
 		when(OadrHttpClient20b.<OadrResponseType, JAXBElement<OadrResponseType>>post(
-				Matchers.<JAXBElement<OadrResponseType>>anyObject(), Matchers.any(), Matchers.any()))
+				ArgumentMatchers.<JAXBElement<OadrResponseType>>any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
 						.thenReturn(mockOadrResponseType);
 
 		OadrRequestReregistrationType payload = new OadrRequestReregistrationType();
@@ -154,7 +154,7 @@ public class OadrHttpVtnClient20bTest {
 				.newOadr20bCreatedReportBuilder("", HttpStatus.SC_OK, "venId").build();
 
 		when(OadrHttpClient20b.<OadrCreatedReportType, JAXBElement<OadrCreatedReportType>>post(
-				Matchers.<JAXBElement<OadrCreatedReportType>>anyObject(), Matchers.any(), Matchers.any()))
+				ArgumentMatchers.<JAXBElement<OadrCreatedReportType>>any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
 						.thenReturn(build);
 
 		OadrCreateReportType payload = new OadrCreateReportType();
@@ -173,7 +173,7 @@ public class OadrHttpVtnClient20bTest {
 				.newOadr20bUpdatedReportBuilder("", HttpStatus.SC_OK, "venId").build();
 
 		when(OadrHttpClient20b.<OadrUpdatedReportType, JAXBElement<OadrUpdatedReportType>>post(
-				Matchers.<JAXBElement<OadrUpdatedReportType>>anyObject(), Matchers.any(), Matchers.any()))
+				ArgumentMatchers.<JAXBElement<OadrUpdatedReportType>>any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
 						.thenReturn(build);
 
 		OadrUpdateReportType payload = new OadrUpdateReportType();
@@ -191,7 +191,7 @@ public class OadrHttpVtnClient20bTest {
 				.newOadr20bCanceledReportBuilder("", HttpStatus.SC_OK, "venId").build();
 
 		when(OadrHttpClient20b.<OadrCanceledReportType, JAXBElement<OadrCanceledReportType>>post(
-				Matchers.<JAXBElement<OadrCanceledReportType>>anyObject(), Matchers.any(), Matchers.any()))
+				ArgumentMatchers.<JAXBElement<OadrCanceledReportType>>any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
 						.thenReturn(build);
 
 		OadrCancelReportType payload = new OadrCancelReportType();
@@ -209,7 +209,7 @@ public class OadrHttpVtnClient20bTest {
 				.newOadr20bRegisteredReportBuilder("", HttpStatus.SC_OK, "venId").build();
 
 		when(OadrHttpClient20b.<OadrRegisteredReportType, JAXBElement<OadrRegisteredReportType>>post(
-				Matchers.<JAXBElement<OadrRegisteredReportType>>anyObject(), Matchers.any(), Matchers.any()))
+				ArgumentMatchers.<JAXBElement<OadrRegisteredReportType>>any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
 						.thenReturn(build);
 
 		OadrRegisterReportType payload = new OadrRegisterReportType();

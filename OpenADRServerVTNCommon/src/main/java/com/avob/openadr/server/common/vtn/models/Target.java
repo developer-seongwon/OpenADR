@@ -1,12 +1,15 @@
 package com.avob.openadr.server.common.vtn.models;
 
-import javax.persistence.Embeddable;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
 
 @Embeddable
 public class Target implements TargetInterface {
 
+	@Column(name = "target_type")
 	private TargetTypeEnum targetType;
 
+	@Column(name = "target_id")
 	private String targetId;
 
 	public Target() {

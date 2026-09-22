@@ -1,10 +1,10 @@
 package com.avob.openadr.server.oadr20b.vtn.service;
 
-import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 public abstract class GenericService<T> {
 
-	public abstract CrudRepository<T, Long> getDao();
+	public abstract JpaRepository<T, Long> getDao();
 
 	public T save(T entity) {
 		return getDao().save(entity);

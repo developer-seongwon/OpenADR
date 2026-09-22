@@ -4,7 +4,7 @@ import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.UUID;
 
-import javax.xml.bind.JAXBException;
+import jakarta.xml.bind.JAXBException;
 
 import org.jivesoftware.smack.SmackException.NotConnectedException;
 import org.jxmpp.jid.Jid;

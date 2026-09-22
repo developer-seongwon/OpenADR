@@ -1,0 +1,146 @@
+### 4. EiOpt - opt 스케줄
+#
+# 스펙 8.5 EiOpt Service.
+#   oadrCreateOpt / oadrCreatedOpt   VEN -> VTN
+#   oadrCancelOpt / oadrCanceledOpt  VEN -> VTN
+#
+# 이벤트 하나에 대한 답(oadrCreatedEvent)과는 다르다.
+# opt 는 기간에 대한 것이다. "이 시간대에는 참여 안 한다" 를 미리 알려 둔다.
+#
+# 스펙 8.5.1 기준으로 쓰임이 세 가지다.
+#   특정 대상에 대해 일시적으로 참여 가능하다고 알리기
+#   특정 대상에 대해 일시적으로 참여 불가하다고 알리기
+#   이미 응답한 이벤트의 optIn/optOut 을 바꾸기
+#
+# oadrCreateOpt 가 한 번 쓰이면 그게 우선한다.
+# 그 뒤의 oadrCreatedEvent 로는 opt 상태가 안 바뀐다(스펙 8.5.2).
+
+### 4-1. oadrCreateOpt (마켓컨텍스트 기준)
+# 확인: VENs > httpven > OptSchedules 탭에 한 줄 생긴다
+# 구조가 까다롭다. 세 가지를 지켜야 한다.
+#   vavailability 는 xcal 네임스페이스이고
+#     components > available > properties > dtstart/duration 까지 전부 있어야 한다
+#   marketContext 는 emix 네임스페이스다
+#   요소 순서가 스키마 순서여야 한다.
+#     optID, optType, optReason, marketContext, venID, vavailability, createdDateTime, requestID
+# 빠지거나 순서가 틀리면 454 INVALID_DATA 가 온다. XSD 검증이 켜져 있다.
+#
+# eiTarget 에 venID 만 있으면 그 VEN 의 모든 리소스에 적용된다.
+# 리소스를 지정하면 그 리소스에만 걸린다(스펙 8.5.2).
+POST {{baseUrl}}/OpenADR2/Simple/2.0b/EiOpt
+Authorization: Basic {{venId}} {{venPassword}}
+Content-Type: application/xml
+
+<?xml version="1.0" encoding="UTF-8"?>
+<oadr:oadrCreateOpt ei:schemaVersion="2.0b"
+	xmlns:ei="http://docs.oasis-open.org/ns/energyinterop/201110"
+	xmlns:pyld="http://docs.oasis-open.org/ns/energyinterop/201110/payloads"
+	xmlns:emix="http://docs.oasis-open.org/ns/emix/2011/06"
+	xmlns:xcal="urn:ietf:params:xml:ns:icalendar-2.0"
+	xmlns:oadr="http://openadr.org/oadr-2.0b/2012/07">
+	<ei:optID>{{optId}}</ei:optID>
+	<ei:optType>optOut</ei:optType>
+	<ei:optReason>participating</ei:optReason>
+	<emix:marketContext>{{marketContext}}</emix:marketContext>
+	<ei:venID>{{venId}}</ei:venID>
+	<xcal:vavailability>
+		<xcal:components>
+			<xcal:available>
+				<xcal:properties>
+					<xcal:dtstart><xcal:date-time>{{$isoTimestamp}}</xcal:date-time></xcal:dtstart>
+					<xcal:duration><xcal:duration>PT1H</xcal:duration></xcal:duration>
+				</xcal:properties>
+			</xcal:available>
+		</xcal:components>
+	</xcal:vavailability>
+	<ei:createdDateTime>{{$isoTimestamp}}</ei:createdDateTime>
+	<pyld:requestID>REQ-CREATE-OPT</pyld:requestID>
+</oadr:oadrCreateOpt>
+
+> {%
+    var body = response.body.toString();
+    client.test("oadrCreatedOpt 200 이 온다", function() {
+        var rc = (body.match(/responseCode>([^<]*)</) || [])[1];
+        client.assert(body.indexOf("oadrCreatedOpt") >= 0 && rc === "200",
+            "responseCode=" + rc + " / " + body.substring(0, 400));
+    });
+    client.log("optID=" + (body.match(/optID>([^<]*)</) || [])[1]);
+%}
+
+### 4-2. VEN 의 opt 전체
+# 확인: VENs > httpven > OptSchedules 탭이 읽는 것과 같은 엔드포인트다
+# 화면의 VEN 상세 > OptSchedules 탭.
+GET {{baseUrl}}/Ven/{{venId}}/opt
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Accept: application/json
+
+> {%
+    client.test("방금 만든 opt 가 보인다", function() {
+        // optId 는 환경파일(http-client.env.json) 값이다.
+        // client.global 에는 스크립트가 set 한 것만 들어 있어서 환경변수는 못 읽고,
+        // 핸들러 안에서는 {{ }} 치환도 안 된다. request.environment 로 가져와야 한다
+        var want = request.environment.get("optId");
+        var ids = response.body.map(function(o) { return o.optId; });
+        client.assert(ids.indexOf(want) >= 0, "찾는 값 " + want + " / 목록 " + ids.join(", "));
+    });
+%}
+
+### 4-3. 기간으로 걸러서
+# 확인: OptSchedules 탭의 기간 필터에 해당한다
+GET {{baseUrl}}/Ven/{{venId}}/opt?start={{$timestamp}}000&end={{$timestamp}}000
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Accept: application/json
+
+### 4-4. 마켓컨텍스트로 걸러서
+# 확인: OptSchedules 탭의 마켓컨텍스트 필터에 해당한다
+GET {{baseUrl}}/Ven/{{venId}}/opt?marketContext={{marketContext}}
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Accept: application/json
+
+### 4-5. 리소스별 opt
+# 확인: OptSchedules 탭의 리소스 필터에 해당한다
+# 06-vtn-admin.http 에서 리소스를 만들어 둬야 의미가 있다.
+# 없어도 빈 목록으로 200 이다.
+GET {{baseUrl}}/Ven/{{venId}}/opt/resource/HttpTestResource
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Accept: application/json
+
+### 4-6. oadrCancelOpt
+# 확인: VENs > httpven > OptSchedules 탭에서 그 줄이 사라진다
+# optID 로 지운다.
+POST {{baseUrl}}/OpenADR2/Simple/2.0b/EiOpt
+Authorization: Basic {{venId}} {{venPassword}}
+Content-Type: application/xml
+
+<?xml version="1.0" encoding="UTF-8"?>
+<oadr:oadrCancelOpt ei:schemaVersion="2.0b"
+	xmlns:ei="http://docs.oasis-open.org/ns/energyinterop/201110"
+	xmlns:pyld="http://docs.oasis-open.org/ns/energyinterop/201110/payloads"
+	xmlns:oadr="http://openadr.org/oadr-2.0b/2012/07">
+	<pyld:requestID>REQ-CANCEL-OPT</pyld:requestID>
+	<ei:optID>{{optId}}</ei:optID>
+	<ei:venID>{{venId}}</ei:venID>
+</oadr:oadrCancelOpt>
+
+> {%
+    var body = response.body.toString();
+    client.test("oadrCanceledOpt 200 이 온다", function() {
+        var rc = (body.match(/responseCode>([^<]*)</) || [])[1];
+        client.assert(body.indexOf("oadrCanceledOpt") >= 0 && rc === "200",
+            "responseCode=" + rc);
+    });
+%}
+
+### 4-7. 지워졌나
+# 확인: OptSchedules 탭이 비어 있으면 된다
+GET {{baseUrl}}/Ven/{{venId}}/opt
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Accept: application/json
+
+> {%
+    client.test("opt 가 없어졌다", function() {
+        var want = request.environment.get("optId");
+        var ids = response.body.map(function(o) { return o.optId; });
+        client.assert(ids.indexOf(want) < 0, "아직 남아 있다 " + want + " / 목록 " + ids.join(", "));
+    });
+%}

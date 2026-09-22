@@ -2,7 +2,7 @@ package com.avob.openadr.server.oadr20b.vtn.utils;
 
 import java.util.List;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.UserRequestPostProcessor;
 import org.springframework.stereotype.Service;

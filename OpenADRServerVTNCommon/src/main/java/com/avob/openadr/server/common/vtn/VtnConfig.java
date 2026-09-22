@@ -1,5 +1,7 @@
 package com.avob.openadr.server.common.vtn;
 
+import java.io.IOException;
+import java.net.ServerSocket;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -8,7 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
@@ -19,7 +21,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.util.SocketUtils;
 
 import com.avob.openadr.security.OadrFingerprintSecurity;
 import com.avob.openadr.security.OadrPKISecurity;
@@ -269,15 +270,34 @@ public class VtnConfig {
 		}
 
 		if (getBrokerPort() == null) {
-			brokerPort = SocketUtils.findAvailableTcpPort();
+			brokerPort = findAvailableTcpPort();
 		}
 
 		if (brokerSslPort == null) {
-			brokerSslPort = SocketUtils.findAvailableTcpPort();
+			brokerSslPort = findAvailableTcpPort();
 		}
 		brokerUrl = "tcp://" + getBrokerHost() + ":" + getBrokerPort();
 		sslBrokerUrl = "ssl://" + brokerSslHost + ":" + brokerSslPort;
 
+	}
+
+	/**
+	 * 비어 있는 TCP 포트를 하나 잡는다.
+	 *
+	 * Spring Framework 6 에서 org.springframework.util.SocketUtils 가 제거됐다.
+	 * 대체재인 TestSocketUtils 는 spring-test 에 있어 테스트 전용이라
+	 * 운영 코드에서 쓰기에 맞지 않으므로 여기서 직접 구현한다.
+	 *
+	 * 포트를 확인한 뒤 소켓을 닫고 브로커가 다시 여는 구조라
+	 * 그 사이에 다른 프로세스가 가져갈 여지는 남아 있다. SocketUtils 도 같았다.
+	 */
+	private static int findAvailableTcpPort() {
+		try (ServerSocket socket = new ServerSocket(0)) {
+			socket.setReuseAddress(true);
+			return socket.getLocalPort();
+		} catch (IOException e) {
+			throw new OadrVTNInitializationException(e);
+		}
 	}
 
 	public boolean hasExternalRabbitMQBroker() {

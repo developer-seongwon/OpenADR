@@ -82,7 +82,13 @@ gen_ecc_key_csr()
 gen_pkcs12()
 {
 	echo "gen_pkcs12: $@"
-	openssl pkcs12 -export  -inkey $1.key -in $1.crt -certfile $CA_NAME.crt -out $1.p12 -password pass:changeme
+	# OpenSSL 3 은 기본으로 PBES2 와 AES-256 을 쓴다.
+	# openfire 4.4.4 이미지에 들어 있는 자바 8 keytool 은 그 형식을 못 읽고
+	# "ObjectIdentifier() -- data isn't an object ID" 로 죽는다.
+	# 구형 호환 알고리즘을 명시해 준다. 테스트용 인증서라 보안상 문제는 없다.
+	openssl pkcs12 -export -inkey $1.key -in $1.crt -certfile $CA_NAME.crt -out $1.p12 \
+		-keypbe PBE-SHA1-3DES -certpbe PBE-SHA1-3DES -macalg sha1 -legacy \
+		-password pass:changeme
 }
 # gen_java_keystore "in/out p12 / keystore name"
 # prompt password

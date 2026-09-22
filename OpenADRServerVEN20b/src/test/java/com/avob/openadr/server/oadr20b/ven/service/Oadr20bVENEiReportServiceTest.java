@@ -3,7 +3,7 @@ package com.avob.openadr.server.oadr20b.ven.service;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 import org.assertj.core.util.Lists;
 import org.junit.Test;

@@ -1,0 +1,173 @@
+### 1. EiRegisterParty - 등록
+#
+# 여기부터가 진짜 OpenADR 프로토콜이다. 전부 XML 이고
+# 엔드포인트는 /OpenADR2/Simple/2.0b/<서비스이름> 이다.
+#
+# 스펙 8.4 Registration Service 의 순서 그대로다.
+#   oadrQueryRegistration       VEN -> VTN   (선택) VTN 이 뭘 지원하는지 먼저 물어본다
+#   oadrCreatePartyRegistration VEN -> VTN   등록. 항상 VEN 이 시작한다
+#   oadrRequestReregistration   VTN -> VEN   VTN 쪽 정보가 바뀌었으니 다시 등록해라
+#   oadrCancelPartyRegistration 양방향       등록 해지
+#
+# 인증은 basic 이다. 원래 프로토콜 엔드포인트는 클라이언트 인증서로 붙지만
+# 00 에서 만든 VEN 은 login 방식이라 아이디/비밀번호로 들어간다.
+
+### 1-1. oadrQueryRegistration
+# 확인: 화면에 안 남는다. 조회만 하고 끝나는 요청이라 응답 XML 로 본다
+# 등록 전에 VTN 이 어떤 프로파일과 전송방식을 받는지 물어본다.
+# 응답은 oadrCreatedPartyRegistration 인데 registrationID 는 없다. 아직 등록한 게 아니라서다.
+# 스펙상 선택 단계다. 건너뛰고 1-2 로 가도 된다.
+POST {{baseUrl}}/OpenADR2/Simple/2.0b/EiRegisterParty
+Authorization: Basic {{venId}} {{venPassword}}
+Content-Type: application/xml
+
+<?xml version="1.0" encoding="UTF-8"?>
+<oadr:oadrQueryRegistration ei:schemaVersion="2.0b"
+	xmlns:ei="http://docs.oasis-open.org/ns/energyinterop/201110"
+	xmlns:pyld="http://docs.oasis-open.org/ns/energyinterop/201110/payloads"
+	xmlns:oadr="http://openadr.org/oadr-2.0b/2012/07">
+	<pyld:requestID>REQ-QUERY-REG</pyld:requestID>
+</oadr:oadrQueryRegistration>
+
+> {%
+    var body = response.body.toString();
+    client.test("oadrCreatedPartyRegistration 이 온다", function() {
+        client.assert(body.indexOf("oadrCreatedPartyRegistration") >= 0, body.substring(0, 300));
+    });
+    client.log("VTN 이 지원하는 프로파일/전송방식이 응답에 들어 있다");
+    client.log("요청한 폴링 주기=" + (body.match(/oadrRequestedOadrPollFreq><xcal:duration>([^<]*)</) || [])[1]);
+%}
+
+### 1-2. oadrCreatePartyRegistration
+# 확인: VENs > httpven > Settings 탭. Registration ID 가 채워지고 머리말이 Registered 로 바뀐다
+# 실제 등록이다. 응답의 registrationID 를 VEN 이 들고 있어야 한다.
+#
+# 스펙 Table 3 기준으로 이 페이로드의 규칙은 이렇다.
+#   registrationID 는 재등록일 때만 넣는다. 최초 등록에는 넣지 않는다
+#   venID 는 미리 정해져 있지 않으면 최초 등록에 넣지 않는다.
+#     이 구현은 basic 인증 아이디로 VEN 을 찾으므로 미리 정해진 경우에 해당한다.
+#     그래서 넣어야 하고, 인증 아이디와 다르면 462 TARGET_MISMATCH 가 온다
+#   oadrTransportAddress 는 push 모델일 때만 필요하다.
+#     여기는 oadrHttpPullModel 이 true 라 안 넣는다
+POST {{baseUrl}}/OpenADR2/Simple/2.0b/EiRegisterParty
+Authorization: Basic {{venId}} {{venPassword}}
+Content-Type: application/xml
+
+<?xml version="1.0" encoding="UTF-8"?>
+<oadr:oadrCreatePartyRegistration ei:schemaVersion="2.0b"
+	xmlns:ei="http://docs.oasis-open.org/ns/energyinterop/201110"
+	xmlns:pyld="http://docs.oasis-open.org/ns/energyinterop/201110/payloads"
+	xmlns:oadr="http://openadr.org/oadr-2.0b/2012/07">
+	<pyld:requestID>REQ-CREATE-REG</pyld:requestID>
+	<ei:venID>{{venId}}</ei:venID>
+	<oadr:oadrProfileName>2.0b</oadr:oadrProfileName>
+	<oadr:oadrTransportName>simpleHttp</oadr:oadrTransportName>
+	<oadr:oadrReportOnly>false</oadr:oadrReportOnly>
+	<oadr:oadrXmlSignature>false</oadr:oadrXmlSignature>
+	<oadr:oadrHttpPullModel>true</oadr:oadrHttpPullModel>
+	<oadr:oadrVenName>{{venName}}</oadr:oadrVenName>
+</oadr:oadrCreatePartyRegistration>
+
+> {%
+    var body = response.body.toString();
+    client.test("responseCode 가 200 이다", function() {
+        var rc = (body.match(/responseCode>([^<]*)</) || [])[1];
+        client.assert(rc === "200", "responseCode=" + rc + " / " + body.substring(0, 400));
+    });
+    var m = body.match(/registrationID>([^<]*)</);
+    client.assert(m !== null, "registrationID 가 없다");
+    client.global.set("registrationId", m[1]);
+    client.log("registrationID=" + m[1]);
+    client.log("vtnID=" + (body.match(/vtnID>([^<]*)</) || [])[1]);
+%}
+
+### 1-3. 등록됐는지 관리 API 로 확인
+# 확인: VENs > httpven > Settings 탭이 읽는 것과 같은 엔드포인트다
+# 방금 받은 registrationID 가 VTN 쪽에도 저장돼 있어야 한다.
+GET {{baseUrl}}/Ven/{{venId}}
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Accept: application/json
+
+> {%
+    client.test("registrationId 가 채워졌다", function() {
+        client.assert(response.body.registrationId === client.global.get("registrationId"),
+            "ven=" + response.body.registrationId + " vs " + client.global.get("registrationId"));
+    });
+%}
+
+### 1-4. 재등록 (oadrCreatePartyRegistration + registrationID)
+# 확인: VENs > httpven > Settings 탭. Registration ID 는 그대로고 VEN Name 이 바뀐다
+# VEN 쪽 정보가 바뀌면 같은 페이로드에 registrationID 를 넣어서 다시 보낸다.
+# registrationID 는 어느 한쪽이 등록을 해지할 때까지 그대로 유지된다.
+POST {{baseUrl}}/OpenADR2/Simple/2.0b/EiRegisterParty
+Authorization: Basic {{venId}} {{venPassword}}
+Content-Type: application/xml
+
+<?xml version="1.0" encoding="UTF-8"?>
+<oadr:oadrCreatePartyRegistration ei:schemaVersion="2.0b"
+	xmlns:ei="http://docs.oasis-open.org/ns/energyinterop/201110"
+	xmlns:pyld="http://docs.oasis-open.org/ns/energyinterop/201110/payloads"
+	xmlns:oadr="http://openadr.org/oadr-2.0b/2012/07">
+	<pyld:requestID>REQ-RE-REGISTER</pyld:requestID>
+	<ei:registrationID>{{registrationId}}</ei:registrationID>
+	<ei:venID>{{venId}}</ei:venID>
+	<oadr:oadrProfileName>2.0b</oadr:oadrProfileName>
+	<oadr:oadrTransportName>simpleHttp</oadr:oadrTransportName>
+	<oadr:oadrReportOnly>false</oadr:oadrReportOnly>
+	<oadr:oadrXmlSignature>false</oadr:oadrXmlSignature>
+	<oadr:oadrHttpPullModel>true</oadr:oadrHttpPullModel>
+	<oadr:oadrVenName>{{venName}}-v2</oadr:oadrVenName>
+</oadr:oadrCreatePartyRegistration>
+
+> {%
+    var body = response.body.toString();
+    client.test("registrationID 가 그대로다", function() {
+        var m = body.match(/registrationID>([^<]*)</);
+        client.assert(m && m[1] === client.global.get("registrationId"),
+            "새 registrationID=" + (m || [])[1]);
+    });
+%}
+
+### 1-5. 인증 아이디와 다른 venID 를 보내면 462
+# 확인: 화면에 안 남는다. 거절이 목적이라 응답 XML 의 responseCode 로 본다
+# 스펙에서 말하는 target mismatch 다. 남의 VEN 행세를 못 하게 막는다.
+# OADR 은 HTTP 로는 200 을 주고 responseCode 에 오류를 담는다.
+# @expect-rc 462
+POST {{baseUrl}}/OpenADR2/Simple/2.0b/EiRegisterParty
+Authorization: Basic {{venId}} {{venPassword}}
+Content-Type: application/xml
+
+<?xml version="1.0" encoding="UTF-8"?>
+<oadr:oadrCreatePartyRegistration ei:schemaVersion="2.0b"
+	xmlns:ei="http://docs.oasis-open.org/ns/energyinterop/201110"
+	xmlns:pyld="http://docs.oasis-open.org/ns/energyinterop/201110/payloads"
+	xmlns:oadr="http://openadr.org/oadr-2.0b/2012/07">
+	<pyld:requestID>REQ-MISMATCH</pyld:requestID>
+	<ei:venID>someoneelse</ei:venID>
+	<oadr:oadrProfileName>2.0b</oadr:oadrProfileName>
+	<oadr:oadrTransportName>simpleHttp</oadr:oadrTransportName>
+	<oadr:oadrReportOnly>false</oadr:oadrReportOnly>
+	<oadr:oadrXmlSignature>false</oadr:oadrXmlSignature>
+	<oadr:oadrHttpPullModel>true</oadr:oadrHttpPullModel>
+	<oadr:oadrVenName>someoneelse</oadr:oadrVenName>
+</oadr:oadrCreatePartyRegistration>
+
+> {%
+    var body = response.body.toString();
+    client.test("462 가 온다", function() {
+        var rc = (body.match(/responseCode>([^<]*)</) || [])[1];
+        client.assert(rc === "462", "responseCode=" + rc);
+    });
+%}
+
+### 1-6. VTN 이 재등록을 요청한다 (oadrRequestReregistration)
+# 확인: 화면에 안 남는다. 큐에 들어갈 뿐이라 05-poll.http 의 oadrPoll 로 받아서 확인한다
+# VTN 쪽 정보가 바뀌었을 때 VTN 이 먼저 거는 쪽이다.
+# 관리 API 로 이 요청을 큐에 넣는다. pull VEN 은 05-poll.http 의 oadrPoll 로 받는다.
+# 받은 VEN 은 oadrResponse 로 답하고, 이어서 1-4 처럼 다시 등록한다.
+POST {{baseUrl}}/Ven/{{venId}}/registerparty/requestReregistration
+Authorization: Basic {{adminUser}} {{adminPassword}}
+
+> {%
+    client.log("큐에 들어갔다. 05-poll.http 에서 받아 볼 수 있다");
+%}

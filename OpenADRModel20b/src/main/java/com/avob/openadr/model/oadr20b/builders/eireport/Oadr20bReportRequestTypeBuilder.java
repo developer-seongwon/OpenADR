@@ -1,6 +1,6 @@
 package com.avob.openadr.model.oadr20b.builders.eireport;
 
-import javax.xml.bind.JAXBElement;
+import jakarta.xml.bind.JAXBElement;
 
 import com.avob.openadr.model.oadr20b.Oadr20bFactory;
 import com.avob.openadr.model.oadr20b.ei.ReadingTypeEnumeratedType;

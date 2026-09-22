@@ -203,63 +203,55 @@ export const sendRegisterReport  = (venId) => {
   );
 }
 
+// 리포트를 한 번만 받아온다.
+//
+// 서버는 POST /Ven/{venID}/report/available/description/request 하나뿐이고
+// 본문으로 배열을 받는다. rid 를 빼면 그 명세의 전부를 뜻한다.
+//
+// 예전에는 rid 가 null 일 때 requestAllOtherReportCapabilityDescriptionRid 라는
+// 없는 오퍼레이션을 불렀고, rid 를 줄 때도 평평한 쿼리 파라미터로 보내서 400 이 났다.
+// 화면에서 rid 를 전부 고르면 null 이 되므로 사실상 항상 깨져 있었다.
 export const createRequestedReport  = (venId, reportSpecifierId, start, end, rid) => {
-  if(rid == null) {
-    return swaggerAction(types.CREATE_REQUESTED_REPORT, 
-      (api) => {
-        var params = { venID: venId, reportSpecifierId: reportSpecifierId, start: start, end: end };
-        return  api.apis[ 'oadr-20b-ven-controller' ].requestAllOtherReportCapabilityDescriptionRidUsingPOST(params, jsonResponseContentType);
-      },
-      () => { history.push("/ven/detail/"+venId+"/reports");  },
-    );
+  var request = { reportSpecifierId: reportSpecifierId, start: start, end: end };
+  if(rid != null) {
+    request.rid = rid;
   }
-  else {
-    return swaggerAction(types.CREATE_REQUESTED_REPORT, 
-      (api) => {
-        var params = { venID: venId, reportSpecifierId: reportSpecifierId, start: start, end: end, rid:rid.join(",") };
-        return  api.apis[ 'oadr-20b-ven-controller' ].requestOtherReportCapabilityDescriptionRidUsingPOST(params, jsonResponseContentType);
-      },
-      () => { history.push("/ven/detail/"+venId+"/reports");  },
-    );
-  }
+  return swaggerAction(types.CREATE_REQUESTED_REPORT, 
+    (api) => {
+      var params = { venID: venId, requests: [ request ] };
+      return  api.apis[ 'oadr-20b-ven-controller' ].requestOtherReportCapabilityDescriptionRidUsingPOST(params, jsonResponseContentType);
+    },
+    () => { history.push("/ven/detail/"+venId+"/reports");  },
+  );
 }
 
 
+// 리포트를 계속 받아온다.
+//
+// request 와 마찬가지로 서버는 본문에 배열을 받는다.
+// rid 는 Map<이름, 이력을 남길지> 이고, 빼면 그 명세의 전부를 남기는 것으로 친다.
+//
+// 예전에는 rid 를 줄 때만 평평한 쿼리 파라미터로 보내서 400 이 났다.
+// rid 를 안 줄 때는 제대로 된 본문을 보내고 있어서 그쪽만 동작했다.
 export const createRequestedReportSubscription  = (venId, reportSpecifierId, granularity, reportBackDuration, rid) => {
-
-   if(rid == null) {
-    return swaggerAction(types.CREATE_REQUESTED_REPORT, 
-      (api) => {
-        var params = { venID: venId
-          , subscriptions: [{
-              reportSpecifierId: reportSpecifierId
-              , granularity: granularity
-              , reportBackDuration: reportBackDuration
-            }]
-        };
-        return  api.apis[ 'oadr-20b-ven-controller' ].subscribeOtherReportCapabilityDescriptionRidUsingPOST(params, jsonResponseContentType);
-      },
-      () => { history.push("/ven/detail/"+venId+"/reports");  },
-    );
-  }
-  else {
+  var subscription = { reportSpecifierId: reportSpecifierId
+    , granularity: granularity
+    , reportBackDuration: reportBackDuration
+  };
+  if(rid != null) {
     var ridMap = {};
     for(var i in rid) {
       ridMap[rid[i]] = true;
     }
-    return swaggerAction(types.CREATE_REQUESTED_REPORT, 
-      (api) => {
-        var params = { venID: venId
-          , reportSpecifierId: reportSpecifierId
-          , granularity: granularity
-          , reportBackDuration: reportBackDuration
-          , rid:ridMap
-        };
-        return  api.apis[ 'oadr-20b-ven-controller' ].subscribeOtherReportCapabilityDescriptionRidUsingPOST(params, jsonResponseContentType);
-      },
-      () => { history.push("/ven/detail/"+venId+"/reports");  },
-    );
+    subscription.rid = ridMap;
   }
+  return swaggerAction(types.CREATE_REQUESTED_REPORT, 
+    (api) => {
+      var params = { venID: venId, subscriptions: [ subscription ] };
+      return  api.apis[ 'oadr-20b-ven-controller' ].subscribeOtherReportCapabilityDescriptionRidUsingPOST(params, jsonResponseContentType);
+    },
+    () => { history.push("/ven/detail/"+venId+"/reports");  },
+  );
 }
 
 export const cancelRequestReportSubscription  = (venId, reportRequestId) => {

@@ -5,12 +5,12 @@ import static org.junit.Assert.assertEquals;
 import java.io.StringWriter;
 import java.io.Writer;
 
-import javax.annotation.Resource;
-import javax.xml.bind.JAXBException;
+import jakarta.annotation.Resource;
+import jakarta.xml.bind.JAXBException;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.dom.DOMResult;
 
-import org.eclipse.jetty.http.HttpStatus;
+import jakarta.servlet.http.HttpServletResponse;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -121,33 +121,33 @@ public class Oadr20bVTNEiReportControllerTest {
 		this.oadrMockEiHttpMvc
 				.perform(MockMvcRequestBuilders.get(EIREPORT_ENDPOINT)
 						.with(OadrDataBaseSetup.VEN_HTTP_PULL_DSIG_SECURITY_SESSION))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.METHOD_NOT_ALLOWED_405));
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_METHOD_NOT_ALLOWED));
 
 		// PUT not allowed
 		this.oadrMockEiHttpMvc
 				.perform(MockMvcRequestBuilders.put(EIREPORT_ENDPOINT)
 						.with(OadrDataBaseSetup.VEN_HTTP_PULL_DSIG_SECURITY_SESSION))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.METHOD_NOT_ALLOWED_405));
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_METHOD_NOT_ALLOWED));
 
 		// DELETE not allowed
 		this.oadrMockEiHttpMvc
 				.perform(MockMvcRequestBuilders.delete(EIREPORT_ENDPOINT)
 						.with(OadrDataBaseSetup.VEN_HTTP_PULL_DSIG_SECURITY_SESSION))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.METHOD_NOT_ALLOWED_405));
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_METHOD_NOT_ALLOWED));
 
 		// POST without content
 		String content = "";
 		this.oadrMockEiHttpMvc
 				.perform(MockMvcRequestBuilders.post(EIREPORT_ENDPOINT)
 						.with(OadrDataBaseSetup.VEN_HTTP_PULL_DSIG_SECURITY_SESSION).content(content))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.BAD_REQUEST_400));
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_BAD_REQUEST));
 
 		// POST without content
 		content = "mouaiccool";
 		MvcResult andReturn = this.oadrMockEiHttpMvc
 				.perform(MockMvcRequestBuilders.post(EIREPORT_ENDPOINT)
 						.with(OadrDataBaseSetup.VEN_HTTP_PULL_DSIG_SECURITY_SESSION).content(content))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK)).andReturn();
 
 		OadrPayload unmarshal = jaxbContext.unmarshal(andReturn.getResponse().getContentAsString(), OadrPayload.class);
 		OadrResponseType signedObjectFromOadrPayload = Oadr20bFactory.getSignedObjectFromOadrPayload(unmarshal,
@@ -157,7 +157,7 @@ public class Oadr20bVTNEiReportControllerTest {
 
 		// POST with unsigned content
 		OadrCreatedReportType build = Oadr20bEiReportBuilders
-				.newOadr20bCreatedReportBuilder("requestID", HttpStatus.OK_200, "venID").build();
+				.newOadr20bCreatedReportBuilder("requestID", HttpServletResponse.SC_OK, "venID").build();
 
 		OadrPayload createOadrPayload = Oadr20bFactory.createOadrPayload("mypayload", build);
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -183,7 +183,7 @@ public class Oadr20bVTNEiReportControllerTest {
 		andReturn = this.oadrMockEiHttpMvc
 				.perform(MockMvcRequestBuilders.post(EIREPORT_ENDPOINT)
 						.with(OadrDataBaseSetup.VEN_HTTP_PULL_DSIG_SECURITY_SESSION).content(content))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK)).andReturn();
 		unmarshal = jaxbContext.unmarshal(andReturn.getResponse().getContentAsString(), OadrPayload.class);
 		signedObjectFromOadrPayload = Oadr20bFactory.getSignedObjectFromOadrPayload(unmarshal, OadrResponseType.class);
 		assertEquals(String.valueOf(Oadr20bApplicationLayerErrorCode.INVALID_DATA_454),
@@ -194,7 +194,7 @@ public class Oadr20bVTNEiReportControllerTest {
 		andReturn = this.oadrMockEiHttpMvc
 				.perform(MockMvcRequestBuilders.post(EIREPORT_ENDPOINT)
 						.with(OadrDataBaseSetup.VEN_HTTP_PULL_DSIG_SECURITY_SESSION).content(content))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK)).andReturn();
 		unmarshal = jaxbContext.unmarshal(andReturn.getResponse().getContentAsString(), OadrPayload.class);
 		signedObjectFromOadrPayload = Oadr20bFactory.getSignedObjectFromOadrPayload(unmarshal, OadrResponseType.class);
 		assertEquals(String.valueOf(Oadr20bApplicationLayerErrorCode.COMPLIANCE_ERROR_459),
@@ -208,7 +208,7 @@ public class Oadr20bVTNEiReportControllerTest {
 		andReturn = this.oadrMockEiHttpMvc
 				.perform(MockMvcRequestBuilders.post(EIREPORT_ENDPOINT)
 						.with(OadrDataBaseSetup.VEN_HTTP_PUSH_SECURITY_SESSION).content(content))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK)).andReturn();
 		OadrResponseType resp = jaxbContext.unmarshal(andReturn.getResponse().getContentAsString(),
 				OadrResponseType.class);
 		assertEquals(String.valueOf(Oadr20bApplicationLayerErrorCode.NOT_RECOGNIZED_453),

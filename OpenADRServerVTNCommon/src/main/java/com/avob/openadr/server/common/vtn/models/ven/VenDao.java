@@ -2,9 +2,9 @@ package com.avob.openadr.server.common.vtn.models.ven;
 
 import java.util.List;
 
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
 
 import com.avob.openadr.server.common.vtn.models.venmarketcontext.VenMarketContext;
@@ -15,7 +15,7 @@ import com.avob.openadr.server.common.vtn.models.venmarketcontext.VenMarketConte
  * @author bertrand
  *
  */
-public interface VenDao extends CrudRepository<Ven, Long>, JpaSpecificationExecutor<Ven> {
+public interface VenDao extends JpaRepository<Ven, Long>, JpaSpecificationExecutor<Ven> {
 
 	public Ven findOneByUsername(String username);
 

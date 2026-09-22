@@ -11,36 +11,62 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>2.3.5.RELEASE</version>
+		<version>3.1.5</version>
 		<relativePath></relativePath>
 	</parent>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<java.version>11</java.version>
+		<java.version>17</java.version>
 		<project.version>0.1.0-SNAPSHOT</project.version>
-		<amq.version>5.7.0</amq.version>
-		<smack.version>4.3.4</smack.version>
-		<maven-jar-plugin.version>3.1.1</maven-jar-plugin.version>
-		<jacoco-plugin.version>0.8.5</jacoco-plugin.version>
-		<postgres.version>42.2.5</postgres.version>
-		<rabbitmq-jms.version>1.11.2</rabbitmq-jms.version>
-		<springfox.version>2.9.2</springfox.version>
-		<dozer.version>5.5.1</dozer.version>
-		<commons-compress.version>1.19</commons-compress.version>
-		<guava.version>21.0	</guava.version>
-		<mokito.version>1.9.5</mokito.version>
-		<common-logging.version>1.2</common-logging.version>
 
+		<!-- Spring Boot 3 로 올리면서 손댄 버전들 -->
+		<!-- activemq 6.x 부터 jakarta.jms 를 쓴다. 5.x 는 javax.jms 라 Boot 3 에서 못 쓴다 -->
+		<amq.version>6.1.4</amq.version>
+		<!-- smack 4.4 에서 smack-java7 아티팩트가 없어져 XMPPClient 가 깨진다. 4.3.4 유지 -->
+		<smack.version>4.3.4</smack.version>
+		<!-- jacoco 0.8.5 는 Java 17 바이트코드를 못 읽는다 -->
+		<jacoco-plugin.version>0.8.12</jacoco-plugin.version>
+		<postgres.version>42.6.0</postgres.version>
+		<!-- 테스트는 H2 대신 도커의 PostgreSQL 을 쓴다. 운영과 같은 DB 라야 DDL 이 어긋나지 않는다. -->
+		<!-- 1.x 는 도커 API 1.32 로 붙는데 엔진 29 는 1.44 이상만 받는다. 2.x 라야 붙는다 -->
+		<testcontainers.version>2.0.2</testcontainers.version>
+		<!-- rabbitmq-jms 3.x 가 jakarta.jms 대응 버전이다 -->
+		<rabbitmq-jms.version>3.3.0</rabbitmq-jms.version>
+		<!-- springfox 는 Boot 3 에서 동작하지 않아 springdoc 으로 교체한다 -->
+		<springdoc.version>2.2.0</springdoc.version>
+		<commons-compress.version>1.26.2</commons-compress.version>
+		<!-- commons-compress 1.26 은 commons-lang3 3.14 를 요구하는데
+		     Boot 3.1.5 의 BOM 이 3.12.0 으로 눌러 버린다.
+		     3.12.0 에는 SystemProperties 클래스가 없어서 (3.13 에서 추가됐다)
+		     인증서 생성 경로에서 NoClassDefFoundError 가 난다.
+		     Boot 이 노출하는 프로퍼티라 여기서 덮어쓰면 BOM 쪽도 같이 올라간다 -->
+		<commons-lang3.version>3.14.0</commons-lang3.version>
+		<guava.version>32.1.3-jre</guava.version>
+		<common-logging.version>1.2</common-logging.version>
+		<junit4.version>4.13.2</junit4.version>
+		<!-- Boot 3 부터 httpclient 4.x 를 관리해 주지 않는다. 코드가 4.x API 를 쓰므로 직접 고정한다 -->
+		<httpclient.version>4.5.14</httpclient.version>
+		<jaxb.version>4.0.3</jaxb.version>
+		<jakarta-xml-bind.version>4.0.0</jakarta-xml-bind.version>
+		<activation.version>1.1.1</activation.version>
 	</properties>
 
 
 
 	<dependencies>
+		<!-- 기존 테스트 86개가 JUnit 4 라서 vintage 엔진으로 그대로 돌린다.
+		     안정화된 뒤 JUnit 5 로 옮기고 이 두 개를 걷어낸다 -->
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
+			<version>${junit4.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.vintage</groupId>
+			<artifactId>junit-vintage-engine</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
@@ -91,6 +117,12 @@
 			</dependency>
 			<dependency>
 				<groupId>com.avob.openadr</groupId>
+				<artifactId>OpenADRServerVTNTestSupport</artifactId>
+				<version>${project.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>com.avob.openadr</groupId>
 				<artifactId>OpenADRServerVTN20a</artifactId>
 				<version>${project.version}</version>
 			</dependency>
@@ -102,6 +134,13 @@
 
 
 			<dependency>
+				<groupId>org.testcontainers</groupId>
+				<artifactId>testcontainers-bom</artifactId>
+				<version>${testcontainers.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
 				<groupId>org.postgresql</groupId>
 				<artifactId>postgresql</artifactId>
 				<version>${postgres.version}</version>
@@ -112,19 +151,19 @@
 				<version>${rabbitmq-jms.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>io.springfox</groupId>
-				<artifactId>springfox-swagger2</artifactId>
-				<version>${springfox.version}</version>
+				<groupId>org.apache.activemq</groupId>
+				<artifactId>activemq-broker</artifactId>
+				<version>${amq.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>io.springfox</groupId>
-				<artifactId>springfox-swagger-ui</artifactId>
-				<version>${springfox.version}</version>
+				<groupId>org.apache.activemq</groupId>
+				<artifactId>activemq-client</artifactId>
+				<version>${amq.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>net.sf.dozer</groupId>
-				<artifactId>dozer</artifactId>
-				<version>${dozer.version}</version>
+				<groupId>org.springdoc</groupId>
+				<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+				<version>${springdoc.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.commons</groupId>
@@ -137,14 +176,47 @@
 				<version>${guava.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>org.mockito</groupId>
-				<artifactId>mockito-all</artifactId>
-				<version>${mokito.version}</version>
-			</dependency>
-			<dependency>
 				<groupId>commons-logging</groupId>
 				<artifactId>commons-logging</artifactId>
 				<version>${common-logging.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.httpcomponents</groupId>
+				<artifactId>httpclient</artifactId>
+				<version>${httpclient.version}</version>
+			</dependency>
+
+			<!-- JAXB. XJC 가 jakarta 애노테이션으로 코드를 생성하게 하려면
+			     런타임과 플러그인 양쪽에 4.x 를 고정해야 한다 -->
+			<dependency>
+				<groupId>jakarta.xml.bind</groupId>
+				<artifactId>jakarta.xml.bind-api</artifactId>
+				<version>${jakarta-xml-bind.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.sun.xml.bind</groupId>
+				<artifactId>jaxb-impl</artifactId>
+				<version>${jaxb.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.sun.xml.bind</groupId>
+				<artifactId>jaxb-core</artifactId>
+				<version>${jaxb.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.sun.xml.bind</groupId>
+				<artifactId>jaxb-xjc</artifactId>
+				<version>${jaxb.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.glassfish.jaxb</groupId>
+				<artifactId>jaxb-runtime</artifactId>
+				<version>${jaxb.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>javax.activation</groupId>
+				<artifactId>activation</artifactId>
+				<version>${activation.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
@@ -157,8 +229,7 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<configuration>
-					<source>${java.version}</source>
-					<target>${java.version}</target>
+					<release>${java.version}</release>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -188,21 +259,25 @@
 		</plugins>
 	</build>
 
+	<!-- 전 모듈이 Spring Boot 3 / Java 17 로 이관됐다.
+	     빌드 순서는 메이븐이 의존 관계를 보고 알아서 잡는다 -->
 	<modules>
+		<module>./OpenADRSecurity</module>
+		<module>./OpenADRModel20a</module>
+		<module>./OpenADRModel20b</module>
 		<module>./OpenADRHTTPClient</module>
 		<module>./OpenADRHTTPClient20a</module>
 		<module>./OpenADRHTTPClient20b</module>
 		<module>./OpenADRXMPPClient</module>
-		<module>./OpenADRModel20a</module>
-		<module>./OpenADRModel20b</module>
-		<module>./OpenADRSecurity</module>
+
 		<module>./OpenADRServerVTNCommon</module>
+		<module>./OpenADRServerVTNTestSupport</module>
 		<module>./OpenADRServerVTN20a</module>
+
 		<module>./OpenADRServerVEN20b</module>
 		<module>./OpenADRServerVTN20b</module>
 		<module>./DummyVEN20b</module>
 		<module>./DummyDRProgram</module>
-
 	</modules>
 
 	<scm>

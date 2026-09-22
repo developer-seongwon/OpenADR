@@ -12,11 +12,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletResponse;
-import javax.validation.Valid;
+import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 
-import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.InputStreamResource;
@@ -105,7 +104,7 @@ public class VenController {
 
 		if (findOneByUsername != null) {
 			LOGGER.warn("Ven: " + dto.getUsername() + " already exists");
-			return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE_406)
+			return ResponseEntity.status(HttpServletResponse.SC_NOT_ACCEPTABLE)
 					.contentType(MediaType.parseMediaType("application/octet-stream")).body(null);
 		}
 		Ven prepare = venService.prepare(dto);
@@ -117,13 +116,13 @@ public class VenController {
 			if (generateCertificateIfRequired.isPresent()) {
 				InputStreamResource resource = new InputStreamResource(
 						new FileInputStream(generateCertificateIfRequired.get()));
-				body = ResponseEntity.status(HttpStatus.CREATED_201)
+				body = ResponseEntity.status(HttpServletResponse.SC_CREATED)
 						.header("Content-Disposition", "attachment; filename=\"archive.tar\"")
 						.header("X-VenID", prepare.getUsername())
 						.contentLength(generateCertificateIfRequired.get().length())
 						.contentType(MediaType.parseMediaType("application/octet-stream")).body(resource);
 			} else {
-				body = ResponseEntity.status(HttpStatus.CREATED_201).header("x-venID", prepare.getUsername())
+				body = ResponseEntity.status(HttpServletResponse.SC_CREATED).header("x-venID", prepare.getUsername())
 						.body(null);
 			}
 
@@ -230,10 +229,10 @@ public class VenController {
 
 		} catch (GenerateX509VenException | OadrElementNotFoundException e) {
 			LOGGER.warn("Invalid ven create dto", e);
-			response.setStatus(HttpStatus.NOT_ACCEPTABLE_406);
+			response.setStatus(HttpServletResponse.SC_NOT_ACCEPTABLE);
 		} catch (FileNotFoundException e) {
 			LOGGER.error("", e);
-			response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR_500);
+			response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 		}
 
 		return body;
@@ -248,7 +247,7 @@ public class VenController {
 
 		if (ven == null) {
 			LOGGER.warn("Unknown Ven: " + venUsername);
-			response.setStatus(HttpStatus.NOT_FOUND_404);
+			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 			return null;
 		}
 		if (dto.getName() != null) {
@@ -258,7 +257,7 @@ public class VenController {
 			ven.setPullFrequencySeconds(dto.getPullFrequencySeconds());
 		}
 		venService.save(ven);
-		response.setStatus(HttpStatus.OK_200);
+		response.setStatus(HttpServletResponse.SC_OK);
 		LOGGER.info("Update Ven: " + ven.getUsername());
 		return dtoMapper.map(ven, VenCreateDto.class);
 	}
@@ -269,7 +268,7 @@ public class VenController {
 		Ven ven = venService.findOneByUsername(venUsername);
 		if (ven == null) {
 			LOGGER.warn("Unknown Ven: " + venUsername);
-			response.setStatus(HttpStatus.NOT_FOUND_404);
+			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 			return null;
 		}
 		return dtoMapper.map(ven, VenDto.class);
@@ -281,7 +280,7 @@ public class VenController {
 		Ven ven = venService.findOneByUsername(venUsername);
 		if (ven == null) {
 			LOGGER.warn("Unknown Ven: " + venUsername);
-			response.setStatus(HttpStatus.NOT_FOUND_404);
+			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 			return;
 		}
 		venService.delete(ven);
@@ -295,19 +294,19 @@ public class VenController {
 		Ven ven = venService.findOneByUsername(venUsername);
 		if (ven == null) {
 			LOGGER.warn("Unknown Ven: " + venUsername);
-			response.setStatus(HttpStatus.NOT_FOUND_404);
+			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 			return null;
 		}
 		VenResource findByVenAndName = venResourceService.findByVenAndName(ven, dto.getName());
 		if (findByVenAndName != null) {
 			LOGGER.warn("Resource: " + dto.getName() + " already exists for Ven: " + venUsername);
-			response.setStatus(HttpStatus.NOT_ACCEPTABLE_406);
+			response.setStatus(HttpServletResponse.SC_NOT_ACCEPTABLE);
 			return null;
 		}
 
 		VenResource prepare = venResourceService.prepare(ven, dto);
 		venResourceService.save(prepare);
-		response.setStatus(HttpStatus.CREATED_201);
+		response.setStatus(HttpServletResponse.SC_CREATED);
 		LOGGER.info("Create Resource: " + dto.getName() + " linked to Ven: " + ven.getUsername());
 		return dtoMapper.map(prepare, VenResourceDto.class);
 	}
@@ -319,7 +318,7 @@ public class VenController {
 		Ven ven = venService.findOneByUsername(venUsername);
 		if (ven == null) {
 			LOGGER.warn("Unknown Ven: " + venUsername);
-			response.setStatus(HttpStatus.NOT_FOUND_404);
+			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 			return Collections.emptyList();
 		}
 		return dtoMapper.mapList(venResourceService.findByVen(ven), VenResourceDto.class);
@@ -332,13 +331,13 @@ public class VenController {
 		Ven ven = venService.findOneByUsername(venUsername);
 		if (ven == null) {
 			LOGGER.warn("Unknown Ven: " + venUsername);
-			response.setStatus(HttpStatus.NOT_FOUND_404);
+			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 			return;
 		}
 		VenResource findByVenAndName = venResourceService.findByVenAndName(ven, resourceName);
 		if (findByVenAndName == null) {
 			LOGGER.warn("Unknown Resource: " + resourceName + " for Ven: " + venUsername);
-			response.setStatus(HttpStatus.NOT_FOUND_404);
+			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 			return;
 		}
 		venResourceService.delete(findByVenAndName);
@@ -352,18 +351,18 @@ public class VenController {
 		Ven ven = venService.findOneByUsername(venUsername);
 		if (ven == null) {
 			LOGGER.warn("Unknown Ven: " + venUsername);
-			response.setStatus(HttpStatus.NOT_FOUND_404);
+			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 			return null;
 		}
 		Optional<VenGroup> findByName = venGroupService.findById(groupId);
 		if (!findByName.isPresent()) {
 			LOGGER.warn("Unknown Group: " + groupId);
-			response.setStatus(HttpStatus.NOT_FOUND_404);
+			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 			return null;
 		}
 		ven.getVenGroups().add(findByName.get());
 		venService.save(ven);
-		response.setStatus(HttpStatus.OK_200);
+		response.setStatus(HttpServletResponse.SC_OK);
 		LOGGER.info("Add Group: " + findByName.get().getName() + " to Ven: " + ven.getUsername());
 		return dtoMapper.map(ven, VenCreateDto.class);
 	}
@@ -374,7 +373,7 @@ public class VenController {
 		Ven ven = venService.findOneByUsername(venUsername);
 		if (ven == null) {
 			LOGGER.warn("Unknown Ven: " + venUsername);
-			response.setStatus(HttpStatus.NOT_FOUND_404);
+			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 			return Collections.emptyList();
 		}
 		return dtoMapper.mapList(ven.getVenGroups(), VenGroupDto.class);
@@ -387,19 +386,19 @@ public class VenController {
 		Ven ven = venService.findOneByUsername(venUsername);
 		if (ven == null) {
 			LOGGER.warn("Unknown Ven: " + venUsername);
-			response.setStatus(HttpStatus.NOT_FOUND_404);
+			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 			return;
 		}
 		Optional<VenGroup> findByName = venGroupService.findById(groupId);
 		if (!findByName.isPresent()) {
 			LOGGER.warn("Unknown Group: " + groupId);
-			response.setStatus(HttpStatus.NOT_FOUND_404);
+			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 			return;
 		}
 		ven.getVenGroups().remove(findByName.get());
 		venService.save(ven);
 		LOGGER.info("Remove Group: " + findByName.get().getName() + " from Ven: " + ven.getUsername());
-		response.setStatus(HttpStatus.OK_200);
+		response.setStatus(HttpServletResponse.SC_OK);
 	}
 
 	@RequestMapping(value = "/{venID}/marketContext", method = RequestMethod.POST)
@@ -409,18 +408,18 @@ public class VenController {
 		Ven ven = venService.findOneByUsername(venUsername);
 		if (ven == null) {
 			LOGGER.warn("Unknown Ven: " + venUsername);
-			response.setStatus(HttpStatus.NOT_FOUND_404);
+			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 			return null;
 		}
 		Optional<VenMarketContext> marketContext = venMarketContextService.findById(marketContextId);
 		if (!marketContext.isPresent()) {
 			LOGGER.warn("Unknown MarketContext: " + marketContextId);
-			response.setStatus(HttpStatus.NOT_FOUND_404);
+			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 			return null;
 		}
 		ven.getVenMarketContexts().add(marketContext.get());
 		venService.save(ven);
-		response.setStatus(HttpStatus.OK_200);
+		response.setStatus(HttpServletResponse.SC_OK);
 		LOGGER.info("Add MarketContext: " + marketContext.get().getName() + " to Ven: " + ven.getUsername());
 		return dtoMapper.map(ven, VenCreateDto.class);
 	}
@@ -432,7 +431,7 @@ public class VenController {
 		Ven ven = venService.findOneByUsername(venUsername);
 		if (ven == null) {
 			LOGGER.warn("Unknown Ven: " + venUsername);
-			response.setStatus(HttpStatus.NOT_FOUND_404);
+			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 			return Collections.emptyList();
 		}
 		return dtoMapper.mapList(ven.getVenMarketContexts(), VenMarketContextDto.class);
@@ -445,18 +444,18 @@ public class VenController {
 		Ven ven = venService.findOneByUsername(venUsername);
 		if (ven == null) {
 			LOGGER.warn("Unknown Ven: " + venUsername);
-			response.setStatus(HttpStatus.NOT_FOUND_404);
+			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 			return;
 		}
 		Optional<VenMarketContext> marketContext = venMarketContextService.findById(marketContextId);
 		if (!marketContext.isPresent()) {
 			LOGGER.warn("Unknown MarketContext: " + marketContextId);
-			response.setStatus(HttpStatus.NOT_FOUND_404);
+			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 			return;
 		}
 		ven.getVenMarketContexts().remove(marketContext.get());
 		venService.save(ven);
-		response.setStatus(HttpStatus.OK_200);
+		response.setStatus(HttpServletResponse.SC_OK);
 		LOGGER.info("Remove MarketContext: " + marketContext.get().getName() + " from Ven: " + ven.getUsername());
 	}
 
@@ -466,11 +465,11 @@ public class VenController {
 		Ven ven = venService.findOneByUsername(venUsername);
 		if (ven == null) {
 			LOGGER.warn("Unknown Ven: " + venUsername);
-			response.setStatus(HttpStatus.NOT_FOUND_404);
+			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 			return;
 		}
 		venService.cleanRegistration(ven);
-		response.setStatus(HttpStatus.OK_200);
+		response.setStatus(HttpServletResponse.SC_OK);
 		LOGGER.info("Clean registration of Ven: " + ven.getUsername());
 	}
 

@@ -7,10 +7,9 @@ import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
 
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletResponse;
 
-import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.InputStreamResource;
@@ -90,7 +89,7 @@ public class AccountController {
 
 		if (findOneByUsername != null) {
 			LOGGER.warn("User: " + dto.getUsername() + " already exists");
-			return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE_406)
+			return ResponseEntity.status(HttpServletResponse.SC_NOT_ACCEPTABLE)
 					.contentType(OCTET_STREAM_MEDIA_TYPE).body(null);
 		}
 		OadrUser prepare = oadrUserService.prepare(dto);
@@ -101,22 +100,22 @@ public class AccountController {
 			if (generateCertificateIfRequired.isPresent()) {
 				InputStreamResource resource = new InputStreamResource(
 						new FileInputStream(generateCertificateIfRequired.get()));
-				body = ResponseEntity.status(HttpStatus.CREATED_201)
+				body = ResponseEntity.status(HttpServletResponse.SC_CREATED)
 						.header("Content-Disposition", "attachment; filename=\"archive.tar\"")
 						.header("x-Username", prepare.getUsername())
 						.contentLength(generateCertificateIfRequired.get().length())
 						.contentType(OCTET_STREAM_MEDIA_TYPE).body(resource);
 			} else {
-				body = ResponseEntity.status(HttpStatus.CREATED_201).header("x-username", prepare.getUsername())
+				body = ResponseEntity.status(HttpServletResponse.SC_CREATED).header("x-username", prepare.getUsername())
 						.body(null);
 			}
 
 		} catch (GenerateX509VenException e) {
 			LOGGER.error("", e);
-			response.setStatus(HttpStatus.NOT_ACCEPTABLE_406);
+			response.setStatus(HttpServletResponse.SC_NOT_ACCEPTABLE);
 		} catch (FileNotFoundException e) {
 			LOGGER.error("", e);
-			response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR_500);
+			response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 		}
 
 		oadrUserService.save(prepare);
@@ -132,7 +131,7 @@ public class AccountController {
 		OadrUser findByUsername = oadrUserService.findByUsername(username);
 		if (findByUsername == null) {
 			LOGGER.warn("Unknown User: " + username);
-			response.setStatus(HttpStatus.NOT_FOUND_404);
+			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 			return;
 		}
 		oadrUserService.delete(findByUsername);
@@ -158,7 +157,7 @@ public class AccountController {
 
 		if (findOneByUsername != null) {
 			LOGGER.warn("App: " + dto.getUsername() + " already exists");
-			return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE_406)
+			return ResponseEntity.status(HttpServletResponse.SC_NOT_ACCEPTABLE)
 					.contentType(OCTET_STREAM_MEDIA_TYPE).body(null);
 		}
 		OadrApp prepare = oadrAppService.prepare(dto);
@@ -169,22 +168,22 @@ public class AccountController {
 			if (generateCertificateIfRequired.isPresent()) {
 				InputStreamResource resource = new InputStreamResource(
 						new FileInputStream(generateCertificateIfRequired.get()));
-				body = ResponseEntity.status(HttpStatus.CREATED_201)
+				body = ResponseEntity.status(HttpServletResponse.SC_CREATED)
 						.header("Content-Disposition", "attachment; filename=\"archive.tar\"")
 						.header("x-Username", prepare.getUsername())
 						.contentLength(generateCertificateIfRequired.get().length())
 						.contentType(OCTET_STREAM_MEDIA_TYPE).body(resource);
 			} else {
-				body = ResponseEntity.status(HttpStatus.CREATED_201).header("x-username", prepare.getUsername())
+				body = ResponseEntity.status(HttpServletResponse.SC_CREATED).header("x-username", prepare.getUsername())
 						.body(null);
 			}
 
 		} catch (GenerateX509VenException e) {
 			LOGGER.error("", e);
-			response.setStatus(HttpStatus.NOT_ACCEPTABLE_406);
+			response.setStatus(HttpServletResponse.SC_NOT_ACCEPTABLE);
 		} catch (FileNotFoundException e) {
 			LOGGER.error("", e);
-			response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR_500);
+			response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 		}
 
 		oadrAppService.save(prepare);
@@ -200,7 +199,7 @@ public class AccountController {
 		OadrApp findByUsername = oadrAppService.findByUsername(username);
 		if (findByUsername == null) {
 			LOGGER.warn("Unknown User: " + username);
-			response.setStatus(HttpStatus.NOT_FOUND_404);
+			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 			return;
 		}
 		oadrAppService.delete(findByUsername);

@@ -3,10 +3,9 @@ package com.avob.openadr.server.common.vtn.controller;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletResponse;
 
-import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -38,7 +37,7 @@ public class RoleController {
 		AbstractUser user = abstractUserDao.findOneByUsername(username);
 		List<String> roles = new ArrayList<>();
 		if (user == null) {
-			response.setStatus(HttpStatus.NOT_FOUND_404);
+			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 			return roles;
 		}
 		roles = user.getRoles();

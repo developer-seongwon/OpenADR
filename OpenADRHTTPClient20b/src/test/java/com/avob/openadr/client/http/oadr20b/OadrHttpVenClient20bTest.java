@@ -7,12 +7,12 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 
-import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBException;
+import jakarta.xml.bind.JAXBElement;
+import jakarta.xml.bind.JAXBException;
 
 import org.apache.http.HttpStatus;
 import org.junit.Test;
-import org.mockito.Matchers;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 
 import com.avob.openadr.client.http.oadr20b.ven.OadrHttpVenClient20b;
@@ -103,7 +103,7 @@ public class OadrHttpVenClient20bTest {
 		OadrHttpVenClient20b oadrHttpVenClient20b = new OadrHttpVenClient20b(oadrHttpClient20b);
 
 		when(oadrHttpClient20b.<OadrDistributeEventType, JAXBElement<OadrRequestEventType>>post(
-				Matchers.<JAXBElement<OadrRequestEventType>>anyObject(), Matchers.any(), Matchers.any()))
+				ArgumentMatchers.<JAXBElement<OadrRequestEventType>>any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
 						.thenReturn(mockDistributeEvent);
 
 		OadrRequestEventType requestEvent = new OadrRequestEventType();
@@ -123,7 +123,7 @@ public class OadrHttpVenClient20bTest {
 		OadrHttpVenClient20b oadrHttpVenClient20bTestClass = new OadrHttpVenClient20b(oadrHttpClient20b);
 
 		when(oadrHttpClient20b.<OadrResponseType, JAXBElement<OadrCreatedEventType>>post(
-				Matchers.<JAXBElement<OadrCreatedEventType>>anyObject(), Matchers.any(), Matchers.any()))
+				ArgumentMatchers.<JAXBElement<OadrCreatedEventType>>any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
 						.thenReturn(mockOadrResponseType);
 
 		OadrCreatedEventType createdEvent = new OadrCreatedEventType();
@@ -143,7 +143,7 @@ public class OadrHttpVenClient20bTest {
 		OadrHttpVenClient20b oadrHttpVenClient20bTestClass = new OadrHttpVenClient20b(oadrHttpClient20b);
 
 		when(oadrHttpClient20b.<OadrResponseType, JAXBElement<OadrResponseType>>post(
-				Matchers.<JAXBElement<OadrResponseType>>anyObject(), Matchers.any(), Matchers.any()))
+				ArgumentMatchers.<JAXBElement<OadrResponseType>>any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
 						.thenReturn(mockOadrResponseType);
 
 		OadrCreatedReportType payload = new OadrCreatedReportType();
@@ -162,7 +162,7 @@ public class OadrHttpVenClient20bTest {
 		OadrHttpVenClient20b oadrHttpVenClient20bTestClass = new OadrHttpVenClient20b(oadrHttpClient20b);
 
 		when(oadrHttpClient20b.<OadrCreatedReportType, JAXBElement<OadrCreatedReportType>>post(
-				Matchers.<JAXBElement<OadrCreatedReportType>>anyObject(), Matchers.any(), Matchers.any()))
+				ArgumentMatchers.<JAXBElement<OadrCreatedReportType>>any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
 						.thenReturn(build);
 
 		OadrCreateReportType payload = new OadrCreateReportType();
@@ -180,7 +180,7 @@ public class OadrHttpVenClient20bTest {
 		OadrHttpVenClient20b oadrHttpVenClient20bTestClass = new OadrHttpVenClient20b(oadrHttpClient20b);
 
 		when(oadrHttpClient20b.<OadrUpdatedReportType, JAXBElement<OadrUpdatedReportType>>post(
-				Matchers.<JAXBElement<OadrUpdatedReportType>>anyObject(), Matchers.any(), Matchers.any()))
+				ArgumentMatchers.<JAXBElement<OadrUpdatedReportType>>any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
 						.thenReturn(build);
 
 		OadrUpdateReportType payload = new OadrUpdateReportType();
@@ -198,7 +198,7 @@ public class OadrHttpVenClient20bTest {
 		OadrHttpVenClient20b oadrHttpVenClient20bTestClass = new OadrHttpVenClient20b(oadrHttpClient20b);
 
 		when(oadrHttpClient20b.<OadrRegisteredReportType, JAXBElement<OadrRegisteredReportType>>post(
-				Matchers.<JAXBElement<OadrRegisteredReportType>>anyObject(), Matchers.any(), Matchers.any()))
+				ArgumentMatchers.<JAXBElement<OadrRegisteredReportType>>any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
 						.thenReturn(build);
 
 		OadrRegisterReportType payload = new OadrRegisterReportType();
@@ -216,7 +216,7 @@ public class OadrHttpVenClient20bTest {
 		OadrHttpVenClient20b oadrHttpVenClient20bTestClass = new OadrHttpVenClient20b(oadrHttpClient20b);
 
 		when(oadrHttpClient20b.<OadrResponseType, JAXBElement<OadrResponseType>>post(
-				Matchers.<JAXBElement<OadrResponseType>>anyObject(), Matchers.any(), Matchers.any()))
+				ArgumentMatchers.<JAXBElement<OadrResponseType>>any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
 						.thenReturn(mockOadrResponseType);
 
 		OadrUpdatedReportType payload = new OadrUpdatedReportType();
@@ -234,7 +234,7 @@ public class OadrHttpVenClient20bTest {
 		OadrHttpVenClient20b oadrHttpVenClient20bTestClass = new OadrHttpVenClient20b(oadrHttpClient20b);
 
 		when(oadrHttpClient20b.<OadrResponseType, JAXBElement<OadrResponseType>>post(
-				Matchers.<JAXBElement<OadrResponseType>>anyObject(), Matchers.any(), Matchers.any()))
+				ArgumentMatchers.<JAXBElement<OadrResponseType>>any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
 						.thenReturn(mockOadrResponseType);
 
 		OadrRegisteredReportType payload = new OadrRegisteredReportType();
@@ -252,7 +252,7 @@ public class OadrHttpVenClient20bTest {
 		OadrHttpVenClient20b oadrHttpVenClient20bTestClass = new OadrHttpVenClient20b(oadrHttpClient20b);
 
 		when(oadrHttpClient20b.<OadrCanceledReportType, JAXBElement<OadrCanceledReportType>>post(
-				Matchers.<JAXBElement<OadrCanceledReportType>>anyObject(), Matchers.any(), Matchers.any()))
+				ArgumentMatchers.<JAXBElement<OadrCanceledReportType>>any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
 						.thenReturn(build);
 
 		OadrCancelReportType payload = new OadrCancelReportType();
@@ -270,7 +270,7 @@ public class OadrHttpVenClient20bTest {
 		OadrHttpVenClient20b oadrHttpVenClient20bTestClass = new OadrHttpVenClient20b(oadrHttpClient20b);
 
 		when(oadrHttpClient20b.<OadrResponseType, JAXBElement<OadrResponseType>>post(
-				Matchers.<JAXBElement<OadrResponseType>>anyObject(), Matchers.any(), Matchers.any()))
+				ArgumentMatchers.<JAXBElement<OadrResponseType>>any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
 						.thenReturn(mockOadrResponseType);
 
 		OadrCanceledReportType payload = new OadrCanceledReportType();
@@ -285,8 +285,8 @@ public class OadrHttpVenClient20bTest {
 
 		OadrHttpVenClient20b adrHttpVenClient20bTestClass = new OadrHttpVenClient20b(oadrHttpClient20b);
 
-		when(oadrHttpClient20b.<Object, JAXBElement<Object>>post(Matchers.<JAXBElement<Object>>anyObject(),
-				Matchers.any(), Matchers.any())).thenReturn(new Object());
+		when(oadrHttpClient20b.<Object, JAXBElement<Object>>post(ArgumentMatchers.<JAXBElement<Object>>any(),
+				ArgumentMatchers.any(), ArgumentMatchers.any())).thenReturn(new Object());
 
 		OadrPollType payload = new OadrPollType();
 		adrHttpVenClient20bTestClass.oadrPoll(payload);
@@ -305,7 +305,7 @@ public class OadrHttpVenClient20bTest {
 		OadrHttpVenClient20b oadrHttpVenClient20bTestClass = new OadrHttpVenClient20b(oadrHttpClient20b);
 
 		when(oadrHttpClient20b.<OadrCreatedPartyRegistrationType, JAXBElement<OadrCreatedPartyRegistrationType>>post(
-				Matchers.<JAXBElement<OadrCreatedPartyRegistrationType>>anyObject(), Matchers.any(), Matchers.any()))
+				ArgumentMatchers.<JAXBElement<OadrCreatedPartyRegistrationType>>any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
 						.thenReturn(build);
 
 		OadrCreatePartyRegistrationType payload = new OadrCreatePartyRegistrationType();
@@ -325,7 +325,7 @@ public class OadrHttpVenClient20bTest {
 		OadrHttpVenClient20b oadrHttpVenClient20bTestClass = new OadrHttpVenClient20b(oadrHttpClient20b);
 
 		when(oadrHttpClient20b.<OadrCanceledPartyRegistrationType, JAXBElement<OadrCanceledPartyRegistrationType>>post(
-				Matchers.<JAXBElement<OadrCanceledPartyRegistrationType>>anyObject(), Matchers.any(), Matchers.any()))
+				ArgumentMatchers.<JAXBElement<OadrCanceledPartyRegistrationType>>any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
 						.thenReturn(build);
 
 		OadrCancelPartyRegistrationType payload = new OadrCancelPartyRegistrationType();
@@ -343,7 +343,7 @@ public class OadrHttpVenClient20bTest {
 		OadrHttpVenClient20b oadrHttpVenClient20bTestClass = new OadrHttpVenClient20b(oadrHttpClient20b);
 
 		when(oadrHttpClient20b.<OadrResponseType, JAXBElement<OadrResponseType>>post(
-				Matchers.<JAXBElement<OadrResponseType>>anyObject(), Matchers.any(), Matchers.any()))
+				ArgumentMatchers.<JAXBElement<OadrResponseType>>any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
 						.thenReturn(mockOadrResponseType);
 
 		OadrResponseType payload = new OadrResponseType();
@@ -361,7 +361,7 @@ public class OadrHttpVenClient20bTest {
 		OadrHttpVenClient20b oadrHttpVenClient20bTestClass = new OadrHttpVenClient20b(oadrHttpClient20b);
 
 		when(oadrHttpClient20b.<OadrResponseType, JAXBElement<OadrResponseType>>post(
-				Matchers.<JAXBElement<OadrResponseType>>anyObject(), Matchers.any(), Matchers.any()))
+				ArgumentMatchers.<JAXBElement<OadrResponseType>>any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
 						.thenReturn(mockOadrResponseType);
 
 		OadrCanceledPartyRegistrationType payload = new OadrCanceledPartyRegistrationType();
@@ -381,7 +381,7 @@ public class OadrHttpVenClient20bTest {
 		OadrHttpVenClient20b oadrHttpVenClient20bTestClass = new OadrHttpVenClient20b(oadrHttpClient20b);
 
 		when(oadrHttpClient20b.<OadrCreatedPartyRegistrationType, JAXBElement<OadrCreatedPartyRegistrationType>>post(
-				Matchers.<JAXBElement<OadrCreatedPartyRegistrationType>>anyObject(), Matchers.any(), Matchers.any()))
+				ArgumentMatchers.<JAXBElement<OadrCreatedPartyRegistrationType>>any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
 						.thenReturn(build);
 
 		OadrQueryRegistrationType payload = new OadrQueryRegistrationType();
@@ -399,7 +399,7 @@ public class OadrHttpVenClient20bTest {
 		OadrHttpVenClient20b oadrHttpVenClient20bTestClass = new OadrHttpVenClient20b(oadrHttpClient20b);
 
 		when(oadrHttpClient20b.<OadrCreatedOptType, JAXBElement<OadrCreatedOptType>>post(
-				Matchers.<JAXBElement<OadrCreatedOptType>>anyObject(), Matchers.any(), Matchers.any()))
+				ArgumentMatchers.<JAXBElement<OadrCreatedOptType>>any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
 						.thenReturn(build);
 
 		OadrCreateOptType payload = new OadrCreateOptType();
@@ -417,7 +417,7 @@ public class OadrHttpVenClient20bTest {
 		OadrHttpVenClient20b oadrHttpVenClient20bTestClass = new OadrHttpVenClient20b(oadrHttpClient20b);
 
 		when(oadrHttpClient20b.<OadrCanceledOptType, JAXBElement<OadrCanceledOptType>>post(
-				Matchers.<JAXBElement<OadrCanceledOptType>>anyObject(), Matchers.any(), Matchers.any()))
+				ArgumentMatchers.<JAXBElement<OadrCanceledOptType>>any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
 						.thenReturn(build);
 
 		OadrCancelOptType payload = new OadrCancelOptType();

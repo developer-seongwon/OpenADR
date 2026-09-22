@@ -118,6 +118,14 @@ export class EventDetailPage extends React.Component {
 
   };
 
+  // 탭 순서. Tabs 에 그린 순서와 같아야 하고, App.js 의 :panel 라우트 목록과도 같아야 한다
+  static PANELS = ['descriptor', 'activeperiod', 'signal', 'target', 'venresponse'];
+
+  panelIndex = (panel) => {
+  	var i = EventDetailPage.PANELS.indexOf(panel);
+  	return i < 0 ? 0 : i;
+  }
+
   componentDidMount() {
     this.props.vtnConfigurationActions.loadMarketContext();
     this.props.vtnConfigurationActions.loadGroup();
@@ -131,30 +139,21 @@ export class EventDetailPage extends React.Component {
       this.setState({copyTargets: this.props.event_detail.event.targets});
     }
 
-    switch(this.props.match.params.panel){
-      case "descriptor":
-        this.setState({value:0});
-        break;
-      case "activeperiod":
-        this.setState({value:1});
-        break;
-      case "signal":
-        this.setState({value:2});
-        break;
-      case "target":
-        this.setState({value:3});
-        break;
-      case "venresponse":
-        this.setState({value:4});
-        break;
-      default:
-        break;
-    }
+    this.setState({ value: this.panelIndex(this.props.match.params.panel) });
     
 
   }
 
   componentDidUpdate(prevProps, prevState) {
+    // 주소가 다른 패널로 바뀌면 탭도 따라가야 한다.
+    //
+    // 탭 위치를 componentDidMount 에서만 정하면, 패널만 바뀔 때는 컴포넌트가 다시
+    // 마운트되지 않으므로 주소만 바뀌고 탭은 첫 번째에 머문다.
+    // 이 클래스에는 componentDidUpdate 가 이미 있으니 여기에 같이 둔다.
+    // 따로 하나 더 정의하면 뒤에 오는 정의에 덮여서 조용히 무효가 된다.
+    if (prevProps.match.params.panel !== this.props.match.params.panel) {
+      this.setState({ value: this.panelIndex(this.props.match.params.panel) });
+    }
     if(this.props.event_detail.event.signals !== prevProps.event_detail.event.signals) {
       this.setState({copySignals: this.props.event_detail.event.signals});
     }

@@ -5,12 +5,12 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.Duration;
 
-import org.eclipse.jetty.http.HttpStatus;
+import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -85,12 +85,12 @@ public class Oadr20aVTNEiEventService {
 	private Oadr20aJAXBContext jaxbContext;
 
 	private EiResponse venNotFoundResponse(String requestId, String venId) {
-		return Oadr20aBuilders.newOadr20aEiResponseBuilder(requestId, HttpStatus.NOT_FOUND_404)
+		return Oadr20aBuilders.newOadr20aEiResponseBuilder(requestId, HttpServletResponse.SC_NOT_FOUND)
 				.withDescription("eiRequestEvent:unknown ven with username: " + venId).build();
 	}
 
 	private EiResponse mismatchCredentialsVenIdResponse(String requestId, String username, String venId) {
-		return Oadr20aBuilders.newOadr20aEiResponseBuilder(requestId, HttpStatus.UNAUTHORIZED_401)
+		return Oadr20aBuilders.newOadr20aEiResponseBuilder(requestId, HttpServletResponse.SC_UNAUTHORIZED)
 				.withDescription(
 						"Mismatch between authentication username(" + username + ") and requested venId(" + venId + ")")
 				.build();
@@ -134,7 +134,7 @@ public class Oadr20aVTNEiEventService {
 		if (!op.isPresent()) {
 			String description = "eiCreatedEvent:unknown event with id: " + eventID;
 			throw new Oadr20aCreatedEventApplicationLayerException(description,
-					Oadr20aBuilders.newOadr20aResponseBuilder(requestID, HttpStatus.NOT_FOUND_404)
+					Oadr20aBuilders.newOadr20aResponseBuilder(requestID, HttpServletResponse.SC_NOT_FOUND)
 							.withDescription(description).build());
 		}
 
@@ -144,13 +144,13 @@ public class Oadr20aVTNEiEventService {
 
 			String description = "eiCreatedEvent:mismatch modification number for event with id: " + eventID;
 			throw new Oadr20aCreatedEventApplicationLayerException(description,
-					Oadr20aBuilders.newOadr20aResponseBuilder(requestID, HttpStatus.NOT_ACCEPTABLE_406)
+					Oadr20aBuilders.newOadr20aResponseBuilder(requestID, HttpServletResponse.SC_NOT_ACCEPTABLE)
 							.withDescription(description).build());
 		}
 
 		int responseCode = Integer.valueOf(response.getResponseCode());
 
-		if (HttpStatus.OK_200 == responseCode) {
+		if (HttpServletResponse.SC_OK == responseCode) {
 			OptTypeType optType = response.getOptType();
 			demandResponseEventService.updateVenDemandResponseEvent(Long.parseLong(eventID), modificationNumber,
 					ven.getUsername(), OptConverter.convert(optType));
@@ -186,13 +186,13 @@ public class Oadr20aVTNEiEventService {
 					Oadr20aBuilders.newOadr20aResponseBuilder(venNotFoundResponse(requestID, venID)).build());
 		}
 
-		int responseCode = HttpStatus.OK_200;
+		int responseCode = HttpServletResponse.SC_OK;
 		for (EventResponse response : eiCreatedEvent.getEventResponses().getEventResponse()) {
 			try {
 				processEventResponseFromOadrCreatedEvent(ven, response);
 			} catch (Oadr20aCreatedEventApplicationLayerException e) {
 				LOGGER.warn(e.getMessage());
-				responseCode = HttpStatus.NOT_ACCEPTABLE_406;
+				responseCode = HttpServletResponse.SC_NOT_ACCEPTABLE;
 			}
 		}
 
@@ -233,7 +233,7 @@ public class Oadr20aVTNEiEventService {
 		// oadr events
 		if (findByVenId == null || findByVenId.isEmpty()) {
 			Long andIncrease = venRequestCountService.getAndIncrease(venID);
-			EiResponse eiResponse = Oadr20aBuilders.newOadr20aEiResponseBuilder(venRequestID, HttpStatus.OK_200)
+			EiResponse eiResponse = Oadr20aBuilders.newOadr20aEiResponseBuilder(venRequestID, HttpServletResponse.SC_OK)
 					.build();
 			return Oadr20aBuilders.newOadr20aDistributeEventBuilder(vtnId, Long.toString(andIncrease))
 					.withEiResponse(eiResponse).build();
@@ -250,7 +250,7 @@ public class Oadr20aVTNEiEventService {
 			List<DemandResponseEvent> events) {
 		// vtn request id
 		Long andIncrease = venRequestCountService.getAndIncrease(venId);
-		EiResponse eiResponse = Oadr20aBuilders.newOadr20aEiResponseBuilder(eiResponseRequestId, HttpStatus.OK_200)
+		EiResponse eiResponse = Oadr20aBuilders.newOadr20aEiResponseBuilder(eiResponseRequestId, HttpServletResponse.SC_OK)
 				.build();
 		Oadr20aDistributeEventBuilder builder = Oadr20aBuilders
 				.newOadr20aDistributeEventBuilder(vtnId, Long.toString(andIncrease)).withEiResponse(eiResponse);

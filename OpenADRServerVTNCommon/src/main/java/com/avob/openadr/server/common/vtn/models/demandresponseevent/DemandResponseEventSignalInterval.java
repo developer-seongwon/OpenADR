@@ -1,10 +1,13 @@
 package com.avob.openadr.server.common.vtn.models.demandresponseevent;
 
-import javax.persistence.Embeddable;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
 
 @Embeddable
 public class DemandResponseEventSignalInterval {
+	@Column(name = "interval_value")
 	private Float value;
+	@Column(name = "duration")
 	private String duration;
 
 	public Float getValue() {

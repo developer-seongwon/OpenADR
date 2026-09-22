@@ -1,5 +1,7 @@
 package com.avob.openadr.server.common.vtn;
 
+import javax.sql.DataSource;
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
@@ -10,12 +12,11 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase;
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.jms.annotation.EnableJms;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.test.context.ActiveProfiles;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 
 @EnableJms
 @Configuration
@@ -30,9 +31,21 @@ public class ApplicationTest {
 	@MockBean
 	JmsTemplate jmsTemplate;
 
-	@Bean(destroyMethod = "shutdown")
-	public EmbeddedDatabase dataSource() {
-		return new EmbeddedDatabaseBuilder().setType(EmbeddedDatabaseType.H2).build();
+	/**
+	 * 도커로 띄운 PostgreSQL 을 가리킨다.
+	 *
+	 * 커넥션 풀을 쓰지 않는다. 테스트 클래스마다 컨텍스트가 새로 뜨는데 컨텍스트마다 풀을 잡으면
+	 * 컨테이너의 max_connections 를 금방 넘긴다.
+	 */
+	@Bean
+	public DataSource dataSource() {
+		PostgreSQLContainer db = VtnDatabaseContainer.getInstance();
+		DriverManagerDataSource dataSource = new DriverManagerDataSource();
+		dataSource.setDriverClassName(db.getDriverClassName());
+		dataSource.setUrl(db.getJdbcUrl());
+		dataSource.setUsername(db.getUsername());
+		dataSource.setPassword(db.getPassword());
+		return dataSource;
 	}
 
 	public static void main(String[] args) {

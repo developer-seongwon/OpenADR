@@ -2,12 +2,12 @@ package com.avob.openadr.server.oadr20b.vtn.service.report;
 
 import java.util.List;
 
-import javax.annotation.Resource;
-import javax.transaction.Transactional;
+import jakarta.annotation.Resource;
+import jakarta.transaction.Transactional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 
 import com.avob.openadr.server.common.vtn.models.ven.Ven;
@@ -58,7 +58,7 @@ public class OtherReportCapabilityService extends GenericService<OtherReportCapa
 	}
 
 	@Override
-	public CrudRepository<OtherReportCapability, Long> getDao() {
+	public JpaRepository<OtherReportCapability, Long> getDao() {
 		return otherReportCapabilityDao;
 	}
 

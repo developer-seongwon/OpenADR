@@ -5,11 +5,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
-import javax.annotation.Resource;
-import javax.xml.bind.JAXBElement;
+import jakarta.annotation.Resource;
+import jakarta.xml.bind.JAXBElement;
 import javax.xml.datatype.DatatypeConfigurationException;
 
-import org.eclipse.jetty.http.HttpStatus;
+import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -105,7 +105,7 @@ public class Oadr20bVTNEiEventService implements Oadr20bVTNEiService {
 
 		int responseCode = Integer.valueOf(response.getResponseCode());
 
-		if (HttpStatus.OK_200 == responseCode) {
+		if (HttpServletResponse.SC_OK == responseCode) {
 			OptTypeType optType = response.getOptType();
 			demandResponseEventService.updateVenDemandResponseEvent(Long.parseLong(eventID), modificationNumber,
 					ven.getUsername(), OptConverter.convert(optType));
@@ -129,14 +129,14 @@ public class Oadr20bVTNEiEventService implements Oadr20bVTNEiService {
 			return Oadr20bResponseBuilders.newOadr20bResponseBuilder(mismatchCredentialsVenIdResponse, venID).build();
 		}
 
-		int responseCode = HttpStatus.OK_200;
+		int responseCode = HttpServletResponse.SC_OK;
 		if (eiCreatedEvent.getEventResponses() != null) {
 			for (EventResponse response : eiCreatedEvent.getEventResponses().getEventResponse()) {
 				try {
 					processEventResponseFromOadrCreatedEvent(ven, response);
 				} catch (Oadr20bException e) {
 					LOGGER.warn(e.getMessage());
-					responseCode = HttpStatus.NOT_ACCEPTABLE_406;
+					responseCode = HttpServletResponse.SC_NOT_ACCEPTABLE;
 				}
 			}
 		}
@@ -166,7 +166,7 @@ public class Oadr20bVTNEiEventService implements Oadr20bVTNEiService {
 		if (findByVenId == null || findByVenId.isEmpty()) {
 			Long andIncrease = venRequestCountService.getAndIncrease(venID);
 			EiResponseType eiResponse = Oadr20bResponseBuilders
-					.newOadr20bEiResponseBuilder(requestID, HttpStatus.OK_200).build();
+					.newOadr20bEiResponseBuilder(requestID, HttpServletResponse.SC_OK).build();
 			response = Oadr20bEiEventBuilders
 					.newOadr20bDistributeEventBuilder(vtnConfig.getVtnId(), Long.toString(andIncrease))
 					.withEiResponse(eiResponse).build();
@@ -186,7 +186,7 @@ public class Oadr20bVTNEiEventService implements Oadr20bVTNEiService {
 		// vtn request id
 		Long andIncrease = venRequestCountService.getAndIncrease(venId);
 		EiResponseType eiResponse = Oadr20bResponseBuilders
-				.newOadr20bEiResponseBuilder(eiResponseRequestId, HttpStatus.OK_200).build();
+				.newOadr20bEiResponseBuilder(eiResponseRequestId, HttpServletResponse.SC_OK).build();
 		Oadr20bDistributeEventBuilder builder = Oadr20bEiEventBuilders
 				.newOadr20bDistributeEventBuilder(vtnConfig.getVtnId(), Long.toString(andIncrease))
 				.withEiResponse(eiResponse);

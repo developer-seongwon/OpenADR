@@ -2,8 +2,8 @@ package com.avob.openadr.server.common.vtn.models.user;
 
 import java.io.Serializable;
 
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "oadr_app")

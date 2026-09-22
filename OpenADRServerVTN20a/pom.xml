@@ -30,6 +30,43 @@
 			<artifactId>junit</artifactId>
 			<scope>test</scope>
 		</dependency>
+
+		<!-- VTNCommon 의 VtnDatabaseContainer 를 그대로 쓴다.
+		     테스트 DB 는 H2 가 아니라 도커로 띄운 PostgreSQL 이고,
+		     컨테이너는 JVM 당 하나라 모듈이 늘어도 한 번만 뜬다 -->
+		<!-- 테스트용 DB 컨테이너 홀더.
+		     예전에는 VTNCommon 의 test-jar 로 받았는데, mvn test 단계에서는
+		     메이븐이 그 의존을 리액터의 target/test-classes 디렉토리로 풀기 때문에
+		     test-jar 의 includes 필터가 무시되고 VTNCommon 의 테스트 클래스가
+		     전부 딸려 왔다. 그중 HttpSecurityConfig 가 여기 같은 이름 클래스와
+		     부딪혀서 ConflictingBeanDefinitionException 으로 죽었다.
+		     공유할 것만 따로 모듈로 뺐다 -->
+		<dependency>
+			<groupId>com.avob.openadr</groupId>
+			<artifactId>OpenADRServerVTNTestSupport</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>testcontainers-postgresql</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<!-- 테스트는 브로커 프로파일과 무관하게 항상 내장 activemq 로 돈다.
+		     VtnConfigEmbeddedBroker 가 @Profile({"test","standalone"}) 이라
+		     test 프로파일에서 무조건 로드되기 때문이다.
+		     VTNCommon 은 이걸 provided 로 들고 있는데 provided 는 전이되지 않고,
+		     standalone 프로파일의 compile 스코프는 -P external 이면 사라진다.
+		     그래서 external 로 빌드하면 여기 테스트가 BrokerPlugin 을 못 찾고 죽었다.
+		     운영 산출물에는 test 스코프라 들어가지 않는다 -->
+		<dependency>
+			<groupId>org.apache.activemq</groupId>
+			<artifactId>activemq-broker</artifactId>
+			<scope>test</scope>
+		</dependency>
 		<dependency>
 			<groupId>org.springframework.security</groupId>
 			<artifactId>spring-security-test</artifactId>

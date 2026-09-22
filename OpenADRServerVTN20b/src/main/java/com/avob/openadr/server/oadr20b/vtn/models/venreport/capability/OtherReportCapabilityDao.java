@@ -6,6 +6,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 
+import org.springframework.transaction.annotation.Transactional;
+
 import com.avob.openadr.server.common.vtn.models.ven.Ven;
 
 public interface OtherReportCapabilityDao extends ReportCapabilityDao<OtherReportCapability> {
@@ -21,4 +23,8 @@ public interface OtherReportCapabilityDao extends ReportCapabilityDao<OtherRepor
 
 	public List<OtherReportCapability> findBySourceUsernameInAndReportSpecifierId(List<String> username,
 			String reportSpecifierId);
+
+	// VEN 삭제 시 뒷정리용
+	@Transactional(readOnly = false)
+	public void deleteBySource(Ven source);
 }

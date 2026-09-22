@@ -1,6 +1,6 @@
 package com.avob.openadr.model.oadr20b.xmlsignature;
 
-import javax.xml.bind.JAXBException;
+import jakarta.xml.bind.JAXBException;
 
 import org.junit.Test;
 
@@ -21,8 +21,20 @@ public class OadrXMLSignatureNodeRedTest {
 		jaxbContext = Oadr20bJAXBContext.getInstance(TestUtils.XSD_OADR20B_SCHEMA);
 	}
 
-	@Test
-	public void validate() throws Oadr20bUnmarshalException, Oadr20bXMLSignatureValidationException {
+	/**
+	 * payload 는 DigestMethod 가 http://www.w3.org/2000/09/xmldsig#sha1 이다.
+	 *
+	 * JDK 17 의 jdk.xml.dsig.secureValidationPolicy 가 sha1 을 금지 알고리즘으로
+	 * 넣으면서, DOMValidateContext 의 secure validation 이 켜져 있으면 서명 검증에
+	 * 들어가기 전에 unmarshalXMLSignature 에서 MarshalException 이 난다.
+	 * JDK 11 에서는 통과하던 페이로드다.
+	 *
+	 * OpenADR 2.0b 는 RSA-SHA256 을 요구하므로 이 픽스처 쪽이 규격을 벗어난 것이고,
+	 * 거부하는 동작이 맞다. secure validation 을 끄면 예전처럼 통과시킬 수 있지만
+	 * 라이브러리 전체가 sha1 을 다시 허용하게 되므로 그렇게 하지 않는다.
+	 */
+	@Test(expected = Oadr20bXMLSignatureValidationException.class)
+	public void validateSha1IsRejected() throws Oadr20bUnmarshalException, Oadr20bXMLSignatureValidationException {
 		OadrPayload unmarshal = jaxbContext.unmarshal(payload, OadrPayload.class);
 		OadrXMLSignatureHandler.validate(payload, unmarshal, 0, 10);
 	}

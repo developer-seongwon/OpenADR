@@ -2,8 +2,8 @@ package com.avob.openadr.server.oadr20b.vtn.utils;
 
 import java.util.List;
 
-import javax.annotation.PostConstruct;
-import javax.servlet.Filter;
+import jakarta.annotation.PostConstruct;
+import jakarta.servlet.Filter;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.UserRequestPostProcessor;

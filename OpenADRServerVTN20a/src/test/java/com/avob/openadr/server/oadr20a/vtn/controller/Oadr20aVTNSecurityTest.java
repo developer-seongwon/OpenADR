@@ -12,14 +12,14 @@ import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.util.Arrays;
 
-import javax.annotation.Resource;
-import javax.xml.bind.JAXBException;
+import jakarta.annotation.Resource;
+import jakarta.xml.bind.JAXBException;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
-import org.eclipse.jetty.http.HttpStatus;
+import jakarta.servlet.http.HttpServletResponse;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,6 +27,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.http.HttpHeaders;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -67,10 +68,22 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Sets;
 
+/*
+ * 테스트 클래스마다 컨텍스트를 새로 띄운다.
+ *
+ * 예전에는 클래스마다 H2 임베디드 DB 가 따로 생겨서 데이터가 섞일 일이 없었다.
+ * 지금은 세 클래스가 컨테이너 하나를 같이 쓰는데, 컨텍스트 설정이 같아서
+ * 스프링이 컨텍스트를 캐시하고 재사용한다. 그러면 앞 클래스가 남긴 ven1 같은 행 때문에
+ * 뒤 클래스에서 username 유니크 제약에 걸린다.
+ *
+ * ddl-auto 가 create-drop 이라 컨텍스트가 새로 뜰 때 스키마를 다시 만든다.
+ * 이 애노테이션으로 클래스가 끝날 때 컨텍스트를 버리면 다음 클래스는 빈 DB 에서 시작한다.
+ */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = { VTN20aSecurityApplicationTest.class })
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public class Oadr20aVTNSecurityTest {
 
 	@Value("${oadr.security.vtn.trustcertificate}")
@@ -123,13 +136,13 @@ public class Oadr20aVTNSecurityTest {
 		// valid request
 		OadrRequestEvent event = Oadr20aBuilders.newOadrRequestEventBuilder(ven.getUsername(), "0").build();
 		OadrDistributeEvent oadrRequestEvent = client.oadrRequestEvent(event);
-		assertEquals(String.valueOf(HttpStatus.OK_200), oadrRequestEvent.getEiResponse().getResponseCode());
+		assertEquals(String.valueOf(HttpServletResponse.SC_OK), oadrRequestEvent.getEiResponse().getResponseCode());
 		assertEquals(0, oadrRequestEvent.getOadrEvent().size());
 
 		// mismatch request venId and username
 		event = Oadr20aBuilders.newOadrRequestEventBuilder(ven.getUsername() + "2", "0").build();
 		oadrRequestEvent = client.oadrRequestEvent(event);
-		assertEquals(String.valueOf(HttpStatus.UNAUTHORIZED_401), oadrRequestEvent.getEiResponse().getResponseCode());
+		assertEquals(String.valueOf(HttpServletResponse.SC_UNAUTHORIZED), oadrRequestEvent.getEiResponse().getResponseCode());
 		assertEquals(0, oadrRequestEvent.getOadrEvent().size());
 
 	}
@@ -269,7 +282,7 @@ public class Oadr20aVTNSecurityTest {
 		post.setEntity(stringEntity);
 
 		HttpResponse execute = userBasicHttpClient.execute(post, "");
-		assertEquals(HttpStatus.CREATED_201, execute.getStatusLine().getStatusCode());
+		assertEquals(HttpServletResponse.SC_CREATED, execute.getStatusLine().getStatusCode());
 
 		DemandResponseEventReadDto readdto = mapper.readValue(execute.getEntity().getContent(),
 				DemandResponseEventReadDto.class);
@@ -277,7 +290,7 @@ public class Oadr20aVTNSecurityTest {
 
 		OadrRequestEvent event = Oadr20aBuilders.newOadrRequestEventBuilder(ven.getUsername(), "0").build();
 		OadrDistributeEvent oadrRequestEvent = venBasicHttpClient.oadrRequestEvent(event);
-		assertEquals(String.valueOf(HttpStatus.OK_200), oadrRequestEvent.getEiResponse().getResponseCode());
+		assertEquals(String.valueOf(HttpServletResponse.SC_OK), oadrRequestEvent.getEiResponse().getResponseCode());
 		assertEquals(1, oadrRequestEvent.getOadrEvent().size());
 
 		demandResponseEventService.delete(readdto.getId());

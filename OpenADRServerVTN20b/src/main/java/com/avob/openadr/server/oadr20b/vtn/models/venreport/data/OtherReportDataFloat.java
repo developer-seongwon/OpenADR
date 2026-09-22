@@ -1,7 +1,7 @@
 package com.avob.openadr.server.oadr20b.vtn.models.venreport.data;
 
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "otherreportdata_float")

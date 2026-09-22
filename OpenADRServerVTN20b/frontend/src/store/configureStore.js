@@ -14,7 +14,11 @@ const publicPath = process.env.REACT_APP_BASENAME || null;
 export const history = createBrowserHistory({ basename: publicPath });
 const connectRouterHistory = connectRouter( history );
 
-var swaggerUrl = process.env.REACT_APP_SWAGGER_URL || 'https://vtn.oadr.com:8181/testvtn/v2/api-docs';
+// springfox 를 springdoc 으로 바꾸면서 문서 경로가 v2 에서 v3 로 옮겨졌다.
+// 기본값도 vtn.oadr.com 으로 박혀 있어서 localhost 로 열면 못 찾았다.
+// 지금은 화면을 띄운 그 서버를 그대로 본다.
+var swaggerUrl = process.env.REACT_APP_SWAGGER_URL
+  || (window.location.origin + (publicPath || '/') + 'v3/api-docs').replace(/\/\//g, '/').replace(':/', '://');
 export var config = {
 //		vtnSwaggerUrl: 'https://192.168.1.11:8181/testvtn/v2/api-docs',
 //  vtnSwaggerUrl: 'https://192.168.10.42:8181/testvtn/v2/api-docs',

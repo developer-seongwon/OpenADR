@@ -2,8 +2,8 @@ package com.avob.openadr.server.oadr20b.vtn.service.push;
 
 import java.io.IOException;
 
-import javax.annotation.Resource;
-import javax.xml.bind.JAXBException;
+import jakarta.annotation.Resource;
+import jakarta.xml.bind.JAXBException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

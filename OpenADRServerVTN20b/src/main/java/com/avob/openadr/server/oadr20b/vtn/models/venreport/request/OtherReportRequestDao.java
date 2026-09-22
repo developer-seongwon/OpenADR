@@ -33,6 +33,11 @@ public interface OtherReportRequestDao extends ReportRequestDao<OtherReportReque
 	@Transactional(readOnly = false)
 	public void deleteByOtherReportCapabilitySource(Ven source);
 
+	// 위는 capability 를 거쳐 찾기 때문에 capability 가 null 인 행은 못 지운다.
+	// VEN 을 지울 때는 그런 행까지 남김없이 치워야 해서 source 로 직접 지운다
+	@Transactional(readOnly = false)
+	public void deleteBySource(Ven source);
+
 	@Transactional(readOnly = false)
 	public void deleteByRequestorAndOtherReportCapabilitySourceUsername(AbstractUser requestor, String username);
 

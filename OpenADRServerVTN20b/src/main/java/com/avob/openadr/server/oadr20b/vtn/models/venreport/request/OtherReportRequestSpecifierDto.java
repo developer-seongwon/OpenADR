@@ -1,6 +1,6 @@
 package com.avob.openadr.server.oadr20b.vtn.models.venreport.request;
 
-import javax.persistence.Lob;
+import jakarta.persistence.Lob;
 
 public class OtherReportRequestSpecifierDto {
 

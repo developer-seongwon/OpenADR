@@ -6,11 +6,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
-import javax.servlet.Filter;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.Resource;
+import jakarta.servlet.Filter;
 
-import org.eclipse.jetty.http.HttpStatus;
+import jakarta.servlet.http.HttpServletResponse;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -92,7 +92,7 @@ public class OadrMockEiHttpMvc {
 			response.add(0, invocation);
 			OadrCancelReportType argument = (OadrCancelReportType) invocation.getArgument(1);
 			return Oadr20bEiReportBuilders
-					.newOadr20bCanceledReportBuilder(argument.getRequestID(), HttpStatus.OK_200, argument.getVenID())
+					.newOadr20bCanceledReportBuilder(argument.getRequestID(), HttpServletResponse.SC_OK, argument.getVenID())
 					.build();
 		}).when(unsecure).oadrCancelReport(Mockito.any(String.class), Mockito.any(OadrCancelReportType.class));
 
@@ -100,7 +100,7 @@ public class OadrMockEiHttpMvc {
 			response.add(0, invocation);
 			OadrCreateReportType argument = (OadrCreateReportType) invocation.getArgument(1);
 			return Oadr20bEiReportBuilders
-					.newOadr20bCreatedReportBuilder(argument.getRequestID(), HttpStatus.OK_200, argument.getVenID())
+					.newOadr20bCreatedReportBuilder(argument.getRequestID(), HttpServletResponse.SC_OK, argument.getVenID())
 					.build();
 		}).when(unsecure).oadrCreateReport(Mockito.any(String.class), Mockito.any(OadrCreateReportType.class));
 
@@ -110,7 +110,7 @@ public class OadrMockEiHttpMvc {
 			return Oadr20bResponseBuilders
 					.newOadr20bResponseBuilder(
 							Oadr20bResponseBuilders
-									.newOadr20bEiResponseBuilder(argument.getRequestID(), HttpStatus.OK_200).build(),
+									.newOadr20bEiResponseBuilder(argument.getRequestID(), HttpServletResponse.SC_OK).build(),
 							argument.getVtnID())
 					.build();
 		}).when(unsecure).oadrDistributeEvent(Mockito.any(String.class), Mockito.any(OadrDistributeEventType.class));
@@ -119,7 +119,7 @@ public class OadrMockEiHttpMvc {
 			response.add(0, invocation);
 			OadrRegisterReportType argument = (OadrRegisterReportType) invocation.getArgument(1);
 			return Oadr20bEiReportBuilders
-					.newOadr20bRegisteredReportBuilder(argument.getRequestID(), HttpStatus.OK_200, argument.getVenID())
+					.newOadr20bRegisteredReportBuilder(argument.getRequestID(), HttpServletResponse.SC_OK, argument.getVenID())
 					.build();
 		}).when(unsecure).oadrRegisterReport(Mockito.any(String.class), Mockito.any(OadrRegisterReportType.class));
 
@@ -127,7 +127,7 @@ public class OadrMockEiHttpMvc {
 			response.add(0, invocation);
 			OadrRequestReregistrationType argument = (OadrRequestReregistrationType) invocation.getArgument(1);
 			return Oadr20bResponseBuilders.newOadr20bResponseBuilder(
-					Oadr20bResponseBuilders.newOadr20bEiResponseBuilder("", HttpStatus.OK_200).build(),
+					Oadr20bResponseBuilders.newOadr20bEiResponseBuilder("", HttpServletResponse.SC_OK).build(),
 					argument.getVenID()).build();
 		}).when(unsecure).oadrRequestReregistrationType(Mockito.any(String.class),
 				Mockito.any(OadrRequestReregistrationType.class));
@@ -136,7 +136,7 @@ public class OadrMockEiHttpMvc {
 			response.add(0, invocation);
 			OadrUpdateReportType argument = (OadrUpdateReportType) invocation.getArgument(1);
 			return Oadr20bEiReportBuilders
-					.newOadr20bUpdatedReportBuilder(argument.getRequestID(), HttpStatus.OK_200, argument.getVenID())
+					.newOadr20bUpdatedReportBuilder(argument.getRequestID(), HttpServletResponse.SC_OK, argument.getVenID())
 					.build();
 		}).when(unsecure).oadrUpdateReport(Mockito.any(String.class), Mockito.any(OadrUpdateReportType.class));
 

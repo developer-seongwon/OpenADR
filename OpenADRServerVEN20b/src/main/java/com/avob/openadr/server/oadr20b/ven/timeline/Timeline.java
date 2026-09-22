@@ -20,9 +20,9 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import javax.xml.bind.JAXBElement;
+import jakarta.xml.bind.JAXBElement;
 
-import org.eclipse.jetty.http.HttpStatus;
+import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -192,7 +192,7 @@ public class Timeline {
 		if (knownModificationNumber > modificationNumber) {
 			throw new Oadr20bDistributeEventApplicationLayerException(
 					"registred event " + eventID + " has a modification number higher than retrieved event",
-					Oadr20bResponseBuilders.newOadr20bResponseBuilder(requestId, HttpStatus.NOT_ACCEPTABLE_406, "")
+					Oadr20bResponseBuilders.newOadr20bResponseBuilder(requestId, HttpServletResponse.SC_NOT_ACCEPTABLE, "")
 							.build());
 		}
 

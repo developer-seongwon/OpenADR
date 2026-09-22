@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +42,22 @@ public class EmbeddedSqlDatabaseInit implements ApplicationListener<ContextRefre
 
 	@Value("${vtn.custom-cert-folder}")
 	private String customCertFolder;
+
+	/**
+	 * 비밀번호로 로그인하는 관리자 계정.
+	 *
+	 * 이 클래스가 원래 만들던 관리자는 cert 폴더의 인증서에서 지문을 뽑은 x509 계정뿐이었다.
+	 * 그래서 브라우저에 클라이언트 인증서를 넣지 않으면 화면에 들어갈 방법이 없었다.
+	 * React 쪽에는 아이디/비밀번호 폼이 이미 있으니 그걸 쓸 수 있게 계정을 하나 심는다.
+	 *
+	 * fake-data 프로파일에서만 도는 클래스라 데모와 로컬 개발에만 생긴다.
+	 * 비워 두면 만들지 않는다.
+	 */
+	@Value("${vtn.bootstrap-admin.username:#{null}}")
+	private String bootstrapAdminUsername;
+
+	@Value("${vtn.bootstrap-admin.password:#{null}}")
+	private String bootstrapAdminPassword;
 
 	@Resource
 	private VenMarketContextService venMarketContextService;
@@ -128,6 +144,24 @@ public class EmbeddedSqlDatabaseInit implements ApplicationListener<ContextRefre
 			LOGGER.debug("Create User: " + prepare.getUsername());
 		}
 		return findOneByName;
+	}
+
+	/**
+	 * 아이디와 비밀번호로 들어갈 수 있는 관리자를 하나 만든다.
+	 * 이미 있으면 아무것도 하지 않는다.
+	 */
+	private void createBootstrapAdmin() {
+		if (bootstrapAdminUsername == null || bootstrapAdminPassword == null) {
+			return;
+		}
+		OadrUserCreateDto dto = new OadrUserCreateDto();
+		dto.setUsername(bootstrapAdminUsername);
+		dto.setPassword(bootstrapAdminPassword);
+		dto.setAuthenticationType("login");
+		dto.setCommonName(bootstrapAdminUsername);
+		dto.setRoles(Arrays.asList(VTNRoleEnum.ROLE_ADMIN.name()));
+		saveUserIfMissing(dto);
+		LOGGER.info("Bootstrap admin available: " + bootstrapAdminUsername);
 	}
 
 	private OadrApp saveAppIfMissing(OadrAppCreateDto dto) {
@@ -350,6 +384,8 @@ public class EmbeddedSqlDatabaseInit implements ApplicationListener<ContextRefre
 
 			}
 		}
+
+		createBootstrapAdmin();
 		//		filenames = getUserFilename();
 		//		if (!filenames.isEmpty()) {
 		//			for (String filename : filenames) {

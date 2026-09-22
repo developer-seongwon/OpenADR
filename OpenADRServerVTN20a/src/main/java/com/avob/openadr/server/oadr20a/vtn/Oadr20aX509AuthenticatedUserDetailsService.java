@@ -2,7 +2,7 @@ package com.avob.openadr.server.oadr20a.vtn;
 
 import java.security.cert.X509Certificate;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 import org.springframework.security.core.userdetails.AuthenticationUserDetailsService;
 import org.springframework.security.core.userdetails.UserDetails;

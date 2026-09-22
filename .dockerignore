@@ -1,16 +1,25 @@
-.docker/dummy*
-.docker/nodered
-.docker/openfire
-.docker/postgres
-.docker/rabbitmq
-.docker/vtn20b
+# 여기서 말하는 빌드 컨텍스트는 리포지토리 루트다.
+# 자바 빌드 이미지(docker/build/Dockerfile)와 인프라 이미지들이 루트를 컨텍스트로 쓴다.
+
+# docker 디렉토리는 통째로 뺀다. compose 파일, run.sh, 각 서비스의 Dockerfile 은
+# 이미지 안에 들어갈 이유가 없다.
+docker
+
+# 다만 이미지가 실제로 COPY 하는 파일들은 다시 들인다.
+!docker/build/wait-for-it.sh
+!docker/postgres/init-oadr-vtn.sh
+!docker/postgres/init-openfire.sh
+!docker/openfire/available-plugins.xml
+!docker/openfire/openfire.xml
+
 .vagrant
 .settings
-docker-compose.yml
 
+# 자바 빌드 이미지는 jar 가 이미 있으면 컨테이너 안에서 다시 빌드하지 않는다.
+# 그래서 이 두 개만 target 에서 통과시킨다.
 !OpenADRServerVTN20b/target/OpenADRServerVTN20b-0.1.0-SNAPSHOT.jar
 !OpenADRServerVEN20b/target/OpenADRServerVTN20b-0.1.0-SNAPSHOT.jar
-# */target*
+
 */.classpath
 */.project
 */.factorypath

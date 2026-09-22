@@ -1,0 +1,276 @@
+### 3. EiEvent - 이벤트
+#
+# 스펙 8.1 EiEvent Service. 이벤트는 항상 VTN 이 만들고 VEN 에게 내려간다.
+#   oadrDistributeEvent  VTN -> VEN   이벤트 배포
+#   oadrCreatedEvent     VEN -> VTN   참여/불참 응답
+#   oadrRequestEvent     VEN -> VTN   일회성으로 이벤트를 달라고 요청
+#
+# 배포 방식이 두 가지다(스펙 Figure 4, 5).
+#   PUSH  VTN 이 VEN 의 주소로 직접 oadrDistributeEvent 를 보낸다
+#   PULL  VEN 이 oadrPoll 이나 oadrRequestEvent 로 가져간다
+# 00 에서 만든 VEN 은 httpPullModel 이 true 라 PULL 이다.
+#
+# responseRequired 가 always 면 VEN 은 반드시 oadrCreatedEvent 로 답해야 하고,
+# never 면 방송이라 답하면 안 된다(스펙 8.1).
+
+### 3-1. 이벤트 생성
+# 확인: Events 목록에 한 줄 생긴다. 화면에서는 Events > 새 이벤트가 같은 일을 한다
+# 관리 API 다. 화면의 Events > 새 이벤트에 해당한다.
+#
+# activePeriod.start 는 필수다. 빠지면 400 이 나는데 응답 본문에 이유가 없어서
+# 서버 로그를 봐야 안다. {{$timestamp}}000 으로 지금 시각을 밀리초로 넣는다.
+#
+# 만들기만 하면 아직 아무 VEN 에게도 안 간다. 3-3 의 publish 를 해야 배포 대상이 된다.
+POST {{baseUrl}}/DemandResponseEvent/
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Content-Type: application/json
+
+{
+  "activePeriod": {
+    "start": {{$timestamp}}000,
+    "duration": "PT10M",
+    "notificationDuration": "PT1M",
+    "toleranceDuration": "PT1M"
+  },
+  "descriptor": {
+    "marketContext": "{{marketContext}}",
+    "oadrProfile": "OADR20B",
+    "responseRequired": "ALWAYS"
+  },
+  "signals": [
+    {
+      "signalName": "SIMPLE",
+      "signalType": "LEVEL",
+      "intervals": [
+        { "duration": "PT5M", "value": 0.0 },
+        { "duration": "PT5M", "value": 1.0 }
+      ],
+      "targets": [
+        { "targetType": "VEN", "targetId": "{{venId}}" }
+      ]
+    }
+  ]
+}
+
+> {%
+    client.test("201 로 생성된다", function() {
+        client.assert(response.status === 201, "status=" + response.status);
+    });
+    client.global.set("eventId", response.body.id);
+    client.log("eventId=" + response.body.id + " state=" + response.body.descriptor.state);
+%}
+
+### 3-2. 이벤트 상세
+# 확인: Events > 그 이벤트 > Descriptor 탭
+GET {{baseUrl}}/DemandResponseEvent/{{eventId}}
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Accept: application/json
+
+### 3-3. publish
+# 확인: Events 목록에서 상태가 바뀐다. 이때부터 VEN 이 받아 갈 수 있다
+# 이제 배포 대상이 된다. 상태가 far 나 near 로 간다.
+# pull VEN 은 이때부터 oadrPoll 이나 oadrRequestEvent 로 이걸 받을 수 있다.
+POST {{baseUrl}}/DemandResponseEvent/{{eventId}}/publish
+Authorization: Basic {{adminUser}} {{adminPassword}}
+
+### 3-4. oadrRequestEvent
+# 확인: 화면에 안 남는다. VEN 이 가져가는 쪽이라 응답 XML 의 eventID 로 본다
+# 스펙 8.1. 폴링 말고 일회성으로 이벤트를 달라고 하는 쪽이다.
+# 응답은 oadrDistributeEvent 이고, 이 VEN 에게 해당하는 이벤트가 전부 들어온다.
+# replyLimit 은 한 번에 받을 최대 개수다.
+POST {{baseUrl}}/OpenADR2/Simple/2.0b/EiEvent
+Authorization: Basic {{venId}} {{venPassword}}
+Content-Type: application/xml
+
+<?xml version="1.0" encoding="UTF-8"?>
+<oadr:oadrRequestEvent ei:schemaVersion="2.0b"
+	xmlns:ei="http://docs.oasis-open.org/ns/energyinterop/201110"
+	xmlns:pyld="http://docs.oasis-open.org/ns/energyinterop/201110/payloads"
+	xmlns:oadr="http://openadr.org/oadr-2.0b/2012/07">
+	<pyld:eiRequestEvent>
+		<pyld:requestID>REQ-REQUEST-EVENT</pyld:requestID>
+		<ei:venID>{{venId}}</ei:venID>
+		<pyld:replyLimit>5</pyld:replyLimit>
+	</pyld:eiRequestEvent>
+</oadr:oadrRequestEvent>
+
+> {%
+    var body = response.body.toString();
+    client.test("oadrDistributeEvent 가 온다", function() {
+        client.assert(body.indexOf("oadrDistributeEvent") >= 0, body.substring(0, 300));
+    });
+    var ids = [], re = /<ei:eventID>([^<]*)</g, m;
+    while ((m = re.exec(body)) !== null) { ids.push(m[1]); }
+    client.log("받은 eventID=" + ids.join(", "));
+    client.assert(ids.length > 0, "이벤트가 하나도 없다. 3-3 publish 를 했는지 확인해라");
+    client.global.set("oadrEventId", ids[0]);
+    client.log("modificationNumber=" + (body.match(/modificationNumber>([^<]*)</) || [])[1]);
+    client.log("responseRequired=" + (body.match(/oadrResponseRequired>([^<]*)</) || [])[1]);
+%}
+
+### 3-5. oadrCreatedEvent (참여, optIn)
+# 확인: Events > 그 이벤트 > Ven Responses 탭. 그 VEN 줄의 Opt 가 OPT_IN 으로 바뀐다
+# 스펙 8.1 oadrCreatedEvent Description.
+# qualifiedEventID 는 eventID 와 modificationNumber 쌍이다.
+# VTN 이 이벤트를 고치면 modificationNumber 가 올라가고, VEN 은 다시 답해야 한다.
+#
+# optType 은 optIn 또는 optOut 이다.
+# 나중에 마음을 바꾸려면 같은 페이로드를 다시 보내거나 04-opt.http 의 oadrCreateOpt 를 쓴다.
+POST {{baseUrl}}/OpenADR2/Simple/2.0b/EiEvent
+Authorization: Basic {{venId}} {{venPassword}}
+Content-Type: application/xml
+
+<?xml version="1.0" encoding="UTF-8"?>
+<oadr:oadrCreatedEvent ei:schemaVersion="2.0b"
+	xmlns:ei="http://docs.oasis-open.org/ns/energyinterop/201110"
+	xmlns:pyld="http://docs.oasis-open.org/ns/energyinterop/201110/payloads"
+	xmlns:oadr="http://openadr.org/oadr-2.0b/2012/07">
+	<pyld:eiCreatedEvent>
+		<ei:eiResponse>
+			<ei:responseCode>200</ei:responseCode>
+			<ei:responseDescription>OK</ei:responseDescription>
+			<pyld:requestID></pyld:requestID>
+		</ei:eiResponse>
+		<ei:eventResponses>
+			<ei:eventResponse>
+				<ei:responseCode>200</ei:responseCode>
+				<ei:responseDescription>OK</ei:responseDescription>
+				<pyld:requestID>REQ-CREATED-EVENT</pyld:requestID>
+				<ei:qualifiedEventID>
+					<ei:eventID>{{oadrEventId}}</ei:eventID>
+					<ei:modificationNumber>0</ei:modificationNumber>
+				</ei:qualifiedEventID>
+				<ei:optType>optIn</ei:optType>
+			</ei:eventResponse>
+		</ei:eventResponses>
+		<ei:venID>{{venId}}</ei:venID>
+	</pyld:eiCreatedEvent>
+</oadr:oadrCreatedEvent>
+
+> {%
+    var body = response.body.toString();
+    client.test("oadrResponse 200 이 온다", function() {
+        var rc = (body.match(/responseCode>([^<]*)</) || [])[1];
+        client.assert(rc === "200", "responseCode=" + rc + " / " + body.substring(0, 400));
+    });
+%}
+
+### 3-6. VEN 응답 확인
+# 확인: Events > 그 이벤트 > Ven Responses 탭이 읽는 것과 같은 엔드포인트다
+# 화면의 이벤트 상세 > VEN 응답 탭이 보는 것과 같다.
+# 3-5 를 보냈으면 venOpt 가 OPT_IN 으로 바뀌어 있어야 한다.
+GET {{baseUrl}}/DemandResponseEvent/{{eventId}}/venResponse
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Accept: application/json
+
+> {%
+    // venId 도 환경파일 값이라 client.global 이 아니라 request.environment 에서 읽는다
+    var venId = request.environment.get("venId");
+    var mine = response.body.filter(function(r) { return r.venUsername === venId; });
+    client.test("이 VEN 이 optIn 했다", function() {
+        client.assert(mine.length > 0 && mine[0].venOpt === "OPT_IN",
+            JSON.stringify(mine));
+    });
+    client.log(response.body.map(function(r) {
+        return r.venUsername + "=" + r.venOpt + "/" + r.venStatus;
+    }).join(", "));
+%}
+
+### 3-7. 특정 VEN 의 응답만
+# 확인: Ven Responses 탭의 한 줄에 해당한다
+GET {{baseUrl}}/DemandResponseEvent/{{eventId}}/venResponse/{{venId}}
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Accept: application/json
+
+### 3-8. 이벤트 수정
+# 확인: Events > 그 이벤트 > Active Period 와 Signals 탭에서 바뀐 값이 보인다
+# 고치면 modificationNumber 가 올라가고, responseRequired 가 always 인 VEN 은
+# 바뀐 번호로 oadrCreatedEvent 를 다시 보내야 한다(스펙 8.1).
+PUT {{baseUrl}}/DemandResponseEvent/{{eventId}}
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Content-Type: application/json
+
+{
+  "activePeriod": {
+    "start": {{$timestamp}}000,
+    "duration": "PT20M",
+    "notificationDuration": "PT1M",
+    "toleranceDuration": "PT1M"
+  },
+  "descriptor": {
+    "marketContext": "{{marketContext}}",
+    "oadrProfile": "OADR20B",
+    "responseRequired": "ALWAYS"
+  },
+  "signals": [
+    {
+      "signalName": "SIMPLE",
+      "signalType": "LEVEL",
+      "intervals": [
+        { "duration": "PT10M", "value": 0.0 },
+        { "duration": "PT10M", "value": 2.0 }
+      ],
+      "targets": [
+        { "targetType": "VEN", "targetId": "{{venId}}" }
+      ]
+    }
+  ]
+}
+
+### 3-9. active
+# 확인: Events 목록의 상태가 active 가 된다
+# 상태를 active 로 올린다. 실제로는 시각이 되면 알아서 넘어가지만 직접 줄 수도 있다.
+POST {{baseUrl}}/DemandResponseEvent/{{eventId}}/active
+Authorization: Basic {{adminUser}} {{adminPassword}}
+
+### 3-10. 이벤트 검색 (필터 없음)
+# 확인: Events 목록이 읽는 것과 같은 엔드포인트다
+# 화면의 Events 목록이 쓰는 엔드포인트다.
+POST {{baseUrl}}/DemandResponseEvent/search?page=0&size=20
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Content-Type: application/json
+
+[]
+
+### 3-11. 이벤트 검색 (상태로)
+# 확인: Events 목록의 필터에 해당한다
+# type 은 DemandResponseEventFilterType 에 있는 것만 쓸 수 있다.
+# VEN, MARKET_CONTEXT, EVENT_STATE, EVENT_PUBLISHED, EVENT_SENDABLE
+# EVENT_STATE 의 값은 ACTIVE 또는 CANCELLED 다.
+POST {{baseUrl}}/DemandResponseEvent/search?page=0&size=20
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Content-Type: application/json
+
+[
+  { "type": "EVENT_STATE", "value": "ACTIVE" }
+]
+
+### 3-12. 이벤트 검색 (마켓컨텍스트로)
+# 확인: Events 목록의 필터에 해당한다
+POST {{baseUrl}}/DemandResponseEvent/search?page=0&size=20
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Content-Type: application/json
+
+[
+  { "type": "MARKET_CONTEXT", "value": "{{marketContext}}" }
+]
+
+### 3-13. 이벤트 검색 (이 VEN 에게 간 것만)
+# 확인: VENs > httpven > Enrollments 탭이 이 필터를 쓴다
+POST {{baseUrl}}/DemandResponseEvent/search?page=0&size=20
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Content-Type: application/json
+
+[
+  { "type": "VEN", "value": "{{venId}}" }
+]
+
+### 3-14. 이벤트 취소
+# 확인: Events 목록에서 상태가 cancelled 가 된다
+# 상태가 cancelled 가 되고, VEN 에게 그 상태로 배포된다.
+POST {{baseUrl}}/DemandResponseEvent/{{eventId}}/cancel
+Authorization: Basic {{adminUser}} {{adminPassword}}
+
+> {%
+    client.log("취소됐다. 3-4 를 다시 실행하면 eventStatus 가 cancelled 로 온다");
+%}

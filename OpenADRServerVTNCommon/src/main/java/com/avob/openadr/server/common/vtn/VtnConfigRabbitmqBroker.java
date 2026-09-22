@@ -1,7 +1,7 @@
 package com.avob.openadr.server.common.vtn;
 
-import javax.annotation.Resource;
-import javax.jms.ConnectionFactory;
+import jakarta.annotation.Resource;
+import jakarta.jms.ConnectionFactory;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

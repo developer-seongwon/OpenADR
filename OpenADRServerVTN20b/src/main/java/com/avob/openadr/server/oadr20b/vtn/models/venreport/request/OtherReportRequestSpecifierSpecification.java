@@ -2,8 +2,8 @@ package com.avob.openadr.server.oadr20b.vtn.models.venreport.request;
 
 import java.util.List;
 
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
 
 import org.springframework.data.jpa.domain.Specification;
 

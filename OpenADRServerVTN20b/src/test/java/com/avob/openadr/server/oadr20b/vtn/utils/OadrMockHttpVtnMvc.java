@@ -2,9 +2,9 @@ package com.avob.openadr.server.oadr20b.vtn.utils;
 
 import java.util.List;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
-import org.eclipse.jetty.http.HttpStatus;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.UserRequestPostProcessor;
 import org.springframework.stereotype.Service;
 
@@ -41,7 +41,7 @@ public class OadrMockHttpVtnMvc {
 
 	public VtnConfigurationDto getConfiguration(UserRequestPostProcessor authSession, int status) throws Exception {
 		Class<VtnConfigurationDto> klass = VtnConfigurationDto.class;
-		if (HttpStatus.OK_200 != status) {
+		if (HttpServletResponse.SC_OK != status) {
 			klass = null;
 		}
 		return oadrMockHttpMvc.getRestJsonControllerAndExpect(authSession, VTN_ENDPOINT + "/configuration", status,

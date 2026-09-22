@@ -5,9 +5,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
-import org.eclipse.jetty.http.HttpStatus;
+import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -203,7 +203,7 @@ public class Oadr20bVTNEiOptService implements Oadr20bVTNEiService {
 					.build();
 		}
 
-		return Oadr20bEiOptBuilders.newOadr20bCreatedOptBuilder(requestID, HttpStatus.OK_200, optID).build();
+		return Oadr20bEiOptBuilders.newOadr20bCreatedOptBuilder(requestID, HttpServletResponse.SC_OK, optID).build();
 	}
 
 	public Object oadrCancelOptType(Ven ven, OadrCancelOptType payload) {
@@ -220,7 +220,7 @@ public class Oadr20bVTNEiOptService implements Oadr20bVTNEiService {
 
 		venOptService.deleteScheduledOpt(ven, optID);
 
-		return Oadr20bEiOptBuilders.newOadr20bCanceledOptBuilder(requestID, HttpStatus.OK_200, optID).build();
+		return Oadr20bEiOptBuilders.newOadr20bCanceledOptBuilder(requestID, HttpServletResponse.SC_OK, optID).build();
 	}
 
 	@Override

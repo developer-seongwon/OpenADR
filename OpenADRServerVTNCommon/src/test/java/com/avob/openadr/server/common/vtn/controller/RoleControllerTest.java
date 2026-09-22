@@ -2,10 +2,10 @@ package com.avob.openadr.server.common.vtn.controller;
 
 import static org.junit.Assert.assertTrue;
 
-import javax.annotation.Resource;
-import javax.servlet.Filter;
+import jakarta.annotation.Resource;
+import jakarta.servlet.Filter;
 
-import org.eclipse.jetty.http.HttpStatus;
+import jakarta.servlet.http.HttpServletResponse;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -49,7 +49,7 @@ public class RoleControllerTest {
 	private Filter springSecurityFilterChain;
 
 	@Resource
-	private DtoMapper dozerMapper;
+	private DtoMapper dtoMapper;
 
 	@Resource
 	private OadrUserService oadrUserService;
@@ -103,31 +103,31 @@ public class RoleControllerTest {
 	public void getUserRoleTest() throws Exception {
 		this.mockMvc.perform(
 				MockMvcRequestBuilders.post(ROLE_URL + "admin").header("Content-Type", "application/json").with(user))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.FORBIDDEN_403));
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_FORBIDDEN));
 		
 		this.mockMvc.perform(
 				MockMvcRequestBuilders.post(ROLE_URL + "admin").header("Content-Type", "application/json").with(ven))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.FORBIDDEN_403));
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_FORBIDDEN));
 
 		this.mockMvc.perform(MockMvcRequestBuilders.post(ROLE_URL + "mouaiccool")
 				.header("Content-Type", "application/json").with(admin))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.NOT_FOUND_404));
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_NOT_FOUND));
 
 		MvcResult andReturn = this.mockMvc.perform(
 				MockMvcRequestBuilders.post(ROLE_URL + "admin").header("Content-Type", "application/json").with(admin))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK)).andReturn();
 		assertTrue(andReturn.getResponse().getContentAsString().contains("ROLE_ADMIN"));
 		assertTrue(andReturn.getResponse().getContentAsString().contains("ROLE_USER"));
 
 		andReturn = this.mockMvc.perform(
 				MockMvcRequestBuilders.post(ROLE_URL + "app").header("Content-Type", "application/json").with(admin))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK)).andReturn();
 		assertTrue(andReturn.getResponse().getContentAsString().contains("ROLE_APP"));
 		assertTrue(andReturn.getResponse().getContentAsString().contains("ROLE_DEVICE_MANAGER"));
 
 		andReturn = this.mockMvc.perform(
 				MockMvcRequestBuilders.post(ROLE_URL + "ven").header("Content-Type", "application/json").with(admin))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK)).andReturn();
 		assertTrue(andReturn.getResponse().getContentAsString().contains("ROLE_VEN"));
 	}
 

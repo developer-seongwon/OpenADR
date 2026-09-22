@@ -2,10 +2,10 @@ package com.avob.openadr.server.oadr20b.ven.controller;
 
 import static org.junit.Assert.assertEquals;
 
-import javax.servlet.Filter;
-import javax.servlet.ServletContext;
+import jakarta.servlet.Filter;
+import jakarta.servlet.ServletContext;
 
-import org.eclipse.jetty.http.HttpStatus;
+import jakarta.servlet.http.HttpServletResponse;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -70,27 +70,27 @@ public class Oadr20bVENEiReportControllerTest {
 	public void requestTest() throws Exception {
 		// GET not allowed
 		this.mockMvc.perform(MockMvcRequestBuilders.get(EIREPORT_ENDPOINT).with(VTN_SECURITY_SESSION))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.METHOD_NOT_ALLOWED_405));
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_METHOD_NOT_ALLOWED));
 
 		// PUT not allowed
 		this.mockMvc.perform(MockMvcRequestBuilders.put(EIREPORT_ENDPOINT).with(VTN_SECURITY_SESSION))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.METHOD_NOT_ALLOWED_405));
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_METHOD_NOT_ALLOWED));
 
 		// DELETE not allowed
 		this.mockMvc.perform(MockMvcRequestBuilders.delete(EIREPORT_ENDPOINT).with(VTN_SECURITY_SESSION))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.METHOD_NOT_ALLOWED_405));
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_METHOD_NOT_ALLOWED));
 
 		// POST without content
 		String content = "";
 		this.mockMvc.perform(MockMvcRequestBuilders.post(EIREPORT_ENDPOINT).with(VTN_SECURITY_SESSION).content(content))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.BAD_REQUEST_400));
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_BAD_REQUEST));
 
 		// POST without content
 		content = "mouaiccool";
 		MvcResult andReturn = this.mockMvc
 				.perform(MockMvcRequestBuilders.post(EIREPORT_ENDPOINT)
 						.with(VTN_SECURITY_SESSION).content(content))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK)).andReturn();
 		OadrResponseType unmarshal = jaxbContext.unmarshal(andReturn.getResponse().getContentAsString(), OadrResponseType.class);
 		assertEquals(String.valueOf(Oadr20bApplicationLayerErrorCode.NOT_RECOGNIZED_453),
 				unmarshal.getEiResponse().getResponseCode());

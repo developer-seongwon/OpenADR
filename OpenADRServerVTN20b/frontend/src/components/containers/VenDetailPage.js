@@ -133,6 +133,27 @@ export class VenDetailPage extends React.Component {
   };
 
 
+  // 탭 순서. Tabs 에 그린 순서와 같아야 하고, App.js 의 :panel 라우트 목록과도 같아야 한다
+  static PANELS = ['settings', 'reports', 'requests', 'optschedules', 'enrollments', 'groups'];
+
+  panelIndex = (panel) => {
+  	var i = VenDetailPage.PANELS.indexOf(panel);
+  	return i < 0 ? 0 : i;
+  }
+
+  /**
+   * 주소가 다른 패널로 바뀌면 탭도 따라가야 한다.
+   *
+   * 예전에는 componentDidMount 에서만 탭을 정했다. 컴포넌트는 패널만 바뀔 때
+   * 다시 마운트되지 않으므로, 브라우저 뒤로가기나 패널 주소를 직접 여는 경우
+   * 주소는 바뀌는데 탭은 그대로 첫 번째에 머물렀다.
+   */
+  componentDidUpdate(prevProps) {
+  	if (prevProps.match.params.panel !== this.props.match.params.panel) {
+  		this.setState({ value: this.panelIndex(this.props.match.params.panel) });
+  	}
+  }
+
   componentDidMount() {
 	  
     this.props.vtnConfigurationActions.loadMarketContext();
@@ -145,29 +166,7 @@ export class VenDetailPage extends React.Component {
     this.props.venActions.loadVenOpt( this.props.match.params.username );
     this.setState({venId: this.props.match.params.username})
     
-    switch(this.props.match.params.panel){
-      case "settings":
-        this.setState({value:0});
-        break;
-      case "reports":
-        this.setState({value:1});
-        break;
-      case "requests":
-          this.setState({value:2});
-          break;
-      case "optschedules":
-        this.setState({value:3});
-        break;
-      case "enrollments":
-        this.setState({value:4});
-        break;
-      case "groups":
-        this.setState({value:5});
-        break;
-      default:
-        this.setState({value:0});
-        break;
-    }
+    this.setState({ value: this.panelIndex(this.props.match.params.panel) });
   }
 
   render() {

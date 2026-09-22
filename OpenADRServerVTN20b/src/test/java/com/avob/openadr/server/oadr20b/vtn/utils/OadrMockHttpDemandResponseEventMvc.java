@@ -2,9 +2,9 @@ package com.avob.openadr.server.oadr20b.vtn.utils;
 
 import java.util.List;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
-import org.eclipse.jetty.http.HttpStatus;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.UserRequestPostProcessor;
 import org.springframework.stereotype.Service;
@@ -34,7 +34,7 @@ public class OadrMockHttpDemandResponseEventMvc {
 				.perform(MockMvcRequestBuilders.get(DEMANDRESPONSEEVENT_ENDPOINT + eventId.toString()).with(authSession)
 						.header("Content-Type", "application/json"))
 				.andExpect(MockMvcResultMatchers.status().is(status)).andReturn();
-		if (HttpStatus.OK_200 != status) {
+		if (HttpServletResponse.SC_OK != status) {
 			return null;
 		}
 		MockHttpServletResponse mockHttpServletResponse = andReturn.getResponse();
@@ -48,7 +48,7 @@ public class OadrMockHttpDemandResponseEventMvc {
 				.perform(MockMvcRequestBuilders.post(DEMANDRESPONSEEVENT_ENDPOINT).with(authSession)
 						.content(mapper.writeValueAsBytes(dto)).header("Content-Type", "application/json"))
 				.andExpect(MockMvcResultMatchers.status().is(status)).andReturn();
-		if (HttpStatus.CREATED_201 != status) {
+		if (HttpServletResponse.SC_CREATED != status) {
 			return null;
 		}
 		MockHttpServletResponse mockHttpServletResponse = andReturn.getResponse();

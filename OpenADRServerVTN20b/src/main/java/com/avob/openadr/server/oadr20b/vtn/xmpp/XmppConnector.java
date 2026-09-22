@@ -1,6 +1,6 @@
 package com.avob.openadr.server.oadr20b.vtn.xmpp;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import javax.net.ssl.SSLContext;
 
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;

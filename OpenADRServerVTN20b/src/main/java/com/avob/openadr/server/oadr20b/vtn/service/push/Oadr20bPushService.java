@@ -3,9 +3,9 @@ package com.avob.openadr.server.oadr20b.vtn.service.push;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
-import javax.xml.bind.JAXBException;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.Resource;
+import jakarta.xml.bind.JAXBException;
 
 import org.jivesoftware.smack.SmackException.NotConnectedException;
 import org.jxmpp.jid.Jid;

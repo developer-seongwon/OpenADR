@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	VEN 이 실제 측정값을 VTN 에 올리는 페이로드다. 스펙 8.3.2.3 Send Reports.
+
+	reportRequestID 는 VTN 이 요청할 때 정한 값이어야 하고,
+	rID 는 oadrRegisterReport 로 등록한 명세 안에 있는 데이터 포인트여야 한다.
+	둘 중 하나라도 어긋나면 200 은 오는데 DB 에는 아무것도 안 남는다.
+
+	interval 마다 dtstart 가 있어야 값의 시각이 잡힌다.
+	payloadFloat 말고 payloadResourceStatus, payloadKeyToken 도 쓸 수 있다.
+-->
+<oadr:oadrUpdateReport ei:schemaVersion="2.0b"
+	xmlns:ei="http://docs.oasis-open.org/ns/energyinterop/201110"
+	xmlns:pyld="http://docs.oasis-open.org/ns/energyinterop/201110/payloads"
+	xmlns:oadr="http://openadr.org/oadr-2.0b/2012/07"
+	xmlns:xcal="urn:ietf:params:xml:ns:icalendar-2.0"
+	xmlns:strm="urn:ietf:params:xml:ns:icalendar-2.0:stream">
+	<pyld:requestID>REQ-UPDATE-REPORT</pyld:requestID>
+	<oadr:oadrReport>
+		<xcal:dtstart>
+			<xcal:date-time>{{$isoTimestamp}}</xcal:date-time>
+		</xcal:dtstart>
+		<xcal:duration>
+			<xcal:duration>PT10S</xcal:duration>
+		</xcal:duration>
+		<strm:intervals>
+			<ei:interval>
+				<xcal:dtstart>
+					<xcal:date-time>{{$isoTimestamp}}</xcal:date-time>
+				</xcal:dtstart>
+				<xcal:duration>
+					<xcal:duration>PT10S</xcal:duration>
+				</xcal:duration>
+				<xcal:uid>
+					<xcal:text>0</xcal:text>
+				</xcal:uid>
+				<oadr:oadrReportPayload>
+					<ei:rID>{{rid}}</ei:rID>
+					<ei:confidence>100</ei:confidence>
+					<ei:accuracy>0</ei:accuracy>
+					<ei:payloadFloat>
+						<ei:value>21.5</ei:value>
+					</ei:payloadFloat>
+					<oadr:oadrDataQuality>Quality Good - Non Specific</oadr:oadrDataQuality>
+				</oadr:oadrReportPayload>
+			</ei:interval>
+		</strm:intervals>
+		<ei:eiReportID>RP-HTTP-1</ei:eiReportID>
+		<ei:reportRequestID>{{reportRequestId}}</ei:reportRequestID>
+		<ei:reportSpecifierID>{{reportSpecifierId}}</ei:reportSpecifierID>
+		<ei:reportName>TELEMETRY_USAGE</ei:reportName>
+		<ei:createdDateTime>{{$isoTimestamp}}</ei:createdDateTime>
+	</oadr:oadrReport>
+	<ei:venID>{{venId}}</ei:venID>
+</oadr:oadrUpdateReport>

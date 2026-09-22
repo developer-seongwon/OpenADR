@@ -2,7 +2,7 @@ package com.avob.openadr.client.http.oadr20b;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
@@ -13,7 +13,7 @@ import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.UUID;
 
-import javax.xml.bind.JAXBException;
+import jakarta.xml.bind.JAXBException;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -25,7 +25,7 @@ import org.apache.http.entity.BasicHttpEntity;
 import org.apache.http.message.BasicHttpResponse;
 import org.apache.http.message.BasicStatusLine;
 import org.junit.Test;
-import org.mockito.Matchers;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 
 import com.avob.openadr.client.http.OadrHttpClient;
@@ -130,7 +130,7 @@ public class OadrHttpClient20bTest {
 		String marshal = jaxbContext.marshalRoot(mockOadrResponseType);
 
 		HttpResponse response = this.createHttpResponse(scOk, marshal);
-		when(oadrHttpClient.execute(Matchers.<HttpPost>anyObject(), any(), any(), any())).thenReturn(response);
+		when(oadrHttpClient.execute(ArgumentMatchers.<HttpPost>any(), any(), any(), any())).thenReturn(response);
 
 		OadrHttpClient20b client = new OadrHttpClient20b(oadrHttpClient);
 
@@ -154,7 +154,7 @@ public class OadrHttpClient20bTest {
 		String marshal = jaxbContext.marshalRoot(mockOadrResponseType);
 
 		HttpResponse response = this.createHttpResponse(scOk, marshal);
-		when(oadrHttpClient.execute(Matchers.<HttpPost>anyObject(), any(), any(), any())).thenReturn(response);
+		when(oadrHttpClient.execute(ArgumentMatchers.<HttpPost>any(), any(), any(), any())).thenReturn(response);
 
 		String certPath = "src/test/resources/cert/test";
 		OadrHttpClient20b client = new OadrHttpClient20b(oadrHttpClient, certPath + ".key", certPath + ".crt", 1200L);
@@ -179,7 +179,7 @@ public class OadrHttpClient20bTest {
 		OadrHttpClient oadrHttpClient = Mockito.mock(OadrHttpClient.class);
 
 		HttpResponse response = this.createHttpResponse(HttpStatus.SC_FORBIDDEN, "");
-		when(oadrHttpClient.execute(Matchers.<HttpPost>anyObject(), any(), any(), any())).thenReturn(response);
+		when(oadrHttpClient.execute(ArgumentMatchers.<HttpPost>any(), any(), any(), any())).thenReturn(response);
 
 		OadrHttpClient20b client = new OadrHttpClient20b(oadrHttpClient);
 
@@ -209,7 +209,7 @@ public class OadrHttpClient20bTest {
 		String marshal = jaxbContext.marshalRoot(mockOadrResponseType);
 
 		HttpResponse response = this.createHttpResponse(HttpStatus.SC_OK, marshal);
-		when(oadrHttpClient.execute(Matchers.<HttpPost>anyObject(), any(), any(), any())).thenReturn(response);
+		when(oadrHttpClient.execute(ArgumentMatchers.<HttpPost>any(), any(), any(), any())).thenReturn(response);
 
 		OadrHttpClient20b client = new OadrHttpClient20b(oadrHttpClient);
 
@@ -234,7 +234,7 @@ public class OadrHttpClient20bTest {
 		String marshal = jaxbContext.marshalRoot(mockOadrResponseType);
 
 		HttpResponse response = this.createHttpResponse(scOk, marshal);
-		when(oadrHttpClient.execute(Matchers.<HttpPost>anyObject(), any(), any(), any())).thenReturn(response);
+		when(oadrHttpClient.execute(ArgumentMatchers.<HttpPost>any(), any(), any(), any())).thenReturn(response);
 
 		OadrHttpClient20b client = new OadrHttpClient20b(oadrHttpClient, null, null, null, true);
 
@@ -262,7 +262,7 @@ public class OadrHttpClient20bTest {
 		String marshal = "";
 
 		HttpResponse response = this.createHttpResponse(scOk, marshal);
-		when(oadrHttpClient.execute(Matchers.<HttpPost>anyObject(), any(), any(), any())).thenReturn(response);
+		when(oadrHttpClient.execute(ArgumentMatchers.<HttpPost>any(), any(), any(), any())).thenReturn(response);
 
 		OadrHttpClient20b client = new OadrHttpClient20b(oadrHttpClient);
 
@@ -291,7 +291,7 @@ public class OadrHttpClient20bTest {
 		String marshal = jaxbContext.marshalRoot(mockOadrResponseType);
 
 		HttpResponse response = this.createHttpResponse(scOk, marshal);
-		when(oadrHttpClient.execute(Matchers.<HttpPost>anyObject(), any(), any(), any())).thenReturn(response);
+		when(oadrHttpClient.execute(ArgumentMatchers.<HttpPost>any(), any(), any(), any())).thenReturn(response);
 
 		String keyFile = CERT_FOLDER_PATH + "test.key";
 		String certFile = CERT_FOLDER_PATH + "test.crt";
@@ -335,7 +335,7 @@ public class OadrHttpClient20bTest {
 		String sign = sign(mockOadrResponseType, key, cert);
 
 		HttpResponse response = this.createHttpResponse(scOk, sign);
-		when(oadrHttpClient.execute(Matchers.<HttpPost>anyObject(), any(), any(), any())).thenReturn(response);
+		when(oadrHttpClient.execute(ArgumentMatchers.<HttpPost>any(), any(), any(), any())).thenReturn(response);
 
 		OadrHttpClient20b client = new OadrHttpClient20b(oadrHttpClient, keyFile, certFile, 1200L);
 

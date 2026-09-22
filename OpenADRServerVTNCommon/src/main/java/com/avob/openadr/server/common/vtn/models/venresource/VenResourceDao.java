@@ -2,17 +2,17 @@ package com.avob.openadr.server.common.vtn.models.venresource;
 
 import java.util.List;
 
-import javax.transaction.Transactional;
+import jakarta.transaction.Transactional;
 
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
 
 import com.avob.openadr.server.common.vtn.models.ven.Ven;
 
 @Transactional
-public interface VenResourceDao extends CrudRepository<VenResource, Long> {
+public interface VenResourceDao extends JpaRepository<VenResource, Long> {
 
     @Query("select count(res) from VenResource res where res.ven.id = :venId")
     public long countByVenId(@Param("venId") Long venId);

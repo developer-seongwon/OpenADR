@@ -1,0 +1,48 @@
+services:
+  build:
+    build:
+      context: ..
+      dockerfile: docker/build/Dockerfile
+
+  postgres:
+    build:
+      context: ..
+      dockerfile: docker/postgres/Dockerfile
+    environment:
+      - POSTGRES_PASSWORD=supersecure
+    # 데이터를 named volume 에 둔다.
+    # 볼륨이 없으면 컨테이너를 지우는 순간(docker compose down 등) 데이터도 같이 사라져서
+    # DB 를 언제 비울지 스크립트가 정할 수 없었다. 볼륨으로 빼두면 컨테이너를 새로 만들어도
+    # 데이터가 남고, 비우고 싶을 때만 run.sh 가 볼륨을 지운다.
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  openfire:
+    build:
+      context: ..
+      dockerfile: docker/openfire/Dockerfile
+    depends_on:
+      - "postgres"
+    ports:
+      - "5222:5222"
+      - "9090:9090"
+    extra_hosts:
+      - "vtn.oadr.com:192.168.65.2"
+
+  rabbitmq:
+    build:
+      context: ..
+      dockerfile: docker/rabbitmq/Dockerfile
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=admin
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+
+# 두 compose 프로젝트(oadr-infra, oadr-app)가 같은 볼륨을 쓰도록 이름을 고정한다.
+# name 을 안 주면 프로젝트명이 앞에 붙어서 서로 다른 볼륨이 된다.
+volumes:
+  pgdata:
+    name: oadr_pgdata

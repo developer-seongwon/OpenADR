@@ -3,11 +3,10 @@ package com.avob.openadr.server.common.vtn.controller;
 import java.util.List;
 import java.util.Optional;
 
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletResponse;
-import javax.validation.Valid;
+import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 
-import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -51,12 +50,12 @@ public class MarketContextController {
 		VenMarketContext marketContext = venMarketContextService.findOneByName(dto.getName());
 
 		if (marketContext != null) {
-			response.setStatus(HttpStatus.NOT_ACCEPTABLE_406);
+			response.setStatus(HttpServletResponse.SC_NOT_ACCEPTABLE);
 			return null;
 		}
 		marketContext = venMarketContextService.prepare(dto);
 		venMarketContextService.save(marketContext);
-		response.setStatus(HttpStatus.CREATED_201);
+		response.setStatus(HttpServletResponse.SC_CREATED);
 
 		LOGGER.info("create MarketContext: " + marketContext.getName());
 
@@ -72,13 +71,13 @@ public class MarketContextController {
 		VenMarketContext marketContext = venMarketContextService.findOneByName(dto.getName());
 
 		if (marketContext == null) {
-			response.setStatus(HttpStatus.NOT_ACCEPTABLE_406);
+			response.setStatus(HttpServletResponse.SC_NOT_ACCEPTABLE);
 			return null;
 		}
 		marketContext.setDescription(dto.getDescription());
 		marketContext.setColor(dto.getColor());
 		venMarketContextService.save(marketContext);
-		response.setStatus(HttpStatus.OK_200);
+		response.setStatus(HttpServletResponse.SC_OK);
 
 		LOGGER.info("update MarketContext: " + marketContext.getName());
 
@@ -92,7 +91,7 @@ public class MarketContextController {
 			HttpServletResponse response) {
 		VenMarketContext group = venMarketContextService.findOneByName(marketContextName);
 		if (group == null) {
-			response.setStatus(HttpStatus.NOT_FOUND_404);
+			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 			return null;
 		}
 		return dtoMapper.map(group, VenMarketContextDto.class);
@@ -104,7 +103,7 @@ public class MarketContextController {
 	public void deleteMarketContextById(@PathVariable("marketContextId") Long id, HttpServletResponse response) {
 		Optional<VenMarketContext> findById = venMarketContextService.findById(id);
 		if (!findById.isPresent()) {
-			response.setStatus(HttpStatus.NOT_FOUND_404);
+			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 			return;
 		}
 		venMarketContextService.delete(findById.get());

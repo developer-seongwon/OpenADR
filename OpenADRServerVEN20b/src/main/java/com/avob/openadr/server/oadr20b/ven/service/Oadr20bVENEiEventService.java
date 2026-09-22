@@ -7,9 +7,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ScheduledExecutorService;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
-import org.eclipse.jetty.http.HttpStatus;
+import jakarta.servlet.http.HttpServletResponse;
 import org.jivesoftware.smack.SmackException.NotConnectedException;
 import org.jxmpp.stringprep.XmppStringprepException;
 import org.slf4j.Logger;
@@ -152,7 +152,7 @@ public class Oadr20bVENEiEventService implements Oadr20bVENEiService {
 		ResponseRequiredType oadrResponseRequired = event.getOadrResponseRequired();
 
 		boolean doNeedResponse = ResponseRequiredType.ALWAYS.equals(oadrResponseRequired);
-		int responseCode = HttpStatus.OK_200;
+		int responseCode = HttpServletResponse.SC_OK;
 
 		if (!ResponseRequiredType.NEVER.equals(oadrResponseRequired) && doNeedResponse) {
 			String eventID = event.getEiEvent().getEventDescriptor().getEventID();
@@ -170,7 +170,7 @@ public class Oadr20bVENEiEventService implements Oadr20bVENEiService {
 
 		String vtnRequestID = event.getRequestID();
 
-		int responseCode = HttpStatus.OK_200;
+		int responseCode = HttpServletResponse.SC_OK;
 
 		try {
 			timeline.synchronizeOadrDistributeEvent(vtnConfiguration, event);

@@ -1,8 +1,8 @@
 package com.avob.openadr.server.oadr20b.vtn.service.ei;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
-import org.eclipse.jetty.http.HttpStatus;
+import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -50,13 +50,13 @@ public class Oadr20bVTNOadrPollService {
 
 		String responseStr = venPollService.retrievePollForVenUsername(venID);
 		if (responseStr == null) {
-			return Oadr20bResponseBuilders.newOadr20bResponseBuilder("", HttpStatus.OK_200, venID).build();
+			return Oadr20bResponseBuilders.newOadr20bResponseBuilder("", HttpServletResponse.SC_OK, venID).build();
 		}
 
 		try {
 			return jaxbContext.unmarshal(responseStr);
 		} catch (Oadr20bUnmarshalException e) {
-			return Oadr20bResponseBuilders.newOadr20bResponseBuilder("", HttpStatus.INTERNAL_SERVER_ERROR_500, venID)
+			return Oadr20bResponseBuilders.newOadr20bResponseBuilder("", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, venID)
 					.build();
 		}
 

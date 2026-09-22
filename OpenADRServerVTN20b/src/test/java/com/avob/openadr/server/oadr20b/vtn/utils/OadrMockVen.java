@@ -6,9 +6,9 @@ import static org.junit.Assert.fail;
 
 import java.util.Optional;
 
-import javax.xml.bind.JAXBException;
+import jakarta.xml.bind.JAXBException;
 
-import org.eclipse.jetty.http.HttpStatus;
+import jakarta.servlet.http.HttpServletResponse;
 import org.jivesoftware.smack.packet.Message;
 import org.jxmpp.jid.EntityFullJid;
 import org.jxmpp.jid.Jid;
@@ -160,7 +160,7 @@ public class OadrMockVen {
 		eiRequestEvent.setRequestID("0");
 		eiRequestEvent.setVenID(this.getVenId());
 		oadrRequestEventType.setEiRequestEvent(eiRequestEvent);
-		return this.event(oadrRequestEventType, HttpStatus.OK_200, klass);
+		return this.event(oadrRequestEventType, HttpServletResponse.SC_OK, klass);
 	}
 
 	public <T> T opt(Object payload, int status, Class<T> klass) throws Exception {
@@ -232,20 +232,20 @@ public class OadrMockVen {
 	}
 
 	public OadrDistributeEventType pollForValidOadrDistributeEvent() throws Exception {
-		OadrDistributeEventType poll = this.poll(HttpStatus.OK_200, OadrDistributeEventType.class);
-		assertEquals(String.valueOf(HttpStatus.OK_200), poll.getEiResponse().getResponseCode());
+		OadrDistributeEventType poll = this.poll(HttpServletResponse.SC_OK, OadrDistributeEventType.class);
+		assertEquals(String.valueOf(HttpServletResponse.SC_OK), poll.getEiResponse().getResponseCode());
 		return poll;
 	}
 
 	public void pollForEmpty() throws Exception {
 		if (OadrTransportType.SIMPLE_HTTP.value().equals(this.getVen().getTransport()) && ven.getHttpPullModel()) {
-			OadrResponseType poll = this.poll(HttpStatus.OK_200, OadrResponseType.class);
-			assertEquals(String.valueOf(HttpStatus.OK_200), poll.getEiResponse().getResponseCode());
+			OadrResponseType poll = this.poll(HttpServletResponse.SC_OK, OadrResponseType.class);
+			assertEquals(String.valueOf(HttpServletResponse.SC_OK), poll.getEiResponse().getResponseCode());
 		} else if (OadrTransportType.SIMPLE_HTTP.value().equals(this.getVen().getTransport())
 				&& !ven.getHttpPullModel()) {
-			this.poll(HttpStatus.OK_200, null);
+			this.poll(HttpServletResponse.SC_OK, null);
 		} else if (OadrTransportType.XMPP.value().equals(this.getVen().getTransport())) {
-			this.poll(HttpStatus.OK_200, null);
+			this.poll(HttpServletResponse.SC_OK, null);
 		}
 	}
 

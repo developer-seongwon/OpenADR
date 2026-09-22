@@ -2,7 +2,7 @@ package com.avob.openadr.server.oadr20b.vtn.controller.oadr;
 
 import java.security.Principal;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;

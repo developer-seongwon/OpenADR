@@ -5,9 +5,9 @@ import static org.junit.Assert.assertNull;
 
 import java.io.IOException;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
-import org.eclipse.jetty.http.HttpStatus;
+import jakarta.servlet.http.HttpServletResponse;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -76,7 +76,7 @@ public class Oadr20bVENEiRegisterPartyServiceTest {
 
 		OadrCanceledPartyRegistrationType canceledPartyRegistration = Oadr20bEiRegisterPartyBuilders
 				.newOadr20bCanceledPartyRegistrationBuilder(
-						Oadr20bResponseBuilders.newOadr20bEiResponseBuilder("", HttpStatus.OK_200).build(),
+						Oadr20bResponseBuilders.newOadr20bEiResponseBuilder("", HttpServletResponse.SC_OK).build(),
 						registrationId, multiVtnConfig.getMultiConfig(vtnHttpId, venUrl).getVenId())
 				.build();
 

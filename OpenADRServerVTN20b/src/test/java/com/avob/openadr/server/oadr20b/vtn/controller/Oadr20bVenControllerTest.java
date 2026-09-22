@@ -3,11 +3,11 @@ package com.avob.openadr.server.oadr20b.vtn.controller;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
-import javax.xml.bind.JAXBException;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.Resource;
+import jakarta.xml.bind.JAXBException;
 
-import org.eclipse.jetty.http.HttpStatus;
+import jakarta.servlet.http.HttpServletResponse;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -90,42 +90,42 @@ public class Oadr20bVenControllerTest {
 	public void testReportAction() throws Exception {
 
 		VenDto ven = oadrMockHttpVenMvc.getVen(OadrDataBaseSetup.ADMIN_SECURITY_SESSION, OadrDataBaseSetup.VEN_HTTP_PULL_DSIG,
-				HttpStatus.OK_200);
+				HttpServletResponse.SC_OK);
 		OadrMockVen mockVen = new OadrMockVen(ven, OadrDataBaseSetup.VEN_HTTP_PULL_DSIG_SECURITY_SESSION, oadrMockEiHttpMvc,
 				oadrMockEiXmpp, xmlSignatureService);
 
 		// send register party requestReregistration action
 		oadrMockHttpVenMvc.reregister(OadrDataBaseSetup.ADMIN_SECURITY_SESSION, OadrDataBaseSetup.VEN_HTTP_PULL_DSIG,
-				HttpStatus.OK_200);
+				HttpServletResponse.SC_OK);
 
 		// test register report payload is in poll queue
-		OadrRequestReregistrationType oadrRequestReregistrationType = mockVen.poll(HttpStatus.OK_200,
+		OadrRequestReregistrationType oadrRequestReregistrationType = mockVen.poll(HttpServletResponse.SC_OK,
 				OadrRequestReregistrationType.class);
 		assertNotNull(oadrRequestReregistrationType);
 
 		// send register party requestReregistration action
 		oadrMockHttpVenMvc.cancelRegistration(OadrDataBaseSetup.ADMIN_SECURITY_SESSION, OadrDataBaseSetup.VEN_HTTP_PULL_DSIG,
-				HttpStatus.OK_200);
+				HttpServletResponse.SC_OK);
 
 		// test register report payload is in poll queue
-		OadrCancelPartyRegistrationType oadrCancelPartyRegistrationType = mockVen.poll(HttpStatus.OK_200,
+		OadrCancelPartyRegistrationType oadrCancelPartyRegistrationType = mockVen.poll(HttpServletResponse.SC_OK,
 				OadrCancelPartyRegistrationType.class);
 		assertNotNull(oadrCancelPartyRegistrationType);
 
 		// send request register report action
 		oadrMockHttpVenMvc.requestRegisterReport(OadrDataBaseSetup.ADMIN_SECURITY_SESSION, OadrDataBaseSetup.VEN_HTTP_PULL_DSIG,
-				HttpStatus.OK_200);
+				HttpServletResponse.SC_OK);
 
 		// test register report payload is in poll queue
-		OadrCreateReportType oadrCreateReportType = mockVen.poll(HttpStatus.OK_200, OadrCreateReportType.class);
+		OadrCreateReportType oadrCreateReportType = mockVen.poll(HttpServletResponse.SC_OK, OadrCreateReportType.class);
 		assertNotNull(oadrCreateReportType);
 
 		// send own register report action
 		oadrMockHttpVenMvc.sendRegisterReport(OadrDataBaseSetup.ADMIN_SECURITY_SESSION, OadrDataBaseSetup.VEN_HTTP_PULL_DSIG,
-				HttpStatus.OK_200);
+				HttpServletResponse.SC_OK);
 
 		// test register report payload is in poll queue
-		OadrRegisterReportType oadrRegisterReportType = mockVen.poll(HttpStatus.OK_200, OadrRegisterReportType.class);
+		OadrRegisterReportType oadrRegisterReportType = mockVen.poll(HttpServletResponse.SC_OK, OadrRegisterReportType.class);
 		assertNotNull(oadrRegisterReportType);
 
 		// send cancel report action
@@ -133,15 +133,15 @@ public class Oadr20bVenControllerTest {
 		MultiValueMap<String, String> params = new LinkedMultiValueMap<String, String>();
 		params.add("reportRequestId", reportRequestId);
 		oadrMockHttpVenMvc.sendCancelReport(OadrDataBaseSetup.ADMIN_SECURITY_SESSION, OadrDataBaseSetup.VEN_HTTP_PULL_DSIG, params,
-				HttpStatus.OK_200);
+				HttpServletResponse.SC_OK);
 
 		// test cancel report payload is in poll queue
-		OadrCancelReportType oadrCancelReportType = mockVen.poll(HttpStatus.OK_200, OadrCancelReportType.class);
+		OadrCancelReportType oadrCancelReportType = mockVen.poll(HttpServletResponse.SC_OK, OadrCancelReportType.class);
 		assertNotNull(oadrCancelReportType);
 
-		OadrResponseType oadrResponseType = mockVen.poll(HttpStatus.OK_200, OadrResponseType.class);
+		OadrResponseType oadrResponseType = mockVen.poll(HttpServletResponse.SC_OK, OadrResponseType.class);
 		assertNotNull(oadrResponseType);
-		assertEquals(String.valueOf(HttpStatus.OK_200), oadrResponseType.getEiResponse().getResponseCode());
+		assertEquals(String.valueOf(HttpServletResponse.SC_OK), oadrResponseType.getEiResponse().getResponseCode());
 
 	}
 

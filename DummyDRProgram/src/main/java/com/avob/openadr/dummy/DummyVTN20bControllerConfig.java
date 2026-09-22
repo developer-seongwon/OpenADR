@@ -11,7 +11,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-import javax.jms.ConnectionFactory;
+import jakarta.jms.ConnectionFactory;
+
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;

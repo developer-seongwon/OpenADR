@@ -1,15 +1,14 @@
 package com.avob.openadr.server.common.vtn.service;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.annotation.Resource;
-import javax.transaction.Transactional;
+import jakarta.annotation.Resource;
+import jakarta.transaction.Transactional;
 
-import org.dozer.DozerBeanMapper;
-import org.dozer.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -33,6 +32,7 @@ import com.avob.openadr.server.common.vtn.models.venmarketcontext.VenMarketConte
 import com.avob.openadr.server.common.vtn.models.venmarketcontext.VenMarketContextDao;
 import com.avob.openadr.server.common.vtn.models.venresource.VenResourceDao;
 import com.avob.openadr.server.common.vtn.security.DigestAuthenticationProvider;
+import com.avob.openadr.server.common.vtn.service.dtomapper.VenDtoMapper;
 
 @Service
 public class VenService extends AbstractUserService<Ven> {
@@ -44,6 +44,13 @@ public class VenService extends AbstractUserService<Ven> {
 
 	@Resource
 	private VenResourceDao venResourceDao;
+
+	/**
+	 * VEN 을 지우기 전에 불릴 모듈별 뒷정리. 없으면 비어 있다.
+	 * VenDeleteHandler 의 주석에 이유를 적어 뒀다.
+	 */
+	@Autowired(required = false)
+	private List<VenDeleteHandler> venDeleteHandlers = new ArrayList<>();
 
 	@Resource
 	private VenDemandResponseEventDao venDemandResponseEventDao;
@@ -60,7 +67,8 @@ public class VenService extends AbstractUserService<Ven> {
 	@Resource
 	private DigestAuthenticationProvider digestAuthenticationProvider;
 
-	private Mapper mapper = new DozerBeanMapper();
+	@Resource
+	private VenDtoMapper venDtoMapper;
 
 	public Ven prepare(String username, String password) {
 		return super.prepare(new Ven(), username, password, digestAuthenticationProvider.getRealm());
@@ -87,7 +95,7 @@ public class VenService extends AbstractUserService<Ven> {
 			prepare = super.prepare(new Ven(), dto.getUsername());
 		}
 
-		mapper.map(dto, prepare);
+		venDtoMapper.copyToVen(dto, prepare);
 
 		return prepare;
 	}
@@ -113,7 +121,11 @@ public class VenService extends AbstractUserService<Ven> {
 	@Override
 	@Transactional
 	public void delete(Ven instance) {
-		
+
+		// 다른 모듈이 들고 있는 행을 먼저 치운다.
+		// 이게 없으면 VTN20b 의 리포트 테이블에 걸려서 삭제가 외래키 위반으로 터진다
+		venDeleteHandlers.forEach(handler -> handler.onVenDelete(instance));
+
 		venResourceDao.deleteByVenId(instance.getId());
 		venDemandResponseEventDao.deleteByVenId(instance.getId());
 		venDao.delete(instance);

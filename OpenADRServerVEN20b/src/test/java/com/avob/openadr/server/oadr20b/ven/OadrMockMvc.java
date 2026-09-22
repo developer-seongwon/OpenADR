@@ -5,9 +5,9 @@ import static org.junit.Assert.assertNotNull;
 import java.io.IOException;
 import java.util.List;
 
-import javax.annotation.PostConstruct;
-import javax.servlet.Filter;
-import javax.xml.bind.JAXBElement;
+import jakarta.annotation.PostConstruct;
+import jakarta.servlet.Filter;
+import jakarta.xml.bind.JAXBElement;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -114,7 +114,7 @@ public class OadrMockMvc {
 		}
 
 		MvcResult andReturn = this.mockMvc
-				.perform(MockMvcRequestBuilders.post("https://localhost:8081/"+endpoint).content(content).with(authSession))
+				.perform(MockMvcRequestBuilders.post("https://localhost:18081/"+endpoint).content(content).with(authSession))
 				.andExpect(MockMvcResultMatchers.status().is(status)).andReturn();
 
 		Thread.sleep(200);

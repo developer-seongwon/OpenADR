@@ -1,14 +1,15 @@
 package com.avob.openadr.server.oadr20a.vtn;
 
-import javax.annotation.Resource;
-import javax.xml.bind.JAXBException;
+import jakarta.annotation.Resource;
+import jakarta.xml.bind.JAXBException;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
-import org.springframework.boot.web.embedded.jetty.JettyServletWebServerFactory;
+import org.springframework.boot.autoconfigure.ssl.SslBundleRegistrar;
 import org.springframework.boot.web.server.WebServerFactoryCustomizer;
+import org.springframework.boot.web.servlet.server.ConfigurableServletWebServerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -20,6 +21,7 @@ import com.avob.openadr.model.oadr20a.Oadr20aJAXBContext;
 import com.avob.openadr.model.oadr20a.Oadr20aSecurity;
 import com.avob.openadr.security.exception.OadrSecurityException;
 import com.avob.openadr.server.common.vtn.VTNEmbeddedServletContainerCustomizer;
+import com.avob.openadr.server.common.vtn.VtnSslBundleRegistrar;
 import com.avob.openadr.server.common.vtn.VtnConfig;
 
 @Configuration
@@ -32,10 +34,23 @@ public class VTN20aApplication {
 	@Resource
 	private VtnConfig vtnConfig;
 
+	/**
+	 * 상호 TLS 재료를 SSL 번들로 등록한다.
+	 * 프로토콜과 암호 스위트는 OpenADR 2.0a 프로파일이 정한 목록이다.
+	 */
 	@Bean
-	public WebServerFactoryCustomizer<JettyServletWebServerFactory> servletContainerCustomizer() {
-		return new VTNEmbeddedServletContainerCustomizer(vtnConfig.getPort(), vtnConfig.getContextPath(),
-				vtnConfig.getSslContext(), Oadr20aSecurity.getProtocols(), Oadr20aSecurity.getCiphers());
+	public SslBundleRegistrar vtnSslBundleRegistrar() {
+		return new VtnSslBundleRegistrar(vtnConfig, Oadr20aSecurity.getProtocols(), Oadr20aSecurity.getCiphers());
+	}
+
+	/**
+	 * 포트와 컨텍스트 경로는 oadr 프로퍼티에서 오고, TLS 는 위 번들을 이름으로 가리킨다.
+	 * 키나 인증서가 없는 HTTP 전용 구성이면 번들이 등록되지 않으므로 ssl 도 걸지 않는다.
+	 */
+	@Bean
+	public WebServerFactoryCustomizer<ConfigurableServletWebServerFactory> servletContainerCustomizer() {
+		boolean sslEnabled = vtnConfig.getKey() != null && vtnConfig.getCert() != null;
+		return new VTNEmbeddedServletContainerCustomizer(vtnConfig.getPort(), vtnConfig.getContextPath(), sslEnabled);
 	}
 
 	@Bean

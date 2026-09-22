@@ -2,9 +2,9 @@ package com.avob.openadr.server.common.vtn.models.user;
 
 import java.util.List;
 
-import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface OadrUserDao extends CrudRepository<OadrUser, Long> {
+public interface OadrUserDao extends JpaRepository<OadrUser, Long> {
 
 	public List<OadrUser> findByUsernameIn(List<String> username);
 

@@ -4,9 +4,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
-import org.eclipse.jetty.http.HttpStatus;
+import jakarta.servlet.http.HttpServletResponse;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -36,7 +36,7 @@ public class Oadr20bVtnControllerTest {
 	public void test() throws Exception {
 
 		VtnConfigurationDto conf = oadrMockHttpVtnMvc.getConfiguration(OadrDataBaseSetup.ADMIN_SECURITY_SESSION,
-				HttpStatus.OK_200);
+				HttpServletResponse.SC_OK);
 
 		assertNotNull(conf);
 
@@ -47,8 +47,8 @@ public class Oadr20bVtnControllerTest {
 		assertEquals(vtnConfig.getSupportUnsecuredHttpPush(), conf.getSupportUnsecuredHttpPush());
 		assertEquals(vtnConfig.getReplayProtectAcceptedDelaySecond(), conf.getXmlSignatureReplayProtectSecond());
 
-		oadrMockHttpVtnMvc.getConfiguration(OadrDataBaseSetup.USER_SECURITY_SESSION, HttpStatus.FORBIDDEN_403);
-		oadrMockHttpVtnMvc.getConfiguration(OadrDataBaseSetup.VEN_HTTP_PULL_DSIG_SECURITY_SESSION, HttpStatus.FORBIDDEN_403);
+		oadrMockHttpVtnMvc.getConfiguration(OadrDataBaseSetup.USER_SECURITY_SESSION, HttpServletResponse.SC_FORBIDDEN);
+		oadrMockHttpVtnMvc.getConfiguration(OadrDataBaseSetup.VEN_HTTP_PULL_DSIG_SECURITY_SESSION, HttpServletResponse.SC_FORBIDDEN);
 
 	}
 

@@ -1,6 +1,6 @@
 package com.avob.openadr.server.common.vtn.models.demandresponseevent.dto.validator;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import javax.xml.datatype.DatatypeConfigurationException;
 
 import org.slf4j.Logger;

@@ -12,9 +12,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
-import javax.jms.JMSException;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.Resource;
+import jakarta.jms.JMSException;
 
 import org.apache.http.HttpStatus;
 import org.bouncycastle.asn1.x500.RDN;

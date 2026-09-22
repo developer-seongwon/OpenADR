@@ -3,10 +3,17 @@ import { history } from '../store/configureStore';
 
 import { swaggerAction, jsonResponseContentType, parseJsonData } from './apiUtils';
 
+// 목록을 다시 읽는다.
+//
+// 예전에는 listUsingGET 을 불렀는데 서버에 그런 엔드포인트가 없다.
+// GET /DemandResponseEvent/ 는 405 다. 목록은 POST /search 하나뿐이고,
+// 리듀서에서 LOAD_EVENT_SUCCESS 와 SEARCH_EVENT_SUCCESS 가 하는 일도 똑같다.
+// 그래서 필터 없는 search 로 바꿨다.
 export const loadEvent = (start, end) => {
+  var params = { filters: [], start, end };
   return swaggerAction(types.LOAD_EVENT, 
     (api) => {
-      return api.apis[ 'demand-response-controller' ].listUsingGET(jsonResponseContentType);
+      return api.apis[ 'demand-response-controller' ].searchUsingPOST(params, jsonResponseContentType);
     }, 
     parseJsonData
   );

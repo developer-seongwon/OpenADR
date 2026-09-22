@@ -2,7 +2,7 @@ package com.avob.openadr.server.oadr20b.vtn.service;
 
 import java.util.List;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;

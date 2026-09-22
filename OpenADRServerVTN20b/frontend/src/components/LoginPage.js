@@ -170,10 +170,22 @@ export class LoginPage extends React.Component {
     const {classes} = this.props;
     const {value} = this.state;
 
-    var hasError = this.props.user.connectionError != null;
-    var authenticationError = hasError 
-        && ( ""+this.props.user.connectionError === "Error: Forbidden"
-          || ""+this.props.user.connectionError === "Error: Unauthorized")
+    // 인증 실패인지 상태 코드로 판정한다.
+    //
+    // 예전에는 에러 문자열을 "Error: Forbidden" 과 글자 그대로 비교했다.
+    // 그 문구는 HTTP 응답의 reason phrase 에서 오는데, Jetty 는 "Forbidden" 을 붙여 보냈지만
+    // 톰캣은 붙이지 않는다. 그러면 에러가 그냥 "Error" 가 되어 비교가 빗나가고,
+    // 로그인 폼 대신 "Can't connect to VTN backend" 만 뜬다.
+    // 문구는 서버 구현에 따라 달라지니 상태 코드를 본다. 옛 비교도 남겨 둔다.
+    var connectionError = this.props.user.connectionError;
+    var hasError = connectionError != null;
+    var errorStatus = connectionError
+        && ( connectionError.status
+          || ( connectionError.response && connectionError.response.status ) );
+    var authenticationError = hasError
+        && ( errorStatus === 401 || errorStatus === 403
+          || ""+connectionError === "Error: Forbidden"
+          || ""+connectionError === "Error: Unauthorized")
 
     return (
     <div className={ classes.root }>

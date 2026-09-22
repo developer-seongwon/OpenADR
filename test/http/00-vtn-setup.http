@@ -1,0 +1,176 @@
+### 0. VTN 준비
+#
+# OpenADR 프로토콜을 두드리기 전에 VTN 쪽에 필요한 것들을 만든다.
+# 여기는 전부 VTN 관리 API(JSON)이고 프로토콜이 아니다.
+# 실제 운용에서는 사람이 화면에서 하는 일에 해당한다.
+
+### VTN 설정
+# 확인: 화면 왼쪽 VTN Config > Parameters 탭
+# 제일 먼저 이걸로 VTN 이 살아 있고 인증이 되는지 본다.
+GET {{baseUrl}}/Vtn/configuration
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Accept: application/json
+
+> {%
+    client.test("VTN 이 응답한다", function() {
+        client.assert(response.status === 200, "status=" + response.status);
+    });
+    client.log("vtnId=" + response.body.vtnId + " oadrVersion=" + response.body.oadrVersion);
+%}
+
+### 지금 로그인한 계정
+# 확인: 화면 오른쪽 위 사람 아이콘. 로그인 판정에 쓰는 것과 같은 엔드포인트다
+GET {{baseUrl}}/Account/
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Accept: application/json
+
+> {%
+    client.test("ROLE_ADMIN 이다", function() {
+        client.assert(response.body.roles.indexOf("ROLE_ADMIN") >= 0, JSON.stringify(response.body.roles));
+    });
+%}
+
+### 인증 없이 부르면 막힌다
+# 확인: 화면 없음. 막히는 것 자체가 확인이다
+# @expect 403
+GET {{baseUrl}}/Account/
+
+> {%
+    client.test("인증 없이는 막힌다", function() {
+        client.assert(response.status === 403, "status=" + response.status);
+    });
+%}
+
+### OpenAPI 스펙
+# 확인: https://localhost:8181/testvtn/swagger-ui/index.html
+# 로그인 전에도 열려야 한다. 웹 화면이 여기로 swagger 클라이언트를 만들기 때문이다.
+GET {{baseUrl}}/v3/api-docs
+Accept: application/json
+
+> {%
+    client.test("스펙이 인증 없이 열린다", function() {
+        client.assert(response.status === 200, "status=" + response.status);
+    });
+    client.test("operationId 가 문서 전체에서 유일하다", function() {
+        var seen = {}, dup = [];
+        for (var p in response.body.paths) {
+            var item = response.body.paths[p];
+            for (var m in item) {
+                var oid = item[m].operationId;
+                if (!oid) continue;
+                if (seen[oid]) dup.push(oid);
+                seen[oid] = true;
+            }
+        }
+        client.assert(dup.length === 0, "중복 operationId: " + dup.join(", "));
+    });
+%}
+
+### 마켓컨텍스트 생성
+# 확인: VTN Config > Market Contexts 탭에 HttpTestMarketContext 가 생긴다
+# 이벤트도 opt 도 전부 마켓컨텍스트 단위로 움직인다. 이게 먼저 있어야 한다.
+# fake-data 프로파일이 심어 두는 DummyMarketContext 와 별개로 하나 더 만든다.
+POST {{baseUrl}}/MarketContext/
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Content-Type: application/json
+
+{
+  "name": "HttpTestMarketContext",
+  "description": "test/http 용",
+  "dtstart": 0,
+  "duration": "PT1H"
+}
+
+> {%
+    client.test("201 로 생성된다", function() {
+        client.assert(response.status === 201, "status=" + response.status);
+    });
+    client.global.set("marketContextId", response.body.id);
+%}
+
+### 마켓컨텍스트 조회
+# 확인: VTN Config > Market Contexts 탭
+GET {{baseUrl}}/MarketContext/HttpTestMarketContext
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Accept: application/json
+
+### 그룹 생성
+# 확인: VTN Config > Groups 탭에 HttpTestGroup 이 생긴다
+# 이벤트를 VEN 하나가 아니라 묶음에 보낼 때 쓴다.
+POST {{baseUrl}}/Group/
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Content-Type: application/json
+
+{
+  "name": "HttpTestGroup"
+}
+
+> {%
+    client.global.set("groupId", response.body.id);
+%}
+
+### VEN 계정 생성
+# 확인: VENs 목록에 httpven 이 생긴다
+# 프로토콜로 등록(oadrCreatePartyRegistration)하기 전에, VTN 이 이 VEN 을 알고 있어야 한다.
+# OpenADR 은 통신 전에 신원이 먼저 잡혀 있는 걸 전제로 한다(스펙 10.5 System Registration).
+# 여기서 만드는 건 "이 아이디로 붙어도 된다" 는 등록이지, 프로토콜의 party registration 이 아니다.
+#
+# authenticationType 을 login 으로 주면 인증서를 만들지 않고 아이디/비밀번호 VEN 이 된다.
+# 그래서 클라이언트 인증서 설정 없이 01 부터 프로토콜을 두드릴 수 있다.
+# x509 로 만들면 인증서 묶음(tar)이 응답 본문으로 내려온다.
+POST {{baseUrl}}/Ven/
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Content-Type: application/json
+
+{
+  "username": "{{venId}}",
+  "password": "{{venPassword}}",
+  "authenticationType": "login",
+  "commonName": "{{venId}}",
+  "oadrName": "{{venName}}",
+  "oadrProfil": "20b",
+  "transport": "simpleHttp",
+  "httpPullModel": true,
+  "reportOnly": false,
+  "xmlSignature": false,
+  "marketContexts": ["{{marketContext}}"]
+}
+
+> {%
+    client.test("201 로 생성된다", function() {
+        client.assert(response.status === 201, "status=" + response.status);
+    });
+%}
+
+### VEN 상세
+# 확인: VENs > httpven > Settings 탭. Registration ID 가 아직 비어 있다
+# 아직 registrationId 가 null 이다. 01 을 돌리면 채워진다.
+GET {{baseUrl}}/Ven/{{venId}}
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Accept: application/json
+
+> {%
+    client.test("아직 등록 전이다", function() {
+        client.assert(response.body.registrationId === null,
+            "registrationId=" + response.body.registrationId);
+    });
+%}
+
+### VEN 리소스 추가
+# 확인: VENs > httpven > Enrollments 탭
+# 스펙 Annex D 의 Resource 다. VEN 뒤에 붙은 실제 부하 하나를 가리킨다.
+# 이벤트 타겟이나 opt 대상으로 쓸 수 있다.
+# 04-opt.http 의 리소스별 조회가 이걸 본다.
+POST {{baseUrl}}/Ven/{{venId}}/resource
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Content-Type: application/json
+
+{
+  "name": "HttpTestResource"
+}
+
+> {%
+    client.test("201 로 생성된다", function() {
+        client.assert(response.status === 201, "status=" + response.status);
+    });
+%}

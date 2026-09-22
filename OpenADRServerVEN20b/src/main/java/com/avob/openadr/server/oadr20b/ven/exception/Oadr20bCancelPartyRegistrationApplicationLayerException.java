@@ -2,6 +2,12 @@ package com.avob.openadr.server.oadr20b.ven.exception;
 
 import com.avob.openadr.model.oadr20b.oadr.OadrCanceledPartyRegistrationType;
 
+/**
+ * 아무 데서도 던지지도 잡지도 않는다.
+ *
+ * VEN 의 등록 해지 경로는 Oadr20bApplicationLayerException 으로 통일돼 있다. 지워도 된다.
+ */
+@Deprecated
 public class Oadr20bCancelPartyRegistrationApplicationLayerException extends Exception {
 
     /**

@@ -1,0 +1,190 @@
+### 6. VTN 관리 API
+#
+# 여기는 프로토콜이 아니다. 웹 화면이 쓰는 REST API 고, 앞의 시나리오에
+# 끼지 않는 나머지를 모아 둔 것이다.
+#
+# 전부 admin 계정 basic 인증이다.
+
+### 6-1. VEN 목록
+# 확인: VENs 목록
+GET {{baseUrl}}/Ven/
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Accept: application/json
+
+### 6-2. VEN 검색 (필터 없음, 페이징)
+# 확인: VENs 목록이 읽는 것과 같은 엔드포인트다
+# 화면의 VENs 목록이 쓰는 엔드포인트다.
+# 응답 헤더 X-total-count, X-total-page 로 전체 개수가 온다.
+POST {{baseUrl}}/Ven/search?page=0&size=20
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Content-Type: application/json
+
+[]
+
+> {%
+    client.log("총 " + response.headers.valueOf("X-total-count") + "개");
+%}
+
+### 6-3. VEN 검색 (필터)
+# 확인: VENs 목록의 필터에 해당한다
+# type 은 EVENT, VEN, MARKET_CONTEXT, GROUP, IS_REGISTERED 중 하나다.
+POST {{baseUrl}}/Ven/search?page=0&size=20
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Content-Type: application/json
+
+[
+  { "type": "IS_REGISTERED", "value": "true" }
+]
+
+### 6-4. VEN 수정
+# 확인: VENs > httpven > Settings 탭에서 VEN Name 이 바뀐다
+PUT {{baseUrl}}/Ven/{{venId}}
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Content-Type: application/json
+
+{
+  "oadrName": "{{venName}}-renamed",
+  "oadrProfil": "20b",
+  "transport": "simpleHttp",
+  "httpPullModel": true,
+  "reportOnly": false,
+  "xmlSignature": false
+}
+
+### 6-5. 리소스 목록
+# 확인: VENs > httpven > Enrollments 탭
+# 리소스 생성은 00-vtn-setup.http 에 있다. 04-opt.http 가 그걸 보기 때문이다.
+GET {{baseUrl}}/Ven/{{venId}}/resource
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Accept: application/json
+
+### 6-6. 마켓컨텍스트 배정
+# 확인: VENs > httpven > Enrollments 탭에 마켓컨텍스트가 추가된다
+POST {{baseUrl}}/Ven/{{venId}}/marketContext?marketContextId={{marketContextId}}
+Authorization: Basic {{adminUser}} {{adminPassword}}
+
+### 6-7. 배정된 마켓컨텍스트 조회
+# 확인: VENs > httpven > Enrollments 탭
+GET {{baseUrl}}/Ven/{{venId}}/marketContext
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Accept: application/json
+
+### 6-8. 그룹 배정
+# 확인: VENs > httpven > Groups 탭에 그룹이 추가된다
+POST {{baseUrl}}/Ven/{{venId}}/group?groupId={{groupId}}
+Authorization: Basic {{adminUser}} {{adminPassword}}
+
+### 6-9. 배정된 그룹 조회
+# 확인: VENs > httpven > Groups 탭
+GET {{baseUrl}}/Ven/{{venId}}/group
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Accept: application/json
+
+### 6-10. 마켓컨텍스트 목록
+# 확인: VTN Config > Market Contexts 탭
+GET {{baseUrl}}/MarketContext/
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Accept: application/json
+
+### 6-11. 마켓컨텍스트 수정
+# 확인: VTN Config > Market Contexts 탭에서 설명과 기간이 바뀐다
+# PUT 은 경로가 아니라 body 의 id 로 대상을 찾는다.
+PUT {{baseUrl}}/MarketContext/
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Content-Type: application/json
+
+{
+  "id": {{marketContextId}},
+  "name": "HttpTestMarketContext",
+  "description": "test/http 용 (수정됨)",
+  "dtstart": 0,
+  "duration": "PT2H"
+}
+
+### 6-12. 그룹 목록
+# 확인: VTN Config > Groups 탭
+GET {{baseUrl}}/Group/
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Accept: application/json
+
+### 6-13. 그룹 조회
+# 확인: VTN Config > Groups 탭
+GET {{baseUrl}}/Group/HttpTestGroup
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Accept: application/json
+
+### 6-14. 사용자 목록
+# 확인: Accounts > Users 탭
+# 화면의 Accounts > Users 탭.
+GET {{baseUrl}}/Account/user
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Accept: application/json
+
+### 6-15. 사용자 생성
+# 확인: Accounts > Users 탭에 httptestuser 가 생긴다
+# 권한은 VTNRoleEnum 에 있는 것만 쓸 수 있다.
+# ROLE_ADMIN, ROLE_DEVICE_MANAGER, ROLE_DRPROGRAM, ROLE_USER, ROLE_APP, ROLE_VEN, ROLE_VTN
+#
+# GET /Account/ 는 ADMIN, DEVICE_MANAGER, DRPROGRAM 중 하나가 있어야 열린다.
+# ROLE_USER 만 주면 6-16 이 403 이다.
+POST {{baseUrl}}/Account/user
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Content-Type: application/json
+
+{
+  "username": "httptestuser",
+  "password": "httptestuser",
+  "authenticationType": "login",
+  "commonName": "httptestuser",
+  "roles": ["ROLE_USER", "ROLE_DEVICE_MANAGER"]
+}
+
+> {%
+    client.test("201 로 생성된다", function() {
+        client.assert(response.status === 201, "status=" + response.status);
+    });
+%}
+
+### 6-16. 만든 계정으로 붙어 보기
+# 확인: 그 계정으로 로그아웃 후 다시 로그인하면 보이는 권한과 같다
+GET {{baseUrl}}/Account/
+Authorization: Basic httptestuser httptestuser
+Accept: application/json
+
+> {%
+    client.log("roles=" + JSON.stringify(response.body.roles));
+%}
+
+### 6-17. 권한 변경
+# 확인: Accounts > Users 탭에서 그 계정의 권한이 바뀐다
+POST {{baseUrl}}/Role/httptestuser
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Content-Type: application/json
+
+["ROLE_USER", "ROLE_DEVICE_MANAGER"]
+
+### 6-18. 앱 목록
+# 확인: Accounts > Apps 탭
+# 화면의 Accounts > Apps 탭. DummyDRProgram 이 이 종류다.
+GET {{baseUrl}}/Account/app
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Accept: application/json
+
+### 6-19. 앱 생성
+# 확인: Accounts > Apps 탭에 httptestapp 이 생긴다
+POST {{baseUrl}}/Account/app
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Content-Type: application/json
+
+{
+  "username": "httptestapp",
+  "password": "httptestapp",
+  "authenticationType": "login",
+  "commonName": "httptestapp",
+  "roles": ["ROLE_DRPROGRAM"]
+}
+
+### 6-20. swagger-ui
+# 확인: 브라우저로 직접 연다
+# 브라우저로 열면 위의 API 를 전부 볼 수 있다.
+GET {{baseUrl}}/swagger-ui/index.html

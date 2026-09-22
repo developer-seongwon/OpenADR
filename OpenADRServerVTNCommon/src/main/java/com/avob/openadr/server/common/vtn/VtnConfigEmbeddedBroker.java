@@ -2,7 +2,7 @@ package com.avob.openadr.server.common.vtn;
 
 import java.security.SecureRandom;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerPlugin;

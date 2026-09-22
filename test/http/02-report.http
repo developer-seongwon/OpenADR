@@ -1,0 +1,384 @@
+### 2. EiReport - 리포트
+#
+# 스펙 8.3 Report Service. 네 가지 동작으로 이뤄진다.
+#   Register  oadrRegisterReport / oadrRegisteredReport     "나는 이런 걸 줄 수 있다" (METADATA)
+#   Request   oadrCreateReport   / oadrCreatedReport         "그중 이걸 이렇게 보내라"
+#   Send      oadrUpdateReport   / oadrUpdatedReport         실제 데이터
+#   Cancel    oadrCancelReport   / oadrCanceledReport        그만 보내라
+#
+# 방향이 양쪽 다 있다. VEN 이 자기 능력을 VTN 에 알리기도 하고 그 반대도 한다.
+# 여기서는 VEN 이 source, VTN 이 target 인 쪽을 끝까지 따라간다. 이게 텔레메트리다.
+#
+# 중요: 01-registration.http 를 먼저 돌려야 한다.
+# 스펙 8.3.2.1 에 "Report registration is performed after completion of party registration"
+# 이라고 못 박혀 있다.
+#
+# 올린 데이터를 화면에서 어디서 보나
+#   VENs > httpven > Requests 탭 > 요청 줄을 클릭
+#   그러면 rid 별로 Archived, Last Update Date/Time, Last Update Value 가 나온다.
+#   주소로 바로 가려면 아래 형식이다.
+#   /ven/detail/{venId}/reports/{reportSpecifierId}/requests/{reportRequestId}
+#
+# 화면에 나오는 건 rid 별 "마지막 값" 하나뿐이다.
+# 쌓인 이력 전체를 보는 화면은 없다. 그건 2-10 의 report/data/float 로만 볼 수 있고,
+# 프론트엔드는 그 엔드포인트를 아예 부르지 않는다.
+
+### 2-1. oadrRegisterReport (VEN METADATA)
+# 확인: VENs > httpven > Reports 탭에 명세가 한 줄 생긴다
+# VEN 이 제공할 수 있는 리포트의 명세를 올린다. 실제 값은 아직 없다.
+# 명세 하나가 reportSpecifierID 로 식별되고, 그 안의 데이터 포인트 하나가 rID 다.
+#
+# 응답은 oadrRegisteredReport 이고, 여기에 oadrReportRequest 가 들어올 수 있다.
+# "등록한 김에 이건 바로 보내라" 는 뜻이고, 그러면 VEN 은 oadrCreatedReport 로 답해야 한다.
+#
+# METADATA 를 다시 보내면 이전 명세를 전부 대체하고, 그 명세로 걸려 있던
+# 요청도 같이 지워진다(스펙 8.3.2.1). 그래서 이 요청은 2-2 보다 먼저여야 한다.
+POST {{baseUrl}}/OpenADR2/Simple/2.0b/EiReport
+Authorization: Basic {{venId}} {{venPassword}}
+Content-Type: application/xml
+
+< ./payloads/oadrRegisterReport.xml
+
+> {%
+    var body = response.body.toString();
+    client.test("responseCode 가 200 이다", function() {
+        var rc = (body.match(/responseCode>([^<]*)</) || [])[1];
+        client.assert(rc === "200", "responseCode=" + rc + " / " + body.substring(0, 400));
+    });
+    client.log("바로 요청받은 리포트가 있나: " + (body.indexOf("oadrReportRequest") >= 0 ? "있다" : "없다"));
+%}
+
+### 2-2. VTN 이 뭘 받았는지 확인
+# 확인: VENs > httpven > Reports 탭이 읽는 것과 같은 엔드포인트다
+# 화면의 VEN 상세 > Reports 탭이 보는 것과 같다.
+GET {{baseUrl}}/Ven/{{venId}}/report/available
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Accept: application/json
+
+> {%
+    client.test("명세가 등록됐다", function() {
+        client.assert(response.body.length > 0, "비어 있다");
+    });
+    client.log(response.body.map(function(r) { return r.reportSpecifierId; }).join(", "));
+%}
+
+### 2-3. 명세 안의 데이터 포인트(rid) 목록
+# 확인: Reports 탭에서 그 줄의 Subscribe 나 Request 를 누르면 나오는 rid 체크박스 목록이다
+GET {{baseUrl}}/Ven/{{venId}}/report/available/description?reportSpecifierId={{reportSpecifierId}}
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Accept: application/json
+
+> {%
+    client.log(response.body.map(function(d) { return d.rid + "(" + d.reportType + ")"; }).join(", "));
+%}
+
+### 2-4. VTN 이 리포트를 요청한다 (구독)
+# 확인: VENs > httpven > Requests 탭에 요청이 한 줄 생긴다. 화면에서는 Reports 탭의 Subscribe 버튼이 같은 일을 한다
+# 프로토콜로는 oadrCreateReport 인데, VTN 쪽에서 먼저 거는 동작이라
+# 여기서는 관리 API 로 큐에 넣는다. pull VEN 은 2-5 의 oadrPoll 로 받는다.
+#
+# reportRequestId 를 직접 준다. 안 주면 서버가 UUID 를 만들어서
+# 2-7 에서 그걸 다시 찾아와야 하는데, 고정값이면 그럴 필요가 없다.
+#
+# rid 는 Map<String, Boolean> 이다. 값이 true 여야 데이터가 DB 에 쌓인다.
+# false 면 마지막 값만 갱신하고 이력은 안 남긴다. 문자열을 넣으면 400 이다.
+#
+# 등록되지 않은 reportSpecifierId 로 부르면 406 이다. 2-1 을 먼저 실행해라.
+#
+# reportRequestId 를 생략하면 서버가 UUID 로 만들어 준다. 화면에서 구독을 걸 때가
+# 그렇다. 다만 그러면 2-9 의 oadrUpdateReport 에 넣을 값을 2-7 에서 다시
+# 찾아와야 하므로, 여기서는 고정값을 준다.
+POST {{baseUrl}}/Ven/{{venId}}/report/available/description/subscribe
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Content-Type: application/json
+
+[
+  {
+    "reportSpecifierId": "{{reportSpecifierId}}",
+    "reportRequestId": "{{reportRequestId}}",
+    "rid": { "{{rid}}": true },
+    "granularity": "PT10S",
+    "reportBackDuration": "PT1M"
+  }
+]
+
+> {%
+    client.test("200 이다", function() {
+        client.assert(response.status === 200, "status=" + response.status);
+    });
+%}
+
+### 2-5. oadrPoll 로 요청을 받는다
+# 확인: 화면에 안 남는다. VEN 이 큐에서 꺼내 가는 것이라 응답 XML 로 본다
+# 스펙 8.6. pull VEN 은 VTN 이 먼저 보내려는 걸 폴링으로 가져간다.
+# 구독을 걸었으니 oadrCreateReport 가 와야 한다.
+#
+# 큐에 다른 게 먼저 들어 있으면 그게 먼저 나온다(예: 앞선 재등록 요청이나 이벤트).
+# 스펙상 한 번의 oadrPoll 에는 페이로드 하나만 온다. 비면 oadrResponse 다.
+# 원하는 게 안 나오면 몇 번 더 실행해라.
+POST {{baseUrl}}/OpenADR2/Simple/2.0b/OadrPoll
+Authorization: Basic {{venId}} {{venPassword}}
+Content-Type: application/xml
+
+<?xml version="1.0" encoding="UTF-8"?>
+<oadr:oadrPoll ei:schemaVersion="2.0b"
+	xmlns:ei="http://docs.oasis-open.org/ns/energyinterop/201110"
+	xmlns:oadr="http://openadr.org/oadr-2.0b/2012/07">
+	<ei:venID>{{venId}}</ei:venID>
+</oadr:oadrPoll>
+
+> {%
+    var body = response.body.toString();
+    var root = (body.match(/<oadr:(\w+)/) || [])[1];
+    client.log("받은 페이로드=" + root);
+    if (root === "oadrCreateReport") {
+        client.log("reportRequestID=" + (body.match(/reportRequestID>([^<]*)</) || [])[1]);
+        client.log("rID=" + (body.match(/rID>([^<]*)</) || [])[1]);
+    } else if (root === "oadrResponse") {
+        client.log("큐가 비어 있다");
+    } else {
+        client.log("다른 게 먼저 나왔다. 한 번 더 실행해라");
+    }
+%}
+
+### 2-6. oadrCreatedReport (요청 잘 받았다고 ack)
+# 확인: VENs > httpven > Requests 탭. 그 줄의 버튼이 Cancel 로 바뀐다(acked 가 된다)
+# 스펙 Figure 10 의 응답이다. 이걸 보내야 VTN 쪽 요청이 acked 로 바뀐다.
+# oadrPendingReports 에는 지금 보낼 예정으로 들고 있는 reportRequestID 를 나열한다.
+POST {{baseUrl}}/OpenADR2/Simple/2.0b/EiReport
+Authorization: Basic {{venId}} {{venPassword}}
+Content-Type: application/xml
+
+<?xml version="1.0" encoding="UTF-8"?>
+<oadr:oadrCreatedReport ei:schemaVersion="2.0b"
+	xmlns:ei="http://docs.oasis-open.org/ns/energyinterop/201110"
+	xmlns:pyld="http://docs.oasis-open.org/ns/energyinterop/201110/payloads"
+	xmlns:oadr="http://openadr.org/oadr-2.0b/2012/07">
+	<ei:eiResponse>
+		<ei:responseCode>200</ei:responseCode>
+		<ei:responseDescription>OK</ei:responseDescription>
+		<pyld:requestID>REQ-CREATED-REPORT</pyld:requestID>
+	</ei:eiResponse>
+	<oadr:oadrPendingReports>
+		<ei:reportRequestID>{{reportRequestId}}</ei:reportRequestID>
+	</oadr:oadrPendingReports>
+	<ei:venID>{{venId}}</ei:venID>
+</oadr:oadrCreatedReport>
+
+> {%
+    var body = response.body.toString();
+    client.test("200 이다", function() {
+        var rc = (body.match(/responseCode>([^<]*)</) || [])[1];
+        client.assert(rc === "200", "responseCode=" + rc);
+    });
+%}
+
+### 2-7. VTN 이 이 VEN 에게 요청해 둔 리포트
+# 확인: VENs > httpven > Requests 탭이 읽는 것과 같은 엔드포인트다
+# 화면의 VEN 상세 > Requests 탭.
+GET {{baseUrl}}/Ven/{{venId}}/report/requested
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Accept: application/json
+
+> {%
+    client.log(response.body.map(function(r) {
+        return r.reportRequestId + (r.acked ? " (acked)" : " (아직 ack 안 됨)");
+    }).join(", "));
+%}
+
+### 2-8. 요청한 리포트의 항목별 상태
+# 확인: Requests 탭에서 그 줄을 클릭하면 열리는 rid 표다. 아직 값이 비어 있다
+# rid 별로 마지막 값과 시각이 여기 보인다. 아직 데이터를 안 올렸으니 비어 있다.
+POST {{baseUrl}}/Ven/{{venId}}/report/requested/specifier
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Content-Type: application/json
+
+{
+  "reportSpecifierId": ["{{reportSpecifierId}}"]
+}
+
+### 2-9. oadrUpdateReport (실제 데이터)
+# 확인: VENs > httpven > Requests 탭 > 그 줄 클릭 > rid 표의 Last Update Value 에 올린 값이 뜬다
+# 여기가 텔레메트리 본체다. 이게 빠지면 데이터 조회는 영원히 빈 목록이다.
+#
+# 저장되려면 세 가지가 맞아야 한다.
+#   reportRequestID 가 2-4 에서 만든 요청과 같을 것
+#   rID 가 그 요청에 들어 있을 것
+#   그 rid 의 archived 가 true 일 것 (2-4 에서 true 로 줬다)
+# 하나라도 어긋나면 200 은 오는데 DB 에는 아무것도 안 남는다.
+#
+# 각 interval 에 dtstart 가 있어야 한다. 없으면 start 가 null 이라 시각이 안 잡힌다.
+POST {{baseUrl}}/OpenADR2/Simple/2.0b/EiReport
+Authorization: Basic {{venId}} {{venPassword}}
+Content-Type: application/xml
+
+< ./payloads/oadrUpdateReport.xml
+
+> {%
+    var body = response.body.toString();
+    client.test("oadrUpdatedReport 200 이 온다", function() {
+        var rc = (body.match(/responseCode>([^<]*)</) || [])[1];
+        client.assert(rc === "200", "responseCode=" + rc + " / " + body.substring(0, 400));
+    });
+%}
+
+### 2-10. 데이터가 쌓였나
+# 확인: 이 이력 전체를 보는 화면은 없다. 화면에는 rid 별 마지막 값만 나온다(Requests 탭 > 줄 클릭)
+GET {{baseUrl}}/Ven/{{venId}}/report/data/float/{{reportSpecifierId}}
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Accept: application/json
+
+> {%
+    client.test("데이터가 들어왔다", function() {
+        client.assert(response.body.length > 0,
+            "비어 있다. reportRequestId 와 rid 가 2-4 의 구독과 같은지 확인해라");
+    });
+    client.log(response.body.length + "건: " +
+        response.body.map(function(d) { return d.rid + "=" + d.value; }).join(", "));
+%}
+
+### 2-11. 특정 rid 만
+# 확인: 이것도 화면에는 없다. 마지막 값만 Requests 탭 > 줄 클릭에서 본다
+# rid 이름에 공백이 있어서 경로에는 인코딩한 ridPath 를 쓴다.
+GET {{baseUrl}}/Ven/{{venId}}/report/data/float/{{reportSpecifierId}}/rid/{{ridPath}}
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Accept: application/json
+
+### 2-12. 항목별 상태 다시 보기
+# 확인: VENs > httpven > Requests 탭 > 그 줄 클릭. Last Update Date/Time 과 Value 가 채워져 있다
+# 이번에는 lastUpdateValue 와 lastUpdateDatetime 이 채워져 있어야 한다.
+POST {{baseUrl}}/Ven/{{venId}}/report/requested/specifier
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Content-Type: application/json
+
+{
+  "reportSpecifierId": ["{{reportSpecifierId}}"]
+}
+
+> {%
+    client.log(response.body.map(function(s) {
+        return s.rid + " -> " + s.lastUpdateValue;
+    }).join(", "));
+%}
+
+### 2-13. 다른 종류의 데이터 조회
+# 확인: 화면 없음. 이 이력을 보여주는 화면은 없다
+# 올린 명세가 usage 뿐이라 이 둘은 빈 목록이 정상이다.
+# dummy VEN 은 resource status 리포트도 올리므로 그쪽으로 보면 값이 있다.
+GET {{baseUrl}}/Ven/{{venId}}/report/data/resourcestatus/{{reportSpecifierId}}
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Accept: application/json
+
+### 2-14. key token 데이터
+# 확인: 화면 없음. 이 이력을 보여주는 화면은 없다
+GET {{baseUrl}}/Ven/{{venId}}/report/data/keytoken/{{reportSpecifierId}}
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Accept: application/json
+
+### 2-15. VTN 이 자기 리포트 명세를 VEN 에게 보낸다
+# 확인: 화면에서는 Requests 탭의 SEND REQUESTS 버튼이 같은 일을 한다. 결과는 큐로 나가서 05-poll.http 로 받는다
+# 반대 방향이다. VTN 도 source 가 될 수 있다(스펙 8.3.2.1 "both from the VTN to the VEN").
+# pull VEN 은 05-poll.http 의 oadrPoll 로 oadrRegisterReport 를 받고
+# oadrRegisteredReport 로 답해야 한다.
+POST {{baseUrl}}/Ven/{{venId}}/report_action/sendRegister
+Authorization: Basic {{adminUser}} {{adminPassword}}
+
+### 2-16. VEN 에게 명세를 다시 알려달라고 요청
+# 확인: 화면에서는 Requests 탭의 REQUIRE REPORTS 버튼이 같은 일을 한다
+# VTN 이 VEN 의 METADATA 를 다시 받고 싶을 때. 이것도 큐를 거친다.
+POST {{baseUrl}}/Ven/{{venId}}/report_action/requestRegister
+Authorization: Basic {{adminUser}} {{adminPassword}}
+
+### 2-17. oadrRegisteredReport (VTN 명세를 받았다고 답)
+# 확인: 화면에 안 남는다. VEN 이 보내는 답이라 응답 XML 로 본다
+# 2-15 로 VTN 명세를 받았을 때 VEN 이 보내는 답이다.
+# 받을 게 없으면 굳이 보낼 필요는 없지만, 보내도 200 이다.
+POST {{baseUrl}}/OpenADR2/Simple/2.0b/EiReport
+Authorization: Basic {{venId}} {{venPassword}}
+Content-Type: application/xml
+
+<?xml version="1.0" encoding="UTF-8"?>
+<oadr:oadrRegisteredReport ei:schemaVersion="2.0b"
+	xmlns:ei="http://docs.oasis-open.org/ns/energyinterop/201110"
+	xmlns:pyld="http://docs.oasis-open.org/ns/energyinterop/201110/payloads"
+	xmlns:oadr="http://openadr.org/oadr-2.0b/2012/07">
+	<ei:eiResponse>
+		<ei:responseCode>200</ei:responseCode>
+		<ei:responseDescription>OK</ei:responseDescription>
+		<pyld:requestID>REQ-REGISTERED-REPORT</pyld:requestID>
+	</ei:eiResponse>
+	<ei:venID>{{venId}}</ei:venID>
+</oadr:oadrRegisteredReport>
+
+### 2-18. 한 번만 받아오기 (request)
+# 확인: 화면에서는 Reports 탭의 Request 버튼이 같은 일을 한다. 일회성이라 Requests 탭에는 안 남는다
+# 구독이 아니라 일회성이다. reportBackDuration 이 없으면 one shot 이다(스펙 8.3.2.2).
+# 이건 DB 에 요청을 남기지 않는다. 큐로 나가고 끝이다.
+POST {{baseUrl}}/Ven/{{venId}}/report/available/description/request
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Content-Type: application/json
+
+[
+  {
+    "reportSpecifierId": "{{reportSpecifierId}}",
+    "rid": ["{{rid}}"]
+  }
+]
+
+### 2-19. 구독 취소
+# 확인: VENs > httpven > Requests 탭에서 그 줄이 사라진다. 화면에서는 그 줄의 Cancel 버튼이 같은 일을 한다
+# VTN 이 "그만 보내라" 고 한다. 프로토콜로는 oadrCancelReport 가 큐로 나가고
+# VEN 은 oadrCanceledReport 로 답한다.
+POST {{baseUrl}}/Ven/{{venId}}/report/requested/cancelSubscription?reportRequestId={{reportRequestId}}
+Authorization: Basic {{adminUser}} {{adminPassword}}
+
+### 2-20. oadrCanceledReport (취소 받았다고 답)
+# 확인: 화면에 안 남는다. VEN 이 보내는 답이라 응답 XML 로 본다
+# oadrPendingReports 에는 아직 남아 있는 요청을 적는다. 다 끝났으면 비운다.
+POST {{baseUrl}}/OpenADR2/Simple/2.0b/EiReport
+Authorization: Basic {{venId}} {{venPassword}}
+Content-Type: application/xml
+
+<?xml version="1.0" encoding="UTF-8"?>
+<oadr:oadrCanceledReport ei:schemaVersion="2.0b"
+	xmlns:ei="http://docs.oasis-open.org/ns/energyinterop/201110"
+	xmlns:pyld="http://docs.oasis-open.org/ns/energyinterop/201110/payloads"
+	xmlns:oadr="http://openadr.org/oadr-2.0b/2012/07">
+	<ei:eiResponse>
+		<ei:responseCode>200</ei:responseCode>
+		<ei:responseDescription>OK</ei:responseDescription>
+		<pyld:requestID>REQ-CANCELED-REPORT</pyld:requestID>
+	</ei:eiResponse>
+	<oadr:oadrPendingReports/>
+	<ei:venID>{{venId}}</ei:venID>
+</oadr:oadrCanceledReport>
+
+> {%
+    var body = response.body.toString();
+    client.log("responseCode=" + (body.match(/responseCode>([^<]*)</) || [])[1]);
+%}
+
+### 2-21. 전체 VEN 대상 리포트 검색
+# 확인: 화면에 이 목록을 그대로 쓰는 곳은 없다. VEN 별로는 Reports 탭에서 본다
+# 화면의 Reports 목록이 쓰는 것이다.
+GET {{baseUrl}}/Report/available/search?venID={{venId}}
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Accept: application/json
+
+### 2-22. 전체 VEN 대상 항목 검색
+# 확인: 화면에 이 목록을 그대로 쓰는 곳은 없다
+GET {{baseUrl}}/Report/available/description/search?reportSpecifierId={{reportSpecifierId}}
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Accept: application/json
+
+### 2-23. VTN 자기 리포트 명세
+# 확인: 화면 없음. VTN 이 VEN 에게 제공하는 쪽이라 화면에 안 나온다
+GET {{baseUrl}}/Vtn/report/available
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Accept: application/json
+
+### 2-24. VTN 이 받기로 요청해 둔 리포트 전체
+# 확인: 화면에 이 목록을 그대로 쓰는 곳은 없다. VEN 별로는 Requests 탭에서 본다
+GET {{baseUrl}}/Vtn/report/requested
+Authorization: Basic {{adminUser}} {{adminPassword}}
+Accept: application/json

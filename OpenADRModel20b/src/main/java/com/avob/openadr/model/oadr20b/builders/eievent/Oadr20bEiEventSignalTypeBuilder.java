@@ -2,7 +2,7 @@ package com.avob.openadr.model.oadr20b.builders.eievent;
 
 import java.util.List;
 
-import javax.xml.bind.JAXBElement;
+import jakarta.xml.bind.JAXBElement;
 
 import com.avob.openadr.model.oadr20b.Oadr20bFactory;
 import com.avob.openadr.model.oadr20b.ei.EiEventSignalType;

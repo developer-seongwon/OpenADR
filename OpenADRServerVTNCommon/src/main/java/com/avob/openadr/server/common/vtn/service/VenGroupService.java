@@ -3,7 +3,7 @@ package com.avob.openadr.server.common.vtn.service;
 import java.util.List;
 import java.util.Optional;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 import org.springframework.stereotype.Service;
 

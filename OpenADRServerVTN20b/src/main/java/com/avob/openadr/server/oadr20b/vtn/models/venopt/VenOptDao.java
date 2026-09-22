@@ -2,16 +2,16 @@ package com.avob.openadr.server.oadr20b.vtn.models.venopt;
 
 import java.util.List;
 
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.avob.openadr.server.common.vtn.models.ven.Ven;
 
 @Transactional(readOnly = true)
-public interface VenOptDao extends CrudRepository<VenOpt, Long> {
+public interface VenOptDao extends JpaRepository<VenOpt, Long> {
 
     @Query(value = "select opt from VenOpt opt inner join opt.ven ven where opt.ven.username = :venUsername and opt.start >= :start and opt.end < :end")
     public List<VenOpt> findScheduledOptBetween(@Param("venUsername") String venUsername, @Param("start") Long start,
@@ -77,8 +77,18 @@ public interface VenOptDao extends CrudRepository<VenOpt, Long> {
     public List<VenOpt> findResourceScheduledOpt(@Param("venUsername") String venUsername,
             @Param("marketContextName") String marketContextName, @Param("resourceName") String resourceName);
 
+    // 이 인터페이스는 클래스 레벨이 readOnly = true 다.
+    // H2 는 읽기 전용 트랜잭션에서도 삭제를 그냥 처리했지만 PostgreSQL 은 거부한다.
+    // 이 메서드만 쓰기 트랜잭션으로 덮어쓴다
+    @Transactional
     @Modifying
     @Query("delete from VenOpt opt where opt.ven = :ven and opt.optId = :optId")
     public void deleteByVenAndoptId(@Param("ven") Ven ven, @Param("optId") String optId);
+
+    // VEN 삭제 시 뒷정리용. venopt.ven_id 가 VEN 을 붙들고 있다
+    @Transactional
+    @Modifying
+    @Query("delete from VenOpt opt where opt.ven = :ven")
+    public void deleteByVen(@Param("ven") Ven ven);
 
 }

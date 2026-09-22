@@ -3,12 +3,11 @@ package com.avob.openadr.server.common.vtn.controller;
 import java.util.List;
 import java.util.Optional;
 
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletResponse;
-import javax.validation.Valid;
+import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import javax.xml.datatype.DatatypeConfigurationException;
 
-import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -88,13 +87,13 @@ public class DemandResponseController {
 			HttpServletResponse response, BindingResult result) {
 
 		if (result.hasErrors()) {
-			response.setStatus(HttpStatus.BAD_REQUEST_400);
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 			return null;
 		}
 
 		DemandResponseEvent save = demandResponseEventService.create(event);
 
-		response.setStatus(HttpStatus.CREATED_201);
+		response.setStatus(HttpServletResponse.SC_CREATED);
 
 		LOGGER.info("create DR event: " + save.getId());
 
@@ -109,13 +108,13 @@ public class DemandResponseController {
 			BindingResult result) {
 		Optional<DemandResponseEvent> op = demandResponseEventService.findById(id);
 		if (!op.isPresent()) {
-			response.setStatus(HttpStatus.NOT_FOUND_404);
+			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 			return null;
 		}
 		DemandResponseEvent eventOld = op.get();
 		DemandResponseEvent save = demandResponseEventService.update(eventOld, event);
 
-		response.setStatus(HttpStatus.OK_200);
+		response.setStatus(HttpServletResponse.SC_OK);
 
 		LOGGER.info("update DR event: " + save.getId());
 
@@ -128,13 +127,13 @@ public class DemandResponseController {
 	public DemandResponseEventReadDto publish(@PathVariable(value = "id") Long id, HttpServletResponse response) {
 		Optional<DemandResponseEvent> op = demandResponseEventService.findById(id);
 		if (!op.isPresent()) {
-			response.setStatus(HttpStatus.NOT_FOUND_404);
+			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 			return null;
 		}
 		DemandResponseEvent event = op.get();
 		event = demandResponseEventService.publish(event);
 
-		response.setStatus(HttpStatus.OK_200);
+		response.setStatus(HttpServletResponse.SC_OK);
 
 		LOGGER.info("active DR event: " + event.getId());
 
@@ -147,13 +146,13 @@ public class DemandResponseController {
 	public DemandResponseEventReadDto active(@PathVariable(value = "id") Long id, HttpServletResponse response) {
 		Optional<DemandResponseEvent> op = demandResponseEventService.findById(id);
 		if (!op.isPresent()) {
-			response.setStatus(HttpStatus.NOT_FOUND_404);
+			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 			return null;
 		}
 		DemandResponseEvent event = op.get();
 		event = demandResponseEventService.active(event);
 
-		response.setStatus(HttpStatus.OK_200);
+		response.setStatus(HttpServletResponse.SC_OK);
 
 		LOGGER.info("active DR event: " + event.getId());
 
@@ -166,13 +165,13 @@ public class DemandResponseController {
 	public DemandResponseEventReadDto cancel(@PathVariable(value = "id") Long id, HttpServletResponse response) {
 		Optional<DemandResponseEvent> op = demandResponseEventService.findById(id);
 		if (!op.isPresent()) {
-			response.setStatus(HttpStatus.NOT_FOUND_404);
+			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 			return null;
 		}
 		DemandResponseEvent event = op.get();
 		event = demandResponseEventService.cancel(event);
 
-		response.setStatus(HttpStatus.OK_200);
+		response.setStatus(HttpServletResponse.SC_OK);
 
 		LOGGER.info("cancel DR event: " + event.getId());
 
@@ -185,7 +184,7 @@ public class DemandResponseController {
 	public DemandResponseEventReadDto read(@PathVariable(value = "id") Long id, HttpServletResponse response) {
 		Optional<DemandResponseEvent> op = demandResponseEventService.findById(id);
 		if (!op.isPresent()) {
-			response.setStatus(HttpStatus.NOT_FOUND_404);
+			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 			return null;
 		}
 		DemandResponseEvent event = op.get();
@@ -199,7 +198,7 @@ public class DemandResponseController {
 	public void delete(@PathVariable(value = "id") Long id, HttpServletResponse response) {
 		boolean delete = demandResponseEventService.delete(id);
 		if (!delete) {
-			response.setStatus(HttpStatus.NOT_FOUND_404);
+			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 		}
 	}
 
@@ -215,7 +214,7 @@ public class DemandResponseController {
 			return dtoMapper.mapList(venDemandResponseEvent, VenDemandResponseEventDto.class);
 
 		} catch (OadrElementNotFoundException e) {
-			response.setStatus(HttpStatus.NOT_FOUND_404);
+			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 			return null;
 		}
 
@@ -233,7 +232,7 @@ public class DemandResponseController {
 			return dtoMapper.map(venDemandResponseEvent, VenDemandResponseEventDto.class);
 
 		} catch (OadrElementNotFoundException e) {
-			response.setStatus(HttpStatus.NOT_FOUND_404);
+			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 			return null;
 		}
 

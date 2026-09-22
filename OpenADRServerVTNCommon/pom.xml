@@ -15,23 +15,21 @@
 			<groupId>com.avob.openadr</groupId>
 			<artifactId>OpenADRHTTPClient</artifactId>
 		</dependency>
+		<!-- Jetty 를 걷어내고 부트 기본 컨테이너인 톰캣을 쓴다.
+		     Boot 3.1 이 관리하는 Jetty 11 은 서블릿 5 구현인데 BOM 의 jakarta.servlet-api 는
+		     톰캣 10.1 기준 6.0 이라 실제로 서버를 띄우면 HttpSessionContext 가 없어서 죽는다.
+		     servlet-api 를 5 로 내리면 이번엔 Spring 6 테스트 목이 ServletConnection 을 못 찾는다.
+		     톰캣은 서블릿 6 이라 양쪽이 다 맞고, Boot 4 의 기본도 톰캣 11 이라 이쪽이 앞길이 편하다.
+		     TLS 는 VtnSslBundleRegistrar 가 등록하는 SSL 번들로 컨테이너 중립으로 처리한다 -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 			<exclusions>
 				<exclusion>
 					<groupId>org.springframework.boot</groupId>
-					<artifactId>spring-boot-starter-tomcat</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.springframework.boot</groupId>
 					<artifactId>spring-boot-starter-logging</artifactId>
 				</exclusion>
 			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-jetty</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -56,8 +54,8 @@
 			<artifactId>spring-jms</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>javax.jms</groupId>
-			<artifactId>javax.jms-api</artifactId>
+			<groupId>jakarta.jms</groupId>
+			<artifactId>jakarta.jms-api</artifactId>
 		</dependency>
 		
 		<dependency>
@@ -68,10 +66,6 @@
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>net.sf.dozer</groupId>
-			<artifactId>dozer</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
@@ -89,18 +83,8 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.h2database</groupId>
-			<artifactId>h2</artifactId>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
 			<groupId>com.rabbitmq.jms</groupId>
 			<artifactId>rabbitmq-jms</artifactId>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>mysql</groupId>
-			<artifactId>mysql-connector-java</artifactId>
 			<scope>provided</scope>
 		</dependency>
 		
@@ -109,6 +93,24 @@
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<scope>test</scope>
+		</dependency>
+
+		<!-- 테스트 DB. H2 대신 도커로 운영과 같은 PostgreSQL 을 띄운다 -->
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>testcontainers-postgresql</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<!-- 테스트용 DB 컨테이너 홀더. VTN20a, VTN20b 와 같은 것을 써야
+		     컨텍스트마다 컨테이너를 새로 띄우지 않는다 -->
+		<dependency>
+			<groupId>com.avob.openadr</groupId>
+			<artifactId>OpenADRServerVTNTestSupport</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.security</groupId>
@@ -173,14 +175,6 @@
 				<dependency>
 					<groupId>org.apache.activemq</groupId>
 					<artifactId>activemq-broker</artifactId>
-				</dependency>
-				<dependency>
-					<groupId>com.h2database</groupId>
-					<artifactId>h2</artifactId>
-				</dependency>
-				<dependency>
-					<groupId>mysql</groupId>
-					<artifactId>mysql-connector-java</artifactId>
 				</dependency>
 			</dependencies>
 		</profile>

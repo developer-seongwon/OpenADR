@@ -1,6 +1,6 @@
 package com.avob.openadr.server.oadr20b.ven.service;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 import org.jivesoftware.smack.SmackException.NotConnectedException;
 import org.jxmpp.stringprep.XmppStringprepException;

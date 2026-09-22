@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="OpenADRHTTPClient" />
+        <module name="OpenADRModel20a" />
+        <module name="OpenADRXMPPClient" />
+        <module name="OpenADRServerVTNCommon" />
+        <module name="OpenADRServerVTNTestSupport" />
+        <module name="OpenADRHTTPClient20a" />
+        <module name="OpenADRHTTPClient20b" />
+        <module name="OpenADRSecurity" />
+        <module name="DummyDRProgram" />
+        <module name="OpenADRModel20b" />
+        <module name="OpenADRServerVTN20b" />
+        <module name="DummyVEN20b" />
+        <module name="OpenADRServerVEN20b" />
+        <module name="OpenADRServerVTN20a" />
+      </profile>
+    </annotationProcessing>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="DummyDRProgram" options="-parameters" />
+      <module name="DummyVEN20b" options="-parameters" />
+      <module name="OpenADR" options="-parameters" />
+      <module name="OpenADRHTTPClient" options="-parameters" />
+      <module name="OpenADRHTTPClient20a" options="-parameters" />
+      <module name="OpenADRHTTPClient20b" options="-parameters" />
+      <module name="OpenADRModel20a" options="-parameters" />
+      <module name="OpenADRModel20b" options="-parameters" />
+      <module name="OpenADRSecurity" options="-parameters" />
+      <module name="OpenADRServerVEN20b" options="-parameters" />
+      <module name="OpenADRServerVTN20a" options="-parameters" />
+      <module name="OpenADRServerVTN20b" options="-parameters" />
+      <module name="OpenADRServerVTNCommon" options="-parameters" />
+      <module name="OpenADRServerVTNTestSupport" options="-parameters" />
+      <module name="OpenADRXMPPClient" options="-parameters" />
+    </option>
+  </component>
+</project>

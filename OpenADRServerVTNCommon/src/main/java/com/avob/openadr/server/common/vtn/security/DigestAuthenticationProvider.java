@@ -2,7 +2,7 @@ package com.avob.openadr.server.common.vtn.security;
 
 import java.security.SecureRandom;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationProvider;

@@ -2,9 +2,9 @@ package com.avob.openadr.server.oadr20b.vtn.service.report;
 
 import java.util.List;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
-import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 
 import com.avob.openadr.server.oadr20b.vtn.models.venreport.capability.SelfReportCapability;
@@ -28,7 +28,7 @@ public class SelfReportCapabilityDescriptionService extends GenericService<SelfR
     }
 
     @Override
-    public CrudRepository<SelfReportCapabilityDescription, Long> getDao() {
+    public JpaRepository<SelfReportCapabilityDescription, Long> getDao() {
         return selfReportCapabilityDescriptionDao;
     }
 

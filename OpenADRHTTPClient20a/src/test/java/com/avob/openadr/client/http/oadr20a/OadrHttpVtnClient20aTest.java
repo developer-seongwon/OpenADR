@@ -8,11 +8,11 @@ import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.util.Arrays;
 
-import javax.xml.bind.JAXBException;
+import jakarta.xml.bind.JAXBException;
 
 import org.apache.http.HttpStatus;
 import org.junit.Test;
-import org.mockito.Matchers;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 
 import com.avob.openadr.client.http.oadr20a.vtn.OadrHttpVtnClient20a;
@@ -42,8 +42,8 @@ public class OadrHttpVtnClient20aTest {
 
 		OadrResponse mockOadrResponse = Oadr20aBuilders.newOadr20aResponseBuilder("", HttpStatus.SC_OK).build();
 
-		when(oadrHttpClient20a.<OadrResponse>post(Matchers.<OadrDistributeEvent>anyObject(), Matchers.any(),
-				Matchers.any())).thenReturn(mockOadrResponse);
+		when(oadrHttpClient20a.<OadrResponse>post(ArgumentMatchers.<OadrDistributeEvent>any(), ArgumentMatchers.any(),
+				ArgumentMatchers.any())).thenReturn(mockOadrResponse);
 
 		long timestampStart = 0L;
 		String eventXmlDuration = "PT1H";

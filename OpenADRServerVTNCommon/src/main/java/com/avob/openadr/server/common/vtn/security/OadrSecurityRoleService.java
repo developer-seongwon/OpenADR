@@ -2,7 +2,7 @@ package com.avob.openadr.server.common.vtn.security;
 
 import java.util.ArrayList;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -36,9 +36,22 @@ public class OadrSecurityRoleService {
 
 	private BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
+	/**
+	 * DigestAuthenticationFilter 에 넘길 사용자 정보다. 비밀번호와 함께 권한도 같이 채운다.
+	 *
+	 * 예전에는 권한을 비워서 돌려줬다. 필터가 미인증 토큰만 만들어 두면
+	 * Spring Security 5 의 AbstractSecurityInterceptor 가 AuthenticationManager 로
+	 * 다시 인증하면서 DigestAuthenticationProvider 가 권한을 채워 줬기 때문이다.
+	 * Security 6 의 AuthorizationFilter 는 그 재인증을 하지 않는다.
+	 * 토큰이 미인증에 권한도 비어 있는 채로 넘어가 403 이 난다.
+	 *
+	 * 그래서 여기서 권한까지 채우고, 필터 쪽은 createAuthenticatedToken 을 켠다.
+	 * 필터가 다이제스트 해시를 검증한 뒤에만 이 사용자로 컨텍스트를 세우므로
+	 * 권한을 미리 담아 둔다고 해서 검증이 느슨해지지는 않는다.
+	 */
 	public User digestUserDetail(String username) {
 		AbstractUser abstractUser = saveFindUser(username);
-		return new User(abstractUser.getUsername(), abstractUser.getDigestPassword(), Lists.newArrayList());
+		return this.grantRole(abstractUser, abstractUser.getDigestPassword());
 	}
 
 	public User grantDigestRole(String username, String password) {

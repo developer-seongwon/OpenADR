@@ -1,10 +1,12 @@
 package com.avob.openadr.server.common.vtn.models.demandresponseevent;
 
-import javax.persistence.Embeddable;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.ManyToOne;
-import javax.validation.constraints.NotNull;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.ManyToOne;
+import jakarta.validation.constraints.NotNull;
 
 import com.avob.openadr.server.common.vtn.models.venmarketcontext.VenMarketContext;
 
@@ -13,26 +15,34 @@ public class DemandResponseEventDescriptor {
 
 	@ManyToOne
 	@NotNull
+	@JoinColumn(name = "market_context_id")
 	private VenMarketContext marketContext;
 
 	@NotNull
 	@Enumerated(EnumType.STRING)
+	@Column(name = "oadr_profile")
 	private DemandResponseEventOadrProfileEnum oadrProfile;
 
 	@NotNull
 	@Enumerated(EnumType.STRING)
+	@Column(name = "state")
 	private DemandResponseEventStateEnum state = DemandResponseEventStateEnum.ACTIVE;
 
+	@Column(name = "modification_number")
 	private long modificationNumber = 0;
 
+	@Column(name = "priority")
 	private long priority = 0;
 
+	@Column(name = "test_event")
 	private boolean testEvent = false;
 
+	@Column(name = "vtn_comment")
 	private String vtnComment;
 
 	@NotNull
 	@Enumerated(EnumType.STRING)
+	@Column(name = "response_required")
 	private DemandResponseEventResponseRequiredEnum responseRequired;
 
 	public VenMarketContext getMarketContext() {

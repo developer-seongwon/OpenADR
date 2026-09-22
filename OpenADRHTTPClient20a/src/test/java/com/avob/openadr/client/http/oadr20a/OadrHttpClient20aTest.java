@@ -2,7 +2,7 @@ package com.avob.openadr.client.http.oadr20a;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 
-import javax.xml.bind.JAXBException;
+import jakarta.xml.bind.JAXBException;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -22,7 +22,7 @@ import org.apache.http.entity.BasicHttpEntity;
 import org.apache.http.message.BasicHttpResponse;
 import org.apache.http.message.BasicStatusLine;
 import org.junit.Test;
-import org.mockito.Matchers;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 
 import com.avob.openadr.client.http.OadrHttpClient;
@@ -113,7 +113,7 @@ public class OadrHttpClient20aTest {
 		String marshal = jaxbContext.marshal(mockOadrResponse);
 
 		HttpResponse response = this.createHttpResponse(scOk, marshal);
-		when(oadrHttpClient.execute(Matchers.<HttpPost>anyObject(), any(), any(), any())).thenReturn(response);
+		when(oadrHttpClient.execute(ArgumentMatchers.<HttpPost>any(), any(), any(), any())).thenReturn(response);
 
 		OadrHttpClient20a client = new OadrHttpClient20a(oadrHttpClient);
 
@@ -136,7 +136,7 @@ public class OadrHttpClient20aTest {
 		String marshal = jaxbContext.marshal(mockOadrResponse);
 
 		HttpResponse response = this.createHttpResponse(scForbidden, marshal);
-		when(oadrHttpClient.execute(Matchers.<HttpPost>anyObject(), any(), any(), any())).thenReturn(response);
+		when(oadrHttpClient.execute(ArgumentMatchers.<HttpPost>any(), any(), any(), any())).thenReturn(response);
 
 		OadrHttpClient20a client = new OadrHttpClient20a(oadrHttpClient);
 
@@ -164,7 +164,7 @@ public class OadrHttpClient20aTest {
 		String marshal = jaxbContext.marshal(mockOadrResponse);
 
 		HttpResponse response = this.createHttpResponse(scOk, marshal);
-		when(oadrHttpClient.execute(Matchers.<HttpPost>anyObject(), any(), any(), any())).thenReturn(response);
+		when(oadrHttpClient.execute(ArgumentMatchers.<HttpPost>any(), any(), any(), any())).thenReturn(response);
 
 		OadrHttpClient20a client = new OadrHttpClient20a(oadrHttpClient);
 
@@ -191,7 +191,7 @@ public class OadrHttpClient20aTest {
 		String marshal = "";
 
 		HttpResponse response = this.createHttpResponse(scOk, marshal);
-		when(oadrHttpClient.execute(Matchers.<HttpPost>anyObject(), any(), any(), any())).thenReturn(response);
+		when(oadrHttpClient.execute(ArgumentMatchers.<HttpPost>any(), any(), any(), any())).thenReturn(response);
 
 		OadrHttpClient20a client = new OadrHttpClient20a(oadrHttpClient);
 

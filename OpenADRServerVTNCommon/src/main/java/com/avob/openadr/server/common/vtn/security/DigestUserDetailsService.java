@@ -1,6 +1,6 @@
 package com.avob.openadr.server.common.vtn.security;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

@@ -1,6 +1,6 @@
 package com.avob.openadr.server.oadr20b.vtn.models.venreport.capability;
 
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 @Embeddable
 public class SamplingRate {

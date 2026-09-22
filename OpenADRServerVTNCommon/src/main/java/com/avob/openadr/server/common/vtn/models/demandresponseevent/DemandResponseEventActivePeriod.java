@@ -1,47 +1,53 @@
 package com.avob.openadr.server.common.vtn.models.demandresponseevent;
 
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
-import javax.validation.constraints.NotNull;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+import jakarta.validation.constraints.NotNull;
 
 @Embeddable
 public class DemandResponseEventActivePeriod {
 
-	@Column(name = "activePeriodStart")
 	@NotNull
+	@Column(name = "active_period_start")
 	private Long start;
 
-	@Column(name = "activePeriodEnd")
+	@Column(name = "active_period_end")
 	private Long end;
 
 	@NotNull
+	@Column(name = "start_notification")
 	private Long startNotification;
 
 	/**
 	 * Event active state duration as xml duration
 	 */
 	@NotNull
+	@Column(name = "duration")
 	private String duration;
 
 	/**
 	 * Event notification duration as xml duration
 	 */
 	@NotNull
+	@Column(name = "notification_duration")
 	private String notificationDuration;
 
 	/**
 	 * Event tolerance as xml duration
 	 */
+	@Column(name = "tolerance_duration")
 	private String toleranceDuration;
 
 	/**
 	 * Event ramp up duration as xml duration
 	 */
+	@Column(name = "ramp_up_duration")
 	private String rampUpDuration;
 
 	/**
 	 * Event recovery duration as xml duration
 	 */
+	@Column(name = "recovery_duration")
 	private String recoveryDuration;
 
 	public Long getStart() {

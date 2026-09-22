@@ -19,23 +19,19 @@
 			<groupId>com.avob.openadr</groupId>
 			<artifactId>OpenADRXMPPClient</artifactId>
 		</dependency>
+		<!-- Jetty 를 걷어내고 부트 기본 컨테이너인 톰캣을 쓴다.
+		     Boot 3.1 이 관리하는 Jetty 11 은 서블릿 5 구현인데 BOM 의 jakarta.servlet-api 는
+		     톰캣 10.1 기준 6.0 이라 서버를 실제로 띄우면 맞지 않는다.
+		     VTN 쪽과 같은 이유이고, Boot 4 의 기본도 톰캣이라 이쪽이 앞길이 편하다 -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 			<exclusions>
 				<exclusion>
 					<groupId>org.springframework.boot</groupId>
-					<artifactId>spring-boot-starter-tomcat</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.springframework.boot</groupId>
 					<artifactId>spring-boot-starter-logging</artifactId>
 				</exclusion>
 			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-jetty</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

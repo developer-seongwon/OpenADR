@@ -1,0 +1,86 @@
+### 5. OadrPoll - 폴링
+#
+# 스펙 8.6 OpenADR Poll.
+#
+# push VEN 은 VTN 이 직접 찔러 주니 이게 필요 없다.
+# pull VEN 은 VTN 이 먼저 보내고 싶은 게 있어도 보낼 길이 없어서, VEN 이 주기적으로
+# "나한테 올 거 있냐" 고 물어야 한다. 그게 oadrPoll 이다.
+# PUSH 의 메시지 교환을 PULL 에서 흉내내는 장치다.
+#
+# oadrPoll 의 응답으로 올 수 있는 것들(스펙 8.6 표).
+#   oadrResponse                  큐가 비었다
+#   oadrDistributeEvent           새 이벤트
+#   oadrCreateReport              리포트를 이렇게 보내라
+#   oadrRegisterReport            VTN 의 리포트 명세
+#   oadrCancelReport              리포트 그만 보내라
+#   oadrUpdateReport              VTN 이 보내는 리포트 데이터
+#   oadrCancelPartyRegistration   등록 해지
+#   oadrRequestReregistration     다시 등록해라
+#
+# 한 번의 oadrPoll 에는 하나만 온다. 여러 개가 쌓여 있으면 계속 폴링해서 비워야 한다.
+# 폴링 주기는 등록 응답의 oadrRequestedOadrPollFreq 를 따른다(여기서는 PT10S).
+#
+# 논리적 응답이 필요한 페이로드를 받았으면, VEN 은 그 답을 별도의 요청으로 보내야 한다.
+# VTN 은 그 답을 기다리는 동안 oadrPoll 을 무시해도 된다(스펙 Annex C 시나리오 2).
+
+### 5-1. oadrPoll
+# 확인: 화면에 안 남는다. VEN 이 큐를 비우는 쪽이라 응답 XML 의 루트 요소로 본다
+# 여러 번 눌러 보면 큐가 하나씩 비는 게 보인다.
+POST {{baseUrl}}/OpenADR2/Simple/2.0b/OadrPoll
+Authorization: Basic {{venId}} {{venPassword}}
+Content-Type: application/xml
+
+<?xml version="1.0" encoding="UTF-8"?>
+<oadr:oadrPoll ei:schemaVersion="2.0b"
+	xmlns:ei="http://docs.oasis-open.org/ns/energyinterop/201110"
+	xmlns:oadr="http://openadr.org/oadr-2.0b/2012/07">
+	<ei:venID>{{venId}}</ei:venID>
+</oadr:oadrPoll>
+
+> {%
+    var body = response.body.toString();
+    var root = (body.match(/<oadr:(\w+)/) || [])[1];
+    client.log("받은 페이로드=" + root);
+    var guide = {
+        "oadrResponse": "큐가 비어 있다. 정상이다",
+        "oadrDistributeEvent": "새 이벤트다. 03-event.http 의 oadrCreatedEvent 로 답해라",
+        "oadrCreateReport": "리포트 요청이다. 02-report.http 의 oadrCreatedReport 로 답해라",
+        "oadrRegisterReport": "VTN 의 리포트 명세다. 02-report.http 의 oadrRegisteredReport 로 답해라",
+        "oadrCancelReport": "리포트 취소다. 02-report.http 의 oadrCanceledReport 로 답해라",
+        "oadrRequestReregistration": "다시 등록하라는 요청이다. 5-2 로 답하고 01-registration.http 의 1-4 를 실행해라",
+        "oadrCancelPartyRegistration": "등록 해지다. 5-3 으로 답해라"
+    };
+    client.log(guide[root] || "처음 보는 페이로드다");
+%}
+
+### 5-2. oadrResponse (재등록 요청에 대한 답)
+# 확인: 화면에 안 남는다. VEN 이 보내는 답이라 응답 XML 로 본다
+# oadrRequestReregistration 을 받았을 때 보낸다.
+# 이 답을 보내고 나서 oadrCreatePartyRegistration 을 다시 보내는 게 스펙 Figure 15 의 순서다.
+POST {{baseUrl}}/OpenADR2/Simple/2.0b/EiRegisterParty
+Authorization: Basic {{venId}} {{venPassword}}
+Content-Type: application/xml
+
+<?xml version="1.0" encoding="UTF-8"?>
+<oadr:oadrResponse ei:schemaVersion="2.0b"
+	xmlns:ei="http://docs.oasis-open.org/ns/energyinterop/201110"
+	xmlns:pyld="http://docs.oasis-open.org/ns/energyinterop/201110/payloads"
+	xmlns:oadr="http://openadr.org/oadr-2.0b/2012/07">
+	<ei:eiResponse>
+		<ei:responseCode>200</ei:responseCode>
+		<ei:responseDescription>OK</ei:responseDescription>
+		<pyld:requestID>REQ-REREGISTER-ACK</pyld:requestID>
+	</ei:eiResponse>
+	<ei:venID>{{venId}}</ei:venID>
+</oadr:oadrResponse>
+
+> {%
+    var body = response.body.toString();
+    client.log("responseCode=" + (body.match(/responseCode>([^<]*)</) || [])[1]);
+%}
+
+### 5-3. 등록 해지를 받았을 때
+# oadrPoll 로 oadrCancelPartyRegistration 을 받으면
+# oadrCanceledPartyRegistration 으로 답해야 한다(스펙 Figure 16).
+# 그 답을 보내는 순간 등록이 실제로 풀리기 때문에 여기 두지 않고
+# 99-cleanup.http 에 VTN 발 해지 흐름으로 묶어 뒀다.

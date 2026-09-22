@@ -2,8 +2,8 @@ package com.avob.openadr.server.oadr20b.vtn;
 
 import java.io.IOException;
 
-import javax.annotation.Resource;
-import javax.xml.bind.JAXBException;
+import jakarta.annotation.Resource;
+import jakarta.xml.bind.JAXBException;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -26,7 +26,6 @@ import org.springframework.boot.autoconfigure.data.couchbase.CouchbaseRepositori
 import org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchDataAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchRepositoriesAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.elasticsearch.ReactiveElasticsearchRepositoriesAutoConfiguration;
-import org.springframework.boot.autoconfigure.data.elasticsearch.ReactiveElasticsearchRestClientAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.jdbc.JdbcRepositoriesAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.ldap.LdapRepositoriesAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration;
@@ -37,12 +36,10 @@ import org.springframework.boot.autoconfigure.data.neo4j.Neo4jDataAutoConfigurat
 import org.springframework.boot.autoconfigure.data.neo4j.Neo4jRepositoriesAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.r2dbc.R2dbcDataAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.r2dbc.R2dbcRepositoriesAutoConfiguration;
-import org.springframework.boot.autoconfigure.data.r2dbc.R2dbcTransactionManagerAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.rest.RepositoryRestMvcAutoConfiguration;
-import org.springframework.boot.autoconfigure.data.solr.SolrRepositoriesAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchRestClientAutoConfiguration;
 import org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration;
@@ -72,7 +69,6 @@ import org.springframework.boot.autoconfigure.mail.MailSenderAutoConfiguration;
 import org.springframework.boot.autoconfigure.mail.MailSenderValidatorAutoConfiguration;
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.autoconfigure.mongo.MongoReactiveAutoConfiguration;
-import org.springframework.boot.autoconfigure.mongo.embedded.EmbeddedMongoAutoConfiguration;
 import org.springframework.boot.autoconfigure.mustache.MustacheAutoConfiguration;
 import org.springframework.boot.autoconfigure.quartz.QuartzAutoConfiguration;
 import org.springframework.boot.autoconfigure.r2dbc.R2dbcAutoConfiguration;
@@ -92,7 +88,6 @@ import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfi
 import org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration;
 import org.springframework.boot.autoconfigure.sendgrid.SendGridAutoConfiguration;
 import org.springframework.boot.autoconfigure.session.SessionAutoConfiguration;
-import org.springframework.boot.autoconfigure.solr.SolrAutoConfiguration;
 import org.springframework.boot.autoconfigure.task.TaskExecutionAutoConfiguration;
 import org.springframework.boot.autoconfigure.thymeleaf.ThymeleafAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.reactive.HttpHandlerAutoConfiguration;
@@ -107,8 +102,9 @@ import org.springframework.boot.autoconfigure.webservices.client.WebServiceTempl
 import org.springframework.boot.autoconfigure.websocket.reactive.WebSocketReactiveAutoConfiguration;
 import org.springframework.boot.autoconfigure.websocket.servlet.WebSocketMessagingAutoConfiguration;
 import org.springframework.boot.autoconfigure.websocket.servlet.WebSocketServletAutoConfiguration;
-import org.springframework.boot.web.embedded.jetty.JettyServletWebServerFactory;
+import org.springframework.boot.autoconfigure.ssl.SslBundleRegistrar;
 import org.springframework.boot.web.server.WebServerFactoryCustomizer;
+import org.springframework.boot.web.servlet.server.ConfigurableServletWebServerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -121,6 +117,7 @@ import com.avob.openadr.model.oadr20b.Oadr20bJAXBContext;
 import com.avob.openadr.model.oadr20b.Oadr20bSecurity;
 import com.avob.openadr.security.exception.OadrSecurityException;
 import com.avob.openadr.server.common.vtn.VTNEmbeddedServletContainerCustomizer;
+import com.avob.openadr.server.common.vtn.VtnSslBundleRegistrar;
 import com.avob.openadr.server.common.vtn.VtnConfig;
 
 @SpringBootApplication
@@ -148,7 +145,6 @@ import com.avob.openadr.server.common.vtn.VtnConfig;
 		ElasticsearchRepositoriesAutoConfiguration.class,
 		ElasticsearchRestClientAutoConfiguration.class,
 		EmbeddedLdapAutoConfiguration.class,
-		EmbeddedMongoAutoConfiguration.class,
 		ErrorWebFluxAutoConfiguration.class,
 		FlywayAutoConfiguration.class,
 		FreeMarkerAutoConfiguration.class,
@@ -190,7 +186,6 @@ import com.avob.openadr.server.common.vtn.VtnConfig;
 		R2dbcAutoConfiguration.class,
 		R2dbcDataAutoConfiguration.class,
 		R2dbcRepositoriesAutoConfiguration.class,
-		R2dbcTransactionManagerAutoConfiguration.class,
 		RSocketMessagingAutoConfiguration.class,
 		RSocketRequesterAutoConfiguration.class,
 		RSocketSecurityAutoConfiguration.class,
@@ -198,7 +193,6 @@ import com.avob.openadr.server.common.vtn.VtnConfig;
 		RSocketStrategiesAutoConfiguration.class,
 		RabbitAutoConfiguration.class,
 		ReactiveElasticsearchRepositoriesAutoConfiguration.class,
-		ReactiveElasticsearchRestClientAutoConfiguration.class,
 		ReactiveOAuth2ClientAutoConfiguration.class,
 		ReactiveOAuth2ResourceServerAutoConfiguration.class,
 		ReactiveSecurityAutoConfiguration.class,
@@ -211,8 +205,6 @@ import com.avob.openadr.server.common.vtn.VtnConfig;
 		Saml2RelyingPartyAutoConfiguration.class,
 		SendGridAutoConfiguration.class,
 		SessionAutoConfiguration.class,
-		SolrAutoConfiguration.class,
-		SolrRepositoriesAutoConfiguration.class,
 		TaskExecutionAutoConfiguration.class,
 		ThymeleafAutoConfiguration.class,
 		UserDetailsServiceAutoConfiguration.class,
@@ -234,16 +226,23 @@ public class VTN20bApplication {
 	@Resource
 	private VtnConfig vtnConfig;
 
-	private VTNEmbeddedServletContainerCustomizer vtnEmbeddedServletContainerCustomizer;
-
+	/**
+	 * 상호 TLS 재료를 SSL 번들로 등록한다.
+	 * 프로토콜과 암호 스위트는 OpenADR 2.0b 프로파일이 정한 목록이다.
+	 */
 	@Bean
-	public WebServerFactoryCustomizer<JettyServletWebServerFactory> servletContainerCustomizer() {
+	public SslBundleRegistrar vtnSslBundleRegistrar() {
+		return new VtnSslBundleRegistrar(vtnConfig, Oadr20bSecurity.getProtocols(), Oadr20bSecurity.getCiphers());
+	}
 
-		vtnEmbeddedServletContainerCustomizer = new VTNEmbeddedServletContainerCustomizer(vtnConfig.getPort(),
-				vtnConfig.getContextPath(), vtnConfig.getSslContext(),
-				Oadr20bSecurity.getProtocols(), Oadr20bSecurity.getCiphers());
-
-		return vtnEmbeddedServletContainerCustomizer;
+	/**
+	 * 포트와 컨텍스트 경로는 oadr 프로퍼티에서 오고, TLS 는 위 번들을 이름으로 가리킨다.
+	 * 컨테이너 타입에 묶이지 않아서 톰캣이든 Jetty 든 그대로 돈다.
+	 */
+	@Bean
+	public WebServerFactoryCustomizer<ConfigurableServletWebServerFactory> servletContainerCustomizer() {
+		boolean sslEnabled = vtnConfig.getKey() != null && vtnConfig.getCert() != null;
+		return new VTNEmbeddedServletContainerCustomizer(vtnConfig.getPort(), vtnConfig.getContextPath(), sslEnabled);
 	}
 
 	@Bean

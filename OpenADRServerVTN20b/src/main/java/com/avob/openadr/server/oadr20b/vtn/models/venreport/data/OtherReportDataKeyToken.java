@@ -2,9 +2,9 @@ package com.avob.openadr.server.oadr20b.vtn.models.venreport.data;
 
 import java.util.List;
 
-import javax.persistence.Convert;
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 
 import com.avob.openadr.model.oadr20b.avob.KeyTokenType;
 

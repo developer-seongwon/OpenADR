@@ -8,11 +8,11 @@ import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.util.Arrays;
 
-import javax.xml.bind.JAXBException;
+import jakarta.xml.bind.JAXBException;
 
 import org.apache.http.HttpStatus;
 import org.junit.Test;
-import org.mockito.Matchers;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 
 import com.avob.openadr.client.http.oadr20a.ven.OadrHttpVenClient20a;
@@ -78,8 +78,8 @@ public class OadrHttpVenClient20aTest {
 
 		OadrHttpVenClient20a oadrHttpVenClient20a = new OadrHttpVenClient20a(oadrHttpClient20a);
 
-		when(oadrHttpClient20a.<OadrDistributeEvent>post(Matchers.<OadrRequestEvent>anyObject(), Matchers.any(),
-				Matchers.any())).thenReturn(mockDistributeEvent);
+		when(oadrHttpClient20a.<OadrDistributeEvent>post(ArgumentMatchers.<OadrRequestEvent>any(), ArgumentMatchers.any(),
+				ArgumentMatchers.any())).thenReturn(mockDistributeEvent);
 
 		OadrRequestEvent requestEvent = new OadrRequestEvent();
 		oadrHttpVenClient20a.oadrRequestEvent(requestEvent);
@@ -96,8 +96,8 @@ public class OadrHttpVenClient20aTest {
 
 		OadrHttpVenClient20a oadrHttpVenClient20aTestClass = new OadrHttpVenClient20a(oadrHttpClient20a);
 
-		when(oadrHttpClient20a.<OadrResponse>post(Matchers.<OadrCreatedEvent>anyObject(), Matchers.any(),
-				Matchers.any())).thenReturn(mockOadrResponse);
+		when(oadrHttpClient20a.<OadrResponse>post(ArgumentMatchers.<OadrCreatedEvent>any(), ArgumentMatchers.any(),
+				ArgumentMatchers.any())).thenReturn(mockOadrResponse);
 
 		OadrCreatedEvent createdEvent = new OadrCreatedEvent();
 		oadrHttpVenClient20aTestClass.oadrCreatedEvent(createdEvent);

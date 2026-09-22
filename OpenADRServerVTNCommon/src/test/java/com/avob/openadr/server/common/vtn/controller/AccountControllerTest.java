@@ -9,10 +9,10 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.util.List;
 
-import javax.annotation.Resource;
-import javax.servlet.Filter;
+import jakarta.annotation.Resource;
+import jakarta.servlet.Filter;
 
-import org.eclipse.jetty.http.HttpStatus;
+import jakarta.servlet.http.HttpServletResponse;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -66,7 +66,7 @@ public class AccountControllerTest {
 	private Filter springSecurityFilterChain;
 
 	@Resource
-	private DtoMapper dozerMapper;
+	private DtoMapper dtoMapper;
 
 	@Resource
 	private OadrUserService oadrUserService;
@@ -134,11 +134,11 @@ public class AccountControllerTest {
 
 		this.mockMvc
 				.perform(MockMvcRequestBuilders.get(ACCOUNT_URL).header("Content-Type", "application/json").with(user))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.FORBIDDEN_403));
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_FORBIDDEN));
 
 		MvcResult andReturn = this.mockMvc
 				.perform(MockMvcRequestBuilders.get(ACCOUNT_URL).header("Content-Type", "application/json").with(admin))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK)).andReturn();
 
 		AbstractUserWithRoleDto convertMvcResultToOadrUserDto = convertMvcResultToObject(andReturn,
 				AbstractUserWithRoleDto.class);
@@ -147,7 +147,7 @@ public class AccountControllerTest {
 
 		andReturn = this.mockMvc
 				.perform(MockMvcRequestBuilders.get(ACCOUNT_URL).header("Content-Type", "application/json").with(app))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK)).andReturn();
 
 		convertMvcResultToOadrUserDto = convertMvcResultToObject(andReturn, AbstractUserWithRoleDto.class);
 		assertEquals("app", convertMvcResultToOadrUserDto.getUsername());
@@ -160,11 +160,11 @@ public class AccountControllerTest {
 
 		this.mockMvc.perform(
 				MockMvcRequestBuilders.get(ACCOUNT_USER_URL).header("Content-Type", "application/json").with(user))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.FORBIDDEN_403));
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_FORBIDDEN));
 
 		MvcResult andReturn = this.mockMvc.perform(
 				MockMvcRequestBuilders.get(ACCOUNT_USER_URL).header("Content-Type", "application/json").with(admin))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK)).andReturn();
 
 		List<OadrUserDto> convertMvcResultToOadrUserDtoList = convertMvcResultToList(andReturn, userListRef);
 		assertEquals(1, convertMvcResultToOadrUserDtoList.size());
@@ -184,12 +184,12 @@ public class AccountControllerTest {
 		this.mockMvc
 				.perform(MockMvcRequestBuilders.post(ACCOUNT_USER_URL).content(content)
 						.header("Content-Type", "application/json").with(user))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.FORBIDDEN_403));
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_FORBIDDEN));
 		// already created user
 		this.mockMvc
 				.perform(MockMvcRequestBuilders.post(ACCOUNT_USER_URL).content(content)
 						.header("Content-Type", "application/json").with(admin))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.NOT_ACCEPTABLE_406));
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_NOT_ACCEPTABLE));
 
 		// create login auth user no certificate gen
 		dto = new OadrUserCreateDto();
@@ -201,7 +201,7 @@ public class AccountControllerTest {
 		MvcResult andReturn = this.mockMvc
 				.perform(MockMvcRequestBuilders.post(ACCOUNT_USER_URL).content(content)
 						.header("Content-Type", "application/json").with(admin))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.CREATED_201)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_CREATED)).andReturn();
 		assertEquals(0, andReturn.getResponse().getContentLength());
 		// verify user has been created
 		OadrUser findByUsername = oadrUserService.findByUsername("myuser");
@@ -217,7 +217,7 @@ public class AccountControllerTest {
 		andReturn = this.mockMvc
 				.perform(MockMvcRequestBuilders.post(ACCOUNT_USER_URL).content(content)
 						.header("Content-Type", "application/json").with(admin))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.CREATED_201)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_CREATED)).andReturn();
 		assertEquals(0, andReturn.getResponse().getContentLength());
 		// verify user has been created
 		findByUsername = oadrUserService.findByUsername("myuser");
@@ -233,7 +233,7 @@ public class AccountControllerTest {
 		andReturn = this.mockMvc
 				.perform(MockMvcRequestBuilders.post(ACCOUNT_USER_URL).content(content)
 						.header("Content-Type", "application/json").with(admin))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.CREATED_201)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_CREATED)).andReturn();
 		assertNotEquals(0, andReturn.getResponse().getContentLength());
 		// verify user has been created
 		assertNotNull(andReturn.getResponse().getHeader("x-username"));
@@ -250,7 +250,7 @@ public class AccountControllerTest {
 		andReturn = this.mockMvc
 				.perform(MockMvcRequestBuilders.post(ACCOUNT_USER_URL).content(content)
 						.header("Content-Type", "application/json").with(admin))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.CREATED_201)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_CREATED)).andReturn();
 		assertNotEquals(0, andReturn.getResponse().getContentLength());
 		// verify user has been created
 		assertNotNull(andReturn.getResponse().getHeader("x-username"));
@@ -267,13 +267,13 @@ public class AccountControllerTest {
 		this.mockMvc
 				.perform(MockMvcRequestBuilders.delete(ACCOUNT_USER_URL + "/mouaiccool")
 						.header("Content-Type", "application/json").with(user))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.FORBIDDEN_403));
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_FORBIDDEN));
 
 		// delete unknown user account
 		this.mockMvc
 				.perform(MockMvcRequestBuilders.delete(ACCOUNT_USER_URL + "/mouaiccool")
 						.header("Content-Type", "application/json").with(admin))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.NOT_FOUND_404));
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_NOT_FOUND));
 
 		// create login auth user no certificate gen
 		OadrUserCreateDto dto = new OadrUserCreateDto();
@@ -285,7 +285,7 @@ public class AccountControllerTest {
 		MvcResult andReturn = this.mockMvc
 				.perform(MockMvcRequestBuilders.post(ACCOUNT_USER_URL).content(content)
 						.header("Content-Type", "application/json").with(admin))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.CREATED_201)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_CREATED)).andReturn();
 		assertEquals(0, andReturn.getResponse().getContentLength());
 
 		// verify user has been created
@@ -296,7 +296,7 @@ public class AccountControllerTest {
 		this.mockMvc
 				.perform(MockMvcRequestBuilders.delete(ACCOUNT_USER_URL + "/myuser")
 						.header("Content-Type", "application/json").with(admin))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200));
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK));
 
 		// verify user has been deleted
 		findByUsername = oadrUserService.findByUsername("myuser");
@@ -307,11 +307,11 @@ public class AccountControllerTest {
 	public void listAppTest() throws Exception {
 		this.mockMvc.perform(
 				MockMvcRequestBuilders.get(ACCOUNT_APP_URL).header("Content-Type", "application/json").with(user))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.FORBIDDEN_403));
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_FORBIDDEN));
 
 		MvcResult andReturn = this.mockMvc.perform(
 				MockMvcRequestBuilders.get(ACCOUNT_APP_URL).header("Content-Type", "application/json").with(admin))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK)).andReturn();
 
 		List<OadrAppDto> convertMvcResultToOadrUserDtoList = convertMvcResultToList(andReturn, appListRef);
 		assertEquals(1, convertMvcResultToOadrUserDtoList.size());
@@ -331,12 +331,12 @@ public class AccountControllerTest {
 		this.mockMvc
 				.perform(MockMvcRequestBuilders.post(ACCOUNT_APP_URL).content(content)
 						.header("Content-Type", "application/json").with(user))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.FORBIDDEN_403));
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_FORBIDDEN));
 		// already created app
 		this.mockMvc
 				.perform(MockMvcRequestBuilders.post(ACCOUNT_APP_URL).content(content)
 						.header("Content-Type", "application/json").with(admin))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.NOT_ACCEPTABLE_406));
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_NOT_ACCEPTABLE));
 
 		// create login auth app no certificate gen
 		dto = new OadrAppCreateDto();
@@ -348,7 +348,7 @@ public class AccountControllerTest {
 		MvcResult andReturn = this.mockMvc
 				.perform(MockMvcRequestBuilders.post(ACCOUNT_APP_URL).content(content)
 						.header("Content-Type", "application/json").with(admin))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.CREATED_201)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_CREATED)).andReturn();
 		assertEquals(0, andReturn.getResponse().getContentLength());
 		// verify app has been created
 		OadrApp findByUsername = oadrAppService.findByUsername("myapp");
@@ -364,7 +364,7 @@ public class AccountControllerTest {
 		andReturn = this.mockMvc
 				.perform(MockMvcRequestBuilders.post(ACCOUNT_APP_URL).content(content)
 						.header("Content-Type", "application/json").with(admin))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.CREATED_201)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_CREATED)).andReturn();
 		assertEquals(0, andReturn.getResponse().getContentLength());
 		// verify app has been created
 		findByUsername = oadrAppService.findByUsername("myapp");
@@ -380,7 +380,7 @@ public class AccountControllerTest {
 		andReturn = this.mockMvc
 				.perform(MockMvcRequestBuilders.post(ACCOUNT_APP_URL).content(content)
 						.header("Content-Type", "application/json").with(admin))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.CREATED_201)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_CREATED)).andReturn();
 		assertNotEquals(0, andReturn.getResponse().getContentLength());
 		// verify app has been created
 		assertNotNull(andReturn.getResponse().getHeader("x-username"));
@@ -397,7 +397,7 @@ public class AccountControllerTest {
 		andReturn = this.mockMvc
 				.perform(MockMvcRequestBuilders.post(ACCOUNT_APP_URL).content(content)
 						.header("Content-Type", "application/json").with(admin))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.CREATED_201)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_CREATED)).andReturn();
 		assertNotEquals(0, andReturn.getResponse().getContentLength());
 		// verify app has been created
 		assertNotNull(andReturn.getResponse().getHeader("x-username"));
@@ -413,13 +413,13 @@ public class AccountControllerTest {
 		this.mockMvc
 				.perform(MockMvcRequestBuilders.delete(ACCOUNT_APP_URL + "/mouaiccool")
 						.header("Content-Type", "application/json").with(user))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.FORBIDDEN_403));
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_FORBIDDEN));
 
 		// delete unknown app account
 		this.mockMvc
 				.perform(MockMvcRequestBuilders.delete(ACCOUNT_APP_URL + "/mouaiccool")
 						.header("Content-Type", "application/json").with(admin))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.NOT_FOUND_404));
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_NOT_FOUND));
 
 		// create login auth app no certificate gen
 		OadrAppCreateDto dto = new OadrAppCreateDto();
@@ -431,7 +431,7 @@ public class AccountControllerTest {
 		MvcResult andReturn = this.mockMvc
 				.perform(MockMvcRequestBuilders.post(ACCOUNT_APP_URL).content(content)
 						.header("Content-Type", "application/json").with(admin))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.CREATED_201)).andReturn();
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_CREATED)).andReturn();
 		assertEquals(0, andReturn.getResponse().getContentLength());
 
 		// verify app has been created
@@ -442,7 +442,7 @@ public class AccountControllerTest {
 		this.mockMvc
 				.perform(MockMvcRequestBuilders.delete(ACCOUNT_APP_URL + "/myapp")
 						.header("Content-Type", "application/json").with(admin))
-				.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK_200));
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK));
 
 		// verify app has been deleted
 		findByUsername = oadrAppService.findByUsername("myapp");

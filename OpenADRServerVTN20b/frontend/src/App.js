@@ -306,7 +306,11 @@ class App extends React.Component {
           <PrivateRoute path="/ven/detail/:username/reports/:reportSpecifierId/requests/:reportRequestId" component={ VenDetailReportRequestPage } />
           <PrivateRoute path="/ven/detail/:username/reports/:reportSpecifierId/create" component={ VenDetailCreateReportPage } />
           <PrivateRoute path="/ven/detail/:username/reports/:reportSpecifierId" component={ VenDetailReportPage } />
-          <PrivateRoute path="/ven/detail/:username/:panel(settings|reports|optschedules)" component={ VenDetailPage } />
+          {/* VenDetailPage 의 탭은 여섯 개인데 여기에 세 개만 적혀 있었다.
+              requests, enrollments, groups 로 새로고침하거나 주소를 직접 열면
+              panel 이 undefined 가 되어 Settings 탭이 열렸다.
+              탭을 추가하면 여기도 같이 넣어야 한다. */}
+          <PrivateRoute path="/ven/detail/:username/:panel(settings|reports|requests|optschedules|enrollments|groups)" component={ VenDetailPage } />
           <PrivateRoute path="/ven/detail/:username" component={ VenDetailPage } />
           <PrivateRoute path="/ven/create" component={ VenCreatePage } />
           <PrivateRoute path="/ven" component={ VenPage } />
