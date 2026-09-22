@@ -51,7 +51,6 @@ import org.springframework.boot.autoconfigure.hateoas.HypermediaAutoConfiguratio
 import org.springframework.boot.autoconfigure.hazelcast.HazelcastAutoConfiguration;
 import org.springframework.boot.autoconfigure.hazelcast.HazelcastJpaDependencyAutoConfiguration;
 import org.springframework.boot.autoconfigure.http.codec.CodecsAutoConfiguration;
-import org.springframework.boot.autoconfigure.influx.InfluxDbAutoConfiguration;
 import org.springframework.boot.autoconfigure.info.ProjectInfoAutoConfiguration;
 import org.springframework.boot.autoconfigure.integration.IntegrationAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.JndiDataSourceAutoConfiguration;
@@ -77,7 +76,6 @@ import org.springframework.boot.autoconfigure.rsocket.RSocketRequesterAutoConfig
 import org.springframework.boot.autoconfigure.rsocket.RSocketServerAutoConfiguration;
 import org.springframework.boot.autoconfigure.rsocket.RSocketStrategiesAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.oauth2.client.reactive.ReactiveOAuth2ClientAutoConfiguration;
-import org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.reactive.ReactiveOAuth2ResourceServerAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration;
@@ -94,7 +92,6 @@ import org.springframework.boot.autoconfigure.web.reactive.HttpHandlerAutoConfig
 import org.springframework.boot.autoconfigure.web.reactive.ReactiveWebServerFactoryAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.reactive.WebFluxAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.reactive.error.ErrorWebFluxAutoConfiguration;
-import org.springframework.boot.autoconfigure.web.reactive.function.client.ClientHttpConnectorAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.reactive.function.client.WebClientAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration;
 import org.springframework.boot.autoconfigure.webservices.WebServicesAutoConfiguration;
@@ -134,7 +131,7 @@ import com.avob.openadr.server.common.vtn.VtnConfig;
 		CassandraReactiveDataAutoConfiguration.class,
 		CassandraReactiveRepositoriesAutoConfiguration.class,
 		CassandraRepositoriesAutoConfiguration.class,
-		ClientHttpConnectorAutoConfiguration.class,
+		// ClientHttpConnectorAutoConfiguration 은 Boot 4 에서 제거된다. 제외할 대상이 사라진다
 		CodecsAutoConfiguration.class,
 		CouchbaseAutoConfiguration.class,
 		CouchbaseDataAutoConfiguration.class,
@@ -155,7 +152,8 @@ import com.avob.openadr.server.common.vtn.VtnConfig;
 		HazelcastJpaDependencyAutoConfiguration.class,
 		HttpHandlerAutoConfiguration.class,
 		HypermediaAutoConfiguration.class,
-		InfluxDbAutoConfiguration.class,
+		// InfluxDbAutoConfiguration 은 Boot 3.2 에서 deprecated 되고 3.4 에서 제거됐다.
+		// InfluxDB 1.x 클라이언트 지원이 없어진 것이라 제외할 대상 자체가 사라졌다
 		IntegrationAutoConfiguration.class,
 		JdbcRepositoriesAutoConfiguration.class,
 		JerseyAutoConfiguration.class,
@@ -179,7 +177,7 @@ import com.avob.openadr.server.common.vtn.VtnConfig;
 		MustacheAutoConfiguration.class,
 		Neo4jDataAutoConfiguration.class,
 		Neo4jRepositoriesAutoConfiguration.class,
-		OAuth2ClientAutoConfiguration.class,
+		// OAuth2ClientAutoConfiguration 은 Boot 4 에서 제거된다. 제외할 대상이 사라진다
 		OAuth2ResourceServerAutoConfiguration.class,
 		ProjectInfoAutoConfiguration.class,
 		QuartzAutoConfiguration.class,

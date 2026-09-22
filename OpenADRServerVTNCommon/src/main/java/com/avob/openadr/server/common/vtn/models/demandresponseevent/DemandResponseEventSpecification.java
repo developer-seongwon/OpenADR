@@ -196,8 +196,10 @@ public class DemandResponseEventSpecification {
 			}
 		}
 
-		final Specification<DemandResponseEvent> finalRes = Specification.where(marketContextPredicates)
-				.and(venPredicates).and(statePredicates).and(isPublishedPredicates).and(isSendablePredicates);
+		// Specification.where 는 Spring Data JPA 4 에서 제거된다.
+		// allOf 가 후속이고 where 처럼 null 인자를 그대로 받아준다
+		final Specification<DemandResponseEvent> finalRes = Specification.allOf(marketContextPredicates,
+				venPredicates, statePredicates, isPublishedPredicates, isSendablePredicates);
 
 		return (event, cq, cb) -> {
 			cq.distinct(true);

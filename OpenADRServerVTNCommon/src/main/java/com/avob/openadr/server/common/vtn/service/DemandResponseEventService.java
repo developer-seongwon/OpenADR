@@ -448,7 +448,8 @@ public class DemandResponseEventService {
 		if (size == null) {
 			size = DEFAULT_SEARCH_SIZE;
 		}
-		Specification<DemandResponseEvent> spec = Specification.where(DemandResponseEventSpecification.search(filters));
+		// where 는 Spring Data JPA 4 에서 제거된다. search 는 null 을 돌려주지 않으니 래퍼가 필요 없다
+		Specification<DemandResponseEvent> spec = DemandResponseEventSpecification.search(filters);
 
 		if (start != null && end != null) {
 			spec = spec.and(DemandResponseEventSpecification.hasActivePeriodEndNullOrAfter(start)
@@ -470,7 +471,8 @@ public class DemandResponseEventService {
 		if (size == null) {
 			size = DEFAULT_SEARCH_SIZE;
 		}
-		Specification<DemandResponseEvent> spec = Specification.where(DemandResponseEventSpecification.search(filters));
+		// where 는 Spring Data JPA 4 에서 제거된다. search 는 null 을 돌려주지 않으니 래퍼가 필요 없다
+		Specification<DemandResponseEvent> spec = DemandResponseEventSpecification.search(filters);
 
 		if (start != null) {
 

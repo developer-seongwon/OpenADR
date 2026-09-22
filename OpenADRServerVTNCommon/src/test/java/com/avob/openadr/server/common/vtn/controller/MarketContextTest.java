@@ -1,5 +1,6 @@
 package com.avob.openadr.server.common.vtn.controller;
 
+import com.avob.openadr.server.common.vtn.AbstractVtnTest;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -42,7 +43,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @ContextConfiguration(classes = { ApplicationTest.class })
 @WebAppConfiguration
 @ActiveProfiles("test")
-public class MarketContextTest {
+public class MarketContextTest extends AbstractVtnTest {
 
 	private static final String MARKET_CONTEXT_URL = "/MarketContext/";
 

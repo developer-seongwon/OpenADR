@@ -1,5 +1,6 @@
 package com.avob.openadr.server.oadr20b.vtn.service;
 
+import com.avob.openadr.server.oadr20b.vtn.AbstractVtn20bTest;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -30,7 +31,7 @@ import com.avob.openadr.server.oadr20b.vtn.utils.OadrDataBaseSetup;
 @ContextConfiguration(classes = { VTN20bSecurityApplicationTest.class })
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-public class VenPollServiceTest {
+public class VenPollServiceTest extends AbstractVtn20bTest {
 
 	@Resource
 	private VenService venService;

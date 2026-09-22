@@ -1,5 +1,6 @@
 package com.avob.openadr.server.common.vtn.models.vendemandresponseevent;
 
+import com.avob.openadr.server.common.vtn.AbstractVtnTest;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -29,7 +30,7 @@ import com.avob.openadr.server.common.vtn.service.VenService;
 @ContextConfiguration(classes = { ApplicationTest.class })
 @WebAppConfiguration
 @ActiveProfiles("test")
-public class VenDemandResponseEventDaoTest {
+public class VenDemandResponseEventDaoTest extends AbstractVtnTest {
 
 	@Resource
 	private VenMarketContextService venMarketContextService;

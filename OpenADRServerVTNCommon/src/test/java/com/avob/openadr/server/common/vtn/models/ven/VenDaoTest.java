@@ -1,5 +1,6 @@
 package com.avob.openadr.server.common.vtn.models.ven;
 
+import com.avob.openadr.server.common.vtn.AbstractVtnTest;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -20,7 +21,7 @@ import com.avob.openadr.server.common.vtn.ApplicationTest;
 @ContextConfiguration(classes = { ApplicationTest.class })
 @WebAppConfiguration
 @ActiveProfiles("test")
-public class VenDaoTest {
+public class VenDaoTest extends AbstractVtnTest {
 
 	@Resource
 	private VenDao venDao;

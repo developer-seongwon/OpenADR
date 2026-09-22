@@ -1,5 +1,6 @@
 package com.avob.openadr.server.oadr20b.vtn.controller;
 
+import com.avob.openadr.server.oadr20b.vtn.AbstractVtn20bTest;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -78,7 +79,7 @@ import com.google.common.collect.Sets;
 @ContextConfiguration(classes = { VTN20bSecurityApplicationTest.class })
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-public class Oadr20bVTNSecurityTest {
+public class Oadr20bVTNSecurityTest extends AbstractVtn20bTest {
 
 	@Value("${oadr.security.vtn.trustcertificate}")
 	private String oadrRsaRootCertificate;

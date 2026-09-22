@@ -1,5 +1,6 @@
 package com.avob.openadr.server.common.vtn.security;
 
+import com.avob.openadr.server.common.vtn.AbstractVtnTest;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -37,7 +38,7 @@ import com.google.common.collect.Lists;
 @ContextConfiguration(classes = { ApplicationTest.class })
 @WebAppConfiguration
 @ActiveProfiles("test")
-public class OadrSecurityRoleServiceTest {
+public class OadrSecurityRoleServiceTest extends AbstractVtnTest {
 
 	@Resource
 	private DigestAuthenticationProvider digestAuthenticationProvider;

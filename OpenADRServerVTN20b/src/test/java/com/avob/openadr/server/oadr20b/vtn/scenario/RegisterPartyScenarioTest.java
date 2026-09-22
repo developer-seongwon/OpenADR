@@ -1,5 +1,6 @@
 package com.avob.openadr.server.oadr20b.vtn.scenario;
 
+import com.avob.openadr.server.oadr20b.vtn.AbstractVtn20bTest;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -19,7 +20,6 @@ import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
-import org.springframework.jms.core.JmsTemplate;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.UserRequestPostProcessor;
 import org.springframework.test.context.ActiveProfiles;
@@ -65,7 +65,7 @@ import com.avob.openadr.server.oadr20b.vtn.utils.OadrMockVen;
 @ContextConfiguration(classes = { VTN20bSecurityApplicationTest.class })
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-public class RegisterPartyScenarioTest {
+public class RegisterPartyScenarioTest extends AbstractVtn20bTest {
 
 	@Value("${oadr.vtnid}")
 	private String vtnId;
@@ -107,9 +107,6 @@ public class RegisterPartyScenarioTest {
 	private Oadr20bVTNSupportedProfileService oadr20bVTNSupportedProfileService;
 
 	private UserRequestPostProcessor adminSession = SecurityMockMvcRequestPostProcessors.user("admin").roles("ADMIN");
-
-	@Resource
-	private JmsTemplate jmsTemplate;
 
 	@Resource
 	private Oadr20bPushListener oadr20bPushListener;

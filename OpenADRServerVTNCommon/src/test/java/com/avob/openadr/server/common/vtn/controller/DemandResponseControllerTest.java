@@ -1,5 +1,6 @@
 package com.avob.openadr.server.common.vtn.controller;
 
+import com.avob.openadr.server.common.vtn.AbstractVtnTest;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -72,7 +73,7 @@ import com.google.common.collect.Sets;
 @ContextConfiguration(classes = { ApplicationTest.class })
 @WebAppConfiguration
 @ActiveProfiles("test")
-public class DemandResponseControllerTest {
+public class DemandResponseControllerTest extends AbstractVtnTest {
 
 	private static final Float INTERVAL_VALUE = 1.0F;
 	private static final String INTERVAL_DURATION = "PT5S";

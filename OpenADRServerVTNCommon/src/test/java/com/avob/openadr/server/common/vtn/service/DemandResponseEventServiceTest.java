@@ -1,5 +1,6 @@
 package com.avob.openadr.server.common.vtn.service;
 
+import com.avob.openadr.server.common.vtn.AbstractVtnTest;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -47,7 +48,7 @@ import com.google.common.collect.Sets;
 @ContextConfiguration(classes = { ApplicationTest.class })
 @WebAppConfiguration
 @ActiveProfiles("test")
-public class DemandResponseEventServiceTest {
+public class DemandResponseEventServiceTest extends AbstractVtnTest {
 
 	@Resource
 	private DemandResponseEventService demandResponseEventService;

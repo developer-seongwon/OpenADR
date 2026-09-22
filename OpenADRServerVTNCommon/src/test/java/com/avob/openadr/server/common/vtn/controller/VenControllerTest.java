@@ -1,5 +1,6 @@
 package com.avob.openadr.server.common.vtn.controller;
 
+import com.avob.openadr.server.common.vtn.AbstractVtnTest;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -56,7 +57,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @ContextConfiguration(classes = { ApplicationTest.class })
 @WebAppConfiguration
 @ActiveProfiles("test")
-public class VenControllerTest {
+public class VenControllerTest extends AbstractVtnTest {
 
 	private static final String VEN_URL = "/Ven/";
 

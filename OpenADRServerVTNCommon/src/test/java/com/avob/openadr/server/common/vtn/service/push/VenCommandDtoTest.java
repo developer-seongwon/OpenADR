@@ -1,5 +1,6 @@
 package com.avob.openadr.server.common.vtn.service.push;
 
+import com.avob.openadr.server.common.vtn.AbstractVtnTest;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -17,7 +18,7 @@ import com.avob.openadr.server.common.vtn.models.ven.Ven;
 @ContextConfiguration(classes = { ApplicationTest.class })
 @WebAppConfiguration
 @ActiveProfiles("test")
-public class VenCommandDtoTest {
+public class VenCommandDtoTest extends AbstractVtnTest {
 
 	@Test
 	public void test() {

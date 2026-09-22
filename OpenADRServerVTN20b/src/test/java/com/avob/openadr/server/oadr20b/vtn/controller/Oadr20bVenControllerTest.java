@@ -1,5 +1,6 @@
 package com.avob.openadr.server.oadr20b.vtn.controller;
 
+import com.avob.openadr.server.oadr20b.vtn.AbstractVtn20bTest;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -14,7 +15,6 @@ import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
-import org.springframework.jms.core.JmsTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -45,7 +45,7 @@ import com.avob.openadr.server.oadr20b.vtn.utils.OadrMockVen;
 @ContextConfiguration(classes = { VTN20bSecurityApplicationTest.class })
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-public class Oadr20bVenControllerTest {
+public class Oadr20bVenControllerTest extends AbstractVtn20bTest {
 
 	@Resource
 	private XmlSignatureService xmlSignatureService;
@@ -61,9 +61,6 @@ public class Oadr20bVenControllerTest {
 
 	@Resource
 	private OadrMockHttpVenMvc oadrMockHttpVenMvc;
-
-	@Resource
-	private JmsTemplate jmsTemplate;
 
 	@Resource
 	private Oadr20bPushListener oadr20bPushListener;

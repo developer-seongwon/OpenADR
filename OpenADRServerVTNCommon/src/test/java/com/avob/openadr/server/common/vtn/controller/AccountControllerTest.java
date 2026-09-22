@@ -1,5 +1,6 @@
 package com.avob.openadr.server.common.vtn.controller;
 
+import com.avob.openadr.server.common.vtn.AbstractVtnTest;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
@@ -53,7 +54,7 @@ import com.google.common.collect.Lists;
 @ContextConfiguration(classes = { ApplicationTest.class })
 @WebAppConfiguration
 @ActiveProfiles("test")
-public class AccountControllerTest {
+public class AccountControllerTest extends AbstractVtnTest {
 
 	private static final String ACCOUNT_URL = "/Account/";
 	private static final String ACCOUNT_USER_URL = ACCOUNT_URL + "/user";

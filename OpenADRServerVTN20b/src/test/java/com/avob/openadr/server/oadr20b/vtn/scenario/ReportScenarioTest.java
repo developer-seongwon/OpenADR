@@ -1,5 +1,6 @@
 package com.avob.openadr.server.oadr20b.vtn.scenario;
 
+import com.avob.openadr.server.oadr20b.vtn.AbstractVtn20bTest;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -25,7 +26,6 @@ import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
-import org.springframework.jms.core.JmsTemplate;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.UserRequestPostProcessor;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
@@ -118,7 +118,7 @@ import com.google.common.collect.Lists;
 @ContextConfiguration(classes = { VTN20bSecurityApplicationTest.class })
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-public class ReportScenarioTest {
+public class ReportScenarioTest extends AbstractVtn20bTest {
 
 	private static final String MOUAICCOOL = "mouaiccool";
 	private static final String RID_ID = "rid";
@@ -182,9 +182,6 @@ public class ReportScenarioTest {
 
 	@Resource
 	private OadrMockHttpVtnMvc oadrMockHttpVtnMvc;
-
-	@Resource
-	private JmsTemplate jmsTemplate;
 
 	@Resource
 	private Oadr20bPushListener oadr20bPushListener;

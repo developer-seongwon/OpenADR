@@ -62,6 +62,7 @@ import com.avob.openadr.security.OadrPKISecurity;
 import com.avob.openadr.security.exception.OadrSecurityException;
 import com.avob.openadr.server.oadr20b.ven.exception.Oadr20bInvalidReportRequestException;
 import com.avob.openadr.server.oadr20b.ven.exception.OadrVTNInitializationException;
+import com.avob.openadr.server.oadr20b.ven.xmpp.XmppClientFactory;
 import com.avob.openadr.server.oadr20b.ven.xmpp.XmppVenListener;
 
 @Configuration
@@ -74,6 +75,11 @@ public class MultiVtnConfig {
 
 	@Resource
 	private VtnSessionFactory vtnSessionFactory;
+
+	// XMPP 클라이언트 생성 지점. 테스트가 @Primary 빈으로 갈아 끼운다.
+	// 타입으로 받아야 갈아끼우기가 먹으므로 @Resource 가 아니라 @Autowired 다
+	@Autowired
+	private XmppClientFactory xmppClientFactory;
 
 	@Autowired
 	private Environment env;
@@ -154,7 +160,7 @@ public class MultiVtnConfig {
 				builder.withPassword(session.getVtnXmppPass());
 			}
 
-			OadrXmppClient20b oadrXmppClient20b = builder.build();
+			OadrXmppClient20b oadrXmppClient20b = xmppClientFactory.build(builder);
 
 			OadrXmppVenClient20b venClient = null;
 			if (session.getXmlSignature()) {

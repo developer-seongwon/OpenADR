@@ -1,5 +1,6 @@
 package com.avob.openadr.server.common.vtn.controller;
 
+import com.avob.openadr.server.common.vtn.AbstractVtnTest;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -42,7 +43,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @ContextConfiguration(classes = { ApplicationTest.class })
 @WebAppConfiguration
 @ActiveProfiles("test")
-public class GroupControllerTest {
+public class GroupControllerTest extends AbstractVtnTest {
 
 	private static final String GROUP_URL = "/Group/";
 

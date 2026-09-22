@@ -1,5 +1,6 @@
 package com.avob.openadr.server.common.vtn.models.vengroup;
 
+import com.avob.openadr.server.common.vtn.AbstractVtnTest;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -24,7 +25,7 @@ import com.google.common.collect.Sets;
 @ContextConfiguration(classes = { ApplicationTest.class })
 @WebAppConfiguration
 @ActiveProfiles("test")
-public class VenGroupDaoTest {
+public class VenGroupDaoTest extends AbstractVtnTest {
 
 	@Resource
 	private VenService venService;

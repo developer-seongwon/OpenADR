@@ -3,12 +3,10 @@ package com.avob.openadr.server.oadr20b.vtn;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
-import org.springframework.jms.core.JmsTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 
@@ -25,9 +23,6 @@ import com.avob.openadr.server.oadr20b.vtn.utils.MockVenDistributeService;
 @ContextConfiguration(classes = MockVenDistributeService.class)
 @ActiveProfiles("test")
 public class VTN20bSecurityApplicationTest {
-
-	@MockBean
-	JmsTemplate jmsTemplate;
 
 	/**
 	 * 도커로 띄운 PostgreSQL 을 가리킨다. VTNCommon, VTN20a 와 같은 컨테이너를 재사용한다.

@@ -13,8 +13,6 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
 
 import com.avob.openadr.server.common.vtn.models.ItemBase;
 import com.avob.openadr.server.common.vtn.models.Target;
@@ -42,8 +40,9 @@ public class DemandResponseEventSignal {
 
 	private ItemBase itemBase;
 
-	@ElementCollection
-	@LazyCollection(LazyCollectionOption.FALSE)
+	// @LazyCollection(FALSE) 는 하이버네이트 6 에서 deprecated, 7 에서 제거된다.
+	// @ElementCollection 의 기본이 LAZY 라 EAGER 를 직접 지정해 같은 동작을 유지한다
+	@ElementCollection(fetch = FetchType.EAGER)
 	private List<Target> targets;
 
 	/**

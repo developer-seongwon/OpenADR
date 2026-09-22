@@ -3,6 +3,7 @@ package com.avob.openadr.server.oadr20b.vtn.models.venreport.capability;
 import java.util.List;
 
 import jakarta.persistence.ElementCollection;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -12,8 +13,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
 
 import com.avob.openadr.model.oadr20b.ei.ReadingTypeEnumeratedType;
 import com.avob.openadr.model.oadr20b.ei.ReportEnumeratedType;
@@ -47,12 +46,14 @@ public class ReportCapabilityDescription {
 
 	private ItemBase itemBase;
 
-	@ElementCollection
-	@LazyCollection(LazyCollectionOption.FALSE)
+	// @LazyCollection(FALSE) 는 하이버네이트 6 에서 deprecated, 7 에서 제거된다.
+	// @ElementCollection 의 기본이 LAZY 라 EAGER 를 직접 지정해 같은 동작을 유지한다
+	@ElementCollection(fetch = FetchType.EAGER)
 	private List<Target> eiDatasource;
 
-	@ElementCollection
-	@LazyCollection(LazyCollectionOption.FALSE)
+	// @LazyCollection(FALSE) 는 하이버네이트 6 에서 deprecated, 7 에서 제거된다.
+	// @ElementCollection 의 기본이 LAZY 라 EAGER 를 직접 지정해 같은 동작을 유지한다
+	@ElementCollection(fetch = FetchType.EAGER)
 	private List<Target> eiSubject;
 
 	public Long getId() {

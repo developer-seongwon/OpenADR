@@ -1,5 +1,6 @@
 package com.avob.openadr.server.oadr20b.vtn.controller.ei;
 
+import com.avob.openadr.server.oadr20b.vtn.AbstractVtn20bTest;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -21,7 +22,6 @@ import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
-import org.springframework.jms.core.JmsTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -67,7 +67,7 @@ import com.avob.openadr.server.oadr20b.vtn.xmpp.XmppConnector;
 @ContextConfiguration(classes = { VTN20bSecurityApplicationTest.class })
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-public class Oadr20bVTNEiEventControllerTest {
+public class Oadr20bVTNEiEventControllerTest extends AbstractVtn20bTest {
 
 	private static final String EIEVENT_ENDPOINT = "/OpenADR2/Simple/2.0b/EiEvent";
 
@@ -85,9 +85,6 @@ public class Oadr20bVTNEiEventControllerTest {
 
 	@Resource
 	private OadrMockHttpDemandResponseEventMvc oadrMockHttpDemandResponseEventMvc;
-
-	@Resource
-	private JmsTemplate jmsTemplate;
 
 	@Resource
 	private XmppConnector xmppConnector;

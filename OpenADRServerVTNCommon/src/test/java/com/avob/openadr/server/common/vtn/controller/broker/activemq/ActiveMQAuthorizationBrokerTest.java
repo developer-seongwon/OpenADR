@@ -1,5 +1,6 @@
 package com.avob.openadr.server.common.vtn.controller.broker.activemq;
 
+import com.avob.openadr.server.common.vtn.AbstractVtnTest;
 import static org.junit.Assert.assertTrue;
 
 import java.security.cert.X509Certificate;
@@ -36,7 +37,7 @@ import com.google.common.collect.Lists;
 @ContextConfiguration(classes = { ApplicationTest.class })
 @WebAppConfiguration
 @ActiveProfiles("test")
-public class ActiveMQAuthorizationBrokerTest {
+public class ActiveMQAuthorizationBrokerTest extends AbstractVtnTest {
 
 	private static final String LOCAL_ACCESS = "tcp://localhost";
 

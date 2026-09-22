@@ -1,5 +1,6 @@
 package com.avob.openadr.server.common.vtn.service;
 
+import com.avob.openadr.server.common.vtn.AbstractVtnTest;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -45,7 +46,7 @@ import com.google.common.collect.Sets;
 @ContextConfiguration(classes = { ApplicationTest.class })
 @WebAppConfiguration
 @ActiveProfiles("test")
-public class VenServiceTest {
+public class VenServiceTest extends AbstractVtnTest {
 
 	private Long start = System.currentTimeMillis();
 

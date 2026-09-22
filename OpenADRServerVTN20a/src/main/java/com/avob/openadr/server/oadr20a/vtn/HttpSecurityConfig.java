@@ -14,6 +14,7 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationEn
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.authentication.www.DigestAuthenticationEntryPoint;
 import org.springframework.security.web.authentication.www.DigestAuthenticationFilter;
+import org.springframework.security.web.authentication.preauth.x509.SubjectX500PrincipalExtractor;
 
 import com.avob.openadr.server.common.vtn.security.BasicAuthenticationManager;
 import com.avob.openadr.server.common.vtn.security.DigestAuthenticationProvider;
@@ -71,7 +72,13 @@ public class HttpSecurityConfig {
 		http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
 		http.authorizeHttpRequests(auth -> auth.anyRequest().authenticated());
-		http.x509(x509 -> x509.subjectPrincipalRegex("CN=(.*?)(?:,|$)")
+		// 예전에는 subjectPrincipalRegex("CN=(.*?)(?:,|$)") 였는데
+		// 그건 Spring Security 6.5 에서 deprecated 됐다.
+		// 정규식으로 DN 문자열을 긁던 SubjectDnX509PrincipalExtractor 도 같이 deprecated 다.
+		// SubjectX500PrincipalExtractor 는 X500Principal 을 RDN 으로 제대로 파싱해서
+		// CN 을 꺼낸다. 기본값이 CN 이라 따로 지정할 것도 없고, 결과는 같다
+		SubjectX500PrincipalExtractor principalExtractor = new SubjectX500PrincipalExtractor();
+		http.x509(x509 -> x509.x509PrincipalExtractor(principalExtractor)
 				.authenticationUserDetailsService(oadr20aX509AuthenticatedUserDetailsService));
 
 		http.addFilter(digestAuthenticationFilter).addFilter(basicAuthenticationFilter);

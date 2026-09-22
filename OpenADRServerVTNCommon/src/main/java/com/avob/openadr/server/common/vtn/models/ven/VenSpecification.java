@@ -129,8 +129,10 @@ public class VenSpecification {
 
 			}
 		}
-		final Specification<Ven> finalRes = Specification.where(eventIdPredicates).and(marketContextPredicates)
-				.and(groupPredicates).and(registeredPredicates).and(venIdPredicates);
+		// Specification.where 는 Spring Data JPA 4 에서 제거된다.
+		// allOf 가 후속이고 where 처럼 null 인자를 그대로 받아준다
+		final Specification<Ven> finalRes = Specification.allOf(eventIdPredicates, marketContextPredicates,
+				groupPredicates, registeredPredicates, venIdPredicates);
 
 		return (ven, cq, cb) -> {
 			if (finalRes != null) {

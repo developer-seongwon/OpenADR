@@ -2,6 +2,7 @@ package com.avob.openadr.dummy;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -12,7 +13,6 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 
 import org.apache.http.HttpStatus;
-import org.apache.logging.log4j.core.appender.rolling.action.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -149,6 +149,9 @@ public class DummyEventManager {
 
 			String duration = template.getActivePeriod().getDuration();
 
+			// 원래 log4j 내부 클래스(rolling.action.Duration)를 쓰고 있었다.
+			// deprecated 이기도 하고 애초에 로깅 내부용이라 쓸 자리가 아니다.
+			// ISO-8601 기간 문자열(PT1H 같은)은 java.time.Duration 이 그대로 읽는다
 			Duration parse = Duration.parse(duration);
 
 			long durationMillis = parse.toMillis();

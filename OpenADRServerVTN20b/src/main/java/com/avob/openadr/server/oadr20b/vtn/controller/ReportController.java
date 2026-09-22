@@ -93,8 +93,10 @@ public class ReportController {
 				? OtherReportCapabilityDescriptionSpecification.hasReportType(reportType)
 				: null;
 
-		Specification<OtherReportCapabilityDescription> spec = Specification.where(hasReportspecifierId)
-				.and(hasReadingType).and(hasReportName).and(hasReportType);
+		// Specification.where 는 Spring Data JPA 4 에서 제거된다.
+		// allOf 가 후속이고 where 처럼 null 인자를 그대로 받아준다
+		Specification<OtherReportCapabilityDescription> spec = Specification.allOf(hasReportspecifierId,
+				hasReadingType, hasReportName, hasReportType);
 
 		List<OtherReportCapabilityDescription> search = otherReportCapabilityDescriptionService.search(spec);
 

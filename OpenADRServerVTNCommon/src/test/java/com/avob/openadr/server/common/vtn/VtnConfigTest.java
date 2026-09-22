@@ -16,7 +16,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
 @ContextConfiguration(classes = { ApplicationTest.class })
 @WebAppConfiguration
 @ActiveProfiles("test")
-public class VtnConfigTest {
+public class VtnConfigTest extends AbstractVtnTest {
 
 	@Resource
 	private VtnConfig vtnConfig;

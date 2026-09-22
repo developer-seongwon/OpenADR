@@ -1,5 +1,6 @@
 package com.avob.openadr.server.common.vtn.service;
 
+import com.avob.openadr.server.common.vtn.AbstractVtnTest;
 import static org.junit.Assert.assertEquals;
 
 import jakarta.annotation.Resource;
@@ -17,7 +18,7 @@ import com.avob.openadr.server.common.vtn.ApplicationTest;
 @ContextConfiguration(classes = { ApplicationTest.class })
 @WebAppConfiguration
 @ActiveProfiles("test")
-public class VenRequestCountServiceTest {
+public class VenRequestCountServiceTest extends AbstractVtnTest {
 
     @Resource
     private VenRequestCountService venRequestCountService;

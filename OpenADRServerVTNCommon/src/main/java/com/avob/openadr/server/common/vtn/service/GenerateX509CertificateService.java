@@ -19,7 +19,6 @@ import jakarta.annotation.Resource;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.ArchiveOutputStream;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
-import org.apache.commons.compress.utils.IOUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
@@ -89,7 +88,9 @@ public class GenerateX509CertificateService {
 				o.putArchiveEntry(entry);
 				if (fileEntry.getValue().isFile()) {
 					try (InputStream i = new FileInputStream(fileEntry.getValue().getAbsolutePath())) {
-						IOUtils.copy(i, o);
+						// commons-compress 의 IOUtils.copy 는 deprecated 다.
+						// 자바 9 부터 InputStream.transferTo 가 같은 일을 한다
+						i.transferTo(o);
 					}
 				}
 				o.closeArchiveEntry();

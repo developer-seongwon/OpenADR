@@ -1,5 +1,6 @@
 package com.avob.openadr.server.common.vtn.service.push;
 
+import com.avob.openadr.server.common.vtn.AbstractVtnTest;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -14,7 +15,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
-import org.springframework.jms.core.JmsTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -27,10 +27,7 @@ import com.avob.openadr.server.common.vtn.models.ven.Ven;
 @ContextConfiguration(classes = { ApplicationTest.class })
 @WebAppConfiguration
 @ActiveProfiles("test")
-public class DemandResponseEventPublisherTest {
-
-	@Resource
-	private JmsTemplate jmsTemplate;
+public class DemandResponseEventPublisherTest extends AbstractVtnTest {
 
 	@Resource
 	private DemandResponseEventPublisher publisher;

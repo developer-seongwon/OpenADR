@@ -1,5 +1,6 @@
 package com.avob.openadr.server.common.vtn.service;
 
+import com.avob.openadr.server.common.vtn.AbstractVtnTest;
 import static org.junit.Assert.assertNotNull;
 
 import jakarta.annotation.Resource;
@@ -18,7 +19,7 @@ import com.avob.openadr.server.common.vtn.models.ven.VenCreateDto;
 @ContextConfiguration(classes = { ApplicationTest.class })
 @WebAppConfiguration
 @ActiveProfiles("test")
-public class GenerateX509CertificateServiceTest {
+public class GenerateX509CertificateServiceTest extends AbstractVtnTest {
 
 	@Resource
 	private GenerateX509CertificateService generateX509CertificateService;

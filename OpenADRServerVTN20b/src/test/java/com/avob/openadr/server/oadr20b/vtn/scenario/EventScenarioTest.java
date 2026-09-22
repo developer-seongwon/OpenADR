@@ -1,5 +1,6 @@
 package com.avob.openadr.server.oadr20b.vtn.scenario;
 
+import com.avob.openadr.server.oadr20b.vtn.AbstractVtn20bTest;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -23,7 +24,6 @@ import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
-import org.springframework.jms.core.JmsTemplate;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.UserRequestPostProcessor;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
@@ -81,7 +81,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 @ContextConfiguration(classes = { VTN20bSecurityApplicationTest.class })
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-public class EventScenarioTest {
+public class EventScenarioTest extends AbstractVtn20bTest {
 
 	@Value("${oadr.vtnid}")
 	private String vtnId;
@@ -103,9 +103,6 @@ public class EventScenarioTest {
 
 	@Resource
 	private OadrMockHttpDemandResponseEventMvc oadrMockHttpDemandResponseEventMvc;
-
-	@Resource
-	private JmsTemplate jmsTemplate;
 
 	@Resource
 	private XmppConnector xmppConnector;

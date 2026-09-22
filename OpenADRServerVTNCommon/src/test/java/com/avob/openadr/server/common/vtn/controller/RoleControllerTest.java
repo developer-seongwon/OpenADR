@@ -1,5 +1,6 @@
 package com.avob.openadr.server.common.vtn.controller;
 
+import com.avob.openadr.server.common.vtn.AbstractVtnTest;
 import static org.junit.Assert.assertTrue;
 
 import jakarta.annotation.Resource;
@@ -38,7 +39,7 @@ import com.google.common.collect.Lists;
 @ContextConfiguration(classes = { ApplicationTest.class })
 @WebAppConfiguration
 @ActiveProfiles("test")
-public class RoleControllerTest {
+public class RoleControllerTest extends AbstractVtnTest {
 
 	private static final String ROLE_URL = "/Role/";
 

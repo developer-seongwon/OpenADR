@@ -9,6 +9,14 @@
 		<Logger level="info" name="com.avob" additivity="false">
 			<AppenderRef ref="Console" />
 		</Logger>
+		<!-- MultiVtnConfig 는 붙지 못한 VTN 설정을 스택트레이스까지 붙여 ERROR 로 남긴다.
+		     운영에서는 맞는 동작이지만 MultiVtnConfigTest 는 "XMPP 설정이 실패한다" 를
+		     단언하는 테스트라, 기대한 실패가 매번 수백 줄로 찍힌다.
+		     테스트에서만 한 단계 올려서 그 스택을 안 보이게 한다.
+		     실제 실패 여부는 테스트의 assertNull 이 판정한다 -->
+		<Logger level="fatal" name="com.avob.openadr.server.oadr20b.ven.MultiVtnConfig" additivity="false">
+			<AppenderRef ref="Console" />
+		</Logger>
 		<Logger level="warn" name="org.springframework" additivity="false">
 			<AppenderRef ref="Console" />
 		</Logger>
