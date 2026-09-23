@@ -1,22 +1,22 @@
 package com.avob.openadr.server.oadr20b.ven.controller;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import jakarta.servlet.Filter;
 import jakarta.servlet.ServletContext;
 
 import jakarta.servlet.http.HttpServletResponse;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.UserRequestPostProcessor;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -31,7 +31,7 @@ import com.avob.openadr.model.oadr20b.errorcodes.Oadr20bApplicationLayerErrorCod
 import com.avob.openadr.model.oadr20b.oadr.OadrResponseType;
 import com.avob.openadr.server.oadr20b.ven.VEN20bApplicationTest;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = { VEN20bApplicationTest.class })
 @WebAppConfiguration
 @ActiveProfiles("test")
@@ -52,7 +52,7 @@ public class Oadr20bVENEiReportControllerTest {
 	@Autowired
 	private Filter springSecurityFilterChain;
 
-	@Before
+	@BeforeEach
 	public void setup() throws Exception {
 		jaxbContext = Oadr20bJAXBContext.getInstance();
 		this.mockMvc = MockMvcBuilders.webAppContextSetup(this.wac).addFilters(springSecurityFilterChain).build();
@@ -61,9 +61,9 @@ public class Oadr20bVENEiReportControllerTest {
 	@Test
 	public void givenWac_whenServletContext_thenItProvidesOadr20aVENEiEventController() {
 		ServletContext servletContext = wac.getServletContext();
-		Assert.assertNotNull(servletContext);
-		Assert.assertTrue(servletContext instanceof MockServletContext);
-		Assert.assertNotNull(wac.getBean("oadr20bVENEiReportController"));
+		Assertions.assertNotNull(servletContext);
+		Assertions.assertTrue(servletContext instanceof MockServletContext);
+		Assertions.assertNotNull(wac.getBean("oadr20bVENEiReportController"));
 	}
 
 	@Test

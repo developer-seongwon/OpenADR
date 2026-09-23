@@ -1,7 +1,7 @@
 package com.avob.openadr.client.http;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -11,7 +11,7 @@ import java.security.UnrecoverableKeyException;
 import java.util.Arrays;
 
 import org.apache.http.client.ClientProtocolException;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.avob.openadr.security.OadrFingerprintSecurity;
 import com.avob.openadr.security.exception.OadrSecurityException;

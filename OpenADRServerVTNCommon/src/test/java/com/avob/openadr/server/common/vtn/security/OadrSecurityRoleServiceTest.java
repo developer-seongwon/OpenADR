@@ -1,8 +1,8 @@
 package com.avob.openadr.server.common.vtn.security;
 
 import com.avob.openadr.server.common.vtn.AbstractVtnTest;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
@@ -10,15 +10,15 @@ import java.util.List;
 
 import jakarta.annotation.Resource;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.web.WebAppConfiguration;
 
 import com.avob.openadr.security.OadrFingerprintSecurity;
@@ -34,7 +34,7 @@ import com.avob.openadr.server.common.vtn.service.OadrUserService;
 import com.avob.openadr.server.common.vtn.service.VenService;
 import com.google.common.collect.Lists;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = { ApplicationTest.class })
 @WebAppConfiguration
 @ActiveProfiles("test")
@@ -64,7 +64,7 @@ public class OadrSecurityRoleServiceTest extends AbstractVtnTest {
 	private Ven venUser = null;
 	private Ven venX509 = null;
 
-	@Before
+	@BeforeEach
 	public void before() throws OadrSecurityException {
 		oadrUserService.delete(oadrUserService.findAll());
 		oadrAppService.delete(oadrAppService.findAll());
@@ -95,7 +95,7 @@ public class OadrSecurityRoleServiceTest extends AbstractVtnTest {
 
 	}
 
-	@After
+	@AfterEach
 	public void after() {
 		oadrUserService.delete(adminUser);
 		oadrUserService.delete(passwordUser);

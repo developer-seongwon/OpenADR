@@ -1,7 +1,7 @@
 package com.avob.openadr.model.oadr20b.xmlsignature;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.StringWriter;
 import java.io.Writer;
@@ -14,7 +14,7 @@ import java.util.List;
 import jakarta.xml.bind.JAXBException;
 import javax.xml.transform.dom.DOMResult;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.w3c.dom.Document;
 import org.w3c.dom.ls.DOMImplementationLS;
 import org.w3c.dom.ls.LSOutput;

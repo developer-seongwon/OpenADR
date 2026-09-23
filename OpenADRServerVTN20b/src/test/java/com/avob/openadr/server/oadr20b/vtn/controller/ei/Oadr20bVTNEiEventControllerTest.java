@@ -1,9 +1,9 @@
 package com.avob.openadr.server.oadr20b.vtn.controller.ei;
 
 import com.avob.openadr.server.oadr20b.vtn.AbstractVtn20bTest;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.StringWriter;
 import java.io.Writer;
@@ -14,9 +14,8 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.dom.DOMResult;
 
 import jakarta.servlet.http.HttpServletResponse;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,7 +23,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -63,7 +61,6 @@ import com.avob.openadr.server.oadr20b.vtn.utils.OadrMockHttpVenMvc;
 import com.avob.openadr.server.oadr20b.vtn.utils.OadrMockVen;
 import com.avob.openadr.server.oadr20b.vtn.xmpp.XmppConnector;
 
-@RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = { VTN20bSecurityApplicationTest.class })
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
@@ -100,7 +97,7 @@ public class Oadr20bVTNEiEventControllerTest extends AbstractVtn20bTest {
 
 	private Oadr20bJAXBContext jaxbContext;
 
-	@Before
+	@BeforeEach
 	public void init() throws JAXBException {
 
 		jaxbContext = Oadr20bJAXBContext.getInstance();

@@ -1,10 +1,10 @@
 package com.avob.openadr.server.oadr20b.vtn.scenario;
 
 import com.avob.openadr.server.oadr20b.vtn.AbstractVtn20bTest;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -19,9 +19,8 @@ import jakarta.annotation.Resource;
 import jakarta.xml.bind.JAXBException;
 
 import jakarta.servlet.http.HttpServletResponse;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -29,7 +28,6 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.UserRequestPostProcessor;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.LinkedMultiValueMap;
 
 import com.avob.openadr.model.oadr20b.Oadr20bFactory;
@@ -114,7 +112,6 @@ import com.avob.openadr.server.oadr20b.vtn.utils.OadrMockVen;
 import com.avob.openadr.server.oadr20b.vtn.utils.OadrParamBuilder;
 import com.google.common.collect.Lists;
 
-@RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = { VTN20bSecurityApplicationTest.class })
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
@@ -207,7 +204,7 @@ public class ReportScenarioTest extends AbstractVtn20bTest {
 				Mockito.any(String.class));
 	}
 
-	@Before
+	@BeforeEach
 	public void setup() throws JAXBException {
 
 	}

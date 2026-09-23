@@ -1,22 +1,24 @@
 package com.avob.openadr.server.common.vtn.controller;
 
 import com.avob.openadr.server.common.vtn.AbstractVtnTest;
-import static org.junit.Assert.assertTrue;
+
 
 import jakarta.annotation.Resource;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import jakarta.servlet.Filter;
 
 import jakarta.servlet.http.HttpServletResponse;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.UserRequestPostProcessor;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -35,7 +37,7 @@ import com.avob.openadr.server.common.vtn.service.VenService;
 import com.avob.openadr.server.common.vtn.service.dtomapper.DtoMapper;
 import com.google.common.collect.Lists;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = { ApplicationTest.class })
 @WebAppConfiguration
 @ActiveProfiles("test")
@@ -71,7 +73,7 @@ public class RoleControllerTest extends AbstractVtnTest {
 	private UserRequestPostProcessor user = SecurityMockMvcRequestPostProcessors.user("user").roles("USER");
 	private UserRequestPostProcessor ven = SecurityMockMvcRequestPostProcessors.user("ven").roles("VEN");
 
-	@Before
+	@BeforeEach
 	public void before() {
 
 		this.mockMvc = MockMvcBuilders.webAppContextSetup(this.wac).addFilters(springSecurityFilterChain).build();
@@ -93,7 +95,7 @@ public class RoleControllerTest extends AbstractVtnTest {
 
 	}
 
-	@After
+	@AfterEach
 	public void after() {
 		oadrUserService.delete(adminUser);
 		oadrAppService.delete(appUser);

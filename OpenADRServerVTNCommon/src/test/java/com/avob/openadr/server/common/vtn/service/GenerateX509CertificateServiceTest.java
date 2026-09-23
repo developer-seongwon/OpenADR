@@ -1,21 +1,23 @@
 package com.avob.openadr.server.common.vtn.service;
 
 import com.avob.openadr.server.common.vtn.AbstractVtnTest;
-import static org.junit.Assert.assertNotNull;
+
 
 import jakarta.annotation.Resource;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.web.WebAppConfiguration;
 
 import com.avob.openadr.server.common.vtn.ApplicationTest;
 import com.avob.openadr.server.common.vtn.models.ven.VenCreateDto;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = { ApplicationTest.class })
 @WebAppConfiguration
 @ActiveProfiles("test")

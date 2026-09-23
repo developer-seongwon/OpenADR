@@ -1,8 +1,8 @@
 package com.avob.openadr.server.oadr20b.vtn.controller;
 
 import com.avob.openadr.server.oadr20b.vtn.AbstractVtn20bTest;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -20,16 +20,14 @@ import jakarta.xml.bind.JAXBException;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
+import org.junit.jupiter.api.Test;
 import jakarta.servlet.http.HttpServletResponse;
-import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.http.HttpHeaders;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.avob.openadr.client.http.OadrHttpClient;
 import com.avob.openadr.client.http.OadrHttpClientBuilder;
@@ -76,7 +74,6 @@ import com.google.common.collect.Sets;
 
 import tools.jackson.databind.ObjectMapper;
 
-@RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = { VTN20bSecurityApplicationTest.class })
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")

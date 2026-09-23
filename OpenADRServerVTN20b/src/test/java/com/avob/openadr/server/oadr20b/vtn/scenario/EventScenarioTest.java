@@ -1,11 +1,11 @@
 package com.avob.openadr.server.oadr20b.vtn.scenario;
 
 import com.avob.openadr.server.oadr20b.vtn.AbstractVtn20bTest;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -16,9 +16,8 @@ import jakarta.annotation.Resource;
 import jakarta.xml.bind.JAXBException;
 
 import jakarta.servlet.http.HttpServletResponse;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,7 +26,6 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.UserRequestPostProcessor;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.avob.openadr.model.oadr20b.builders.Oadr20bEiEventBuilders;
 import com.avob.openadr.model.oadr20b.builders.Oadr20bResponseBuilders;
@@ -76,7 +74,6 @@ import com.avob.openadr.server.oadr20b.vtn.utils.OadrMockHttpVenMvc;
 import com.avob.openadr.server.oadr20b.vtn.utils.OadrMockVen;
 import com.avob.openadr.server.oadr20b.vtn.xmpp.XmppConnector;
 
-@RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = { VTN20bSecurityApplicationTest.class })
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
@@ -115,7 +112,7 @@ public class EventScenarioTest extends AbstractVtn20bTest {
 	@Resource
 	private Oadr20bDemandResponseEventCreateListener oadr20bDemandResponseEventCreateListener;
 
-	@Before
+	@BeforeEach
 	public void init() throws JAXBException {
 
 		Mockito.doAnswer((Answer<?>) invocation -> {

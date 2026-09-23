@@ -6,9 +6,9 @@ import java.util.List;
 
 import jakarta.xml.bind.JAXBException;
 
-import org.junit.Test;
-
 import com.avob.openadr.model.oadr20b.Oadr20bFactory;
+
+import org.junit.jupiter.api.Test;
 import com.avob.openadr.model.oadr20b.Oadr20bJAXBContext;
 import com.avob.openadr.model.oadr20b.TestUtils;
 import com.avob.openadr.model.oadr20b.builders.Oadr20bEiBuilders;

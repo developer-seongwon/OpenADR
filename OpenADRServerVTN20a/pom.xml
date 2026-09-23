@@ -23,13 +23,6 @@
 			<groupId>com.avob.openadr</groupId>
 			<artifactId>OpenADRServerVTNCommon</artifactId>
 		</dependency>
-		
-		<!-- tests dependencies -->
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<scope>test</scope>
-		</dependency>
 
 		<!-- VTNCommon 의 VtnDatabaseContainer 를 그대로 쓴다.
 		     테스트 DB 는 H2 가 아니라 도커로 띄운 PostgreSQL 이고,

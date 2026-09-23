@@ -1,10 +1,10 @@
 package com.avob.openadr.server.oadr20a.vtn.controller;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,10 +16,9 @@ import jakarta.servlet.Filter;
 import jakarta.servlet.ServletContext;
 
 import jakarta.servlet.http.HttpServletResponse;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -31,7 +30,6 @@ import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequ
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -97,7 +95,6 @@ import tools.jackson.databind.ObjectMapper;
  * ddl-auto 가 create-drop 이라 컨텍스트가 새로 뜰 때 스키마를 다시 만든다.
  * 이 애노테이션으로 클래스가 끝날 때 컨텍스트를 버리면 다음 클래스는 빈 DB 에서 시작한다.
  */
-@RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = { VTN20aSecurityApplicationTest.class })
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
@@ -140,7 +137,7 @@ public class Oadr20aVTNEiEventControllerTest {
 
 	private Oadr20aJAXBContext jaxbContext;
 
-	@Before
+	@BeforeEach
 	public void setup() throws Exception {
 		jaxbContext = Oadr20aJAXBContext.getInstance();
 		this.mockMvc = MockMvcBuilders.webAppContextSetup(this.wac).addFilters(springSecurityFilterChain).build();
@@ -149,8 +146,8 @@ public class Oadr20aVTNEiEventControllerTest {
 	@Test
 	public void givenWac_whenServletContext_thenItProvidesOadr20aVtnEiEventController() {
 		ServletContext servletContext = wac.getServletContext();
-		Assert.assertNotNull(servletContext);
-		Assert.assertNotNull(wac.getBean("oadr20aVTNEiEventController"));
+		Assertions.assertNotNull(servletContext);
+		Assertions.assertNotNull(wac.getBean("oadr20aVTNEiEventController"));
 	}
 
 	@Test

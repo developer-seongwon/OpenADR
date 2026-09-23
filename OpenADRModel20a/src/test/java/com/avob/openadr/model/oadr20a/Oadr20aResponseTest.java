@@ -1,8 +1,8 @@
 package com.avob.openadr.model.oadr20a;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -11,7 +11,7 @@ import java.io.FileNotFoundException;
 import jakarta.xml.bind.JAXBException;
 import javax.xml.datatype.DatatypeConfigurationException;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.avob.openadr.model.oadr20a.builders.Oadr20aBuilders;
 import com.avob.openadr.model.oadr20a.exception.Oadr20aMarshalException;

@@ -1,11 +1,11 @@
 package com.avob.openadr.server.common.vtn.service;
 
 import com.avob.openadr.server.common.vtn.AbstractVtnTest;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -13,14 +13,14 @@ import java.util.List;
 
 import jakarta.annotation.Resource;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.data.domain.Page;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.web.WebAppConfiguration;
 
 import com.avob.openadr.server.common.vtn.ApplicationTest;
@@ -44,7 +44,7 @@ import com.avob.openadr.server.common.vtn.models.venmarketcontext.VenMarketConte
 import com.avob.openadr.server.common.vtn.models.venmarketcontext.VenMarketContextDto;
 import com.google.common.collect.Sets;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = { ApplicationTest.class })
 @WebAppConfiguration
 @ActiveProfiles("test")
@@ -74,7 +74,7 @@ public class DemandResponseEventServiceTest extends AbstractVtnTest {
 	private Ven ven2;
 	private Ven ven3;
 
-	@Before
+	@BeforeEach
 	public void before() {
 
 		String marketContextName = "http://oadr.avob.com";
@@ -150,7 +150,7 @@ public class DemandResponseEventServiceTest extends AbstractVtnTest {
 		events.add(event3);
 	}
 
-	@After
+	@AfterEach
 	public void after() {
 		demandResponseEventService.delete(events);
 		venService.delete(vens);

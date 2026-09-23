@@ -8,15 +8,13 @@ import java.net.URISyntaxException;
 import jakarta.annotation.Resource;
 
 import jakarta.servlet.http.HttpServletResponse;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.avob.openadr.client.http.oadr20a.vtn.OadrHttpVtnClient20a;
 import com.avob.openadr.model.oadr20a.builders.Oadr20aBuilders;
@@ -38,7 +36,6 @@ import com.avob.openadr.server.oadr20a.vtn.service.push.Oadr20aPushService;
  * ddl-auto 가 create-drop 이라 컨텍스트가 새로 뜰 때 스키마를 다시 만든다.
  * 이 애노테이션으로 클래스가 끝날 때 컨텍스트를 버리면 다음 클래스는 빈 DB 에서 시작한다.
  */
-@RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = { VTN20aSecurityApplicationTest.class })
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")

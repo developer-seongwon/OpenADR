@@ -1,6 +1,6 @@
 package com.avob.openadr.server.oadr20b.ven;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.io.IOException;
 import java.util.List;

@@ -105,13 +105,6 @@
 			<artifactId>rabbitmq-jms</artifactId>
 			<scope>provided</scope>
 		</dependency>
-		
-		<!-- tests dependencies -->
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<scope>test</scope>
-		</dependency>
 
 		<!-- 테스트 DB. H2 대신 도커로 운영과 같은 PostgreSQL 을 띄운다 -->
 		<dependency>

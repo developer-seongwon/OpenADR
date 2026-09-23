@@ -1,13 +1,12 @@
 package com.avob.openadr.server.oadr20b.vtn;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springdoc.core.customizers.OpenApiCustomizer;
 
 import io.swagger.v3.oas.models.OpenAPI;
@@ -162,7 +161,7 @@ public class SwaggerConfigTest {
 		Set<String> ids = new HashSet<>();
 		openApi.getPaths().values()
 				.forEach(item -> item.readOperations().forEach(op -> assertTrue(
-						"operationId 가 중복됐다: " + op.getOperationId(), ids.add(op.getOperationId()))));
+						ids.add(op.getOperationId()), "operationId 가 중복됐다: " + op.getOperationId())));
 		assertEquals(3, ids.size());
 	}
 

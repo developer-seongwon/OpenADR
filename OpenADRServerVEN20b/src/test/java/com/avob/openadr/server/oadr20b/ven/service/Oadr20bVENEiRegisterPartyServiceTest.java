@@ -1,23 +1,21 @@
 package com.avob.openadr.server.oadr20b.ven.service;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.io.IOException;
 
 import jakarta.annotation.Resource;
 
 import jakarta.servlet.http.HttpServletResponse;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.avob.openadr.client.http.oadr20b.ven.OadrHttpVenClient20b;
 import com.avob.openadr.model.oadr20b.Oadr20bJAXBContext;
@@ -38,7 +36,6 @@ import com.avob.openadr.server.oadr20b.ven.MultiVtnConfig;
 import com.avob.openadr.server.oadr20b.ven.VEN20bApplicationTest;
 import com.avob.openadr.server.oadr20b.ven.VtnSessionConfiguration;
 
-@RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = { VEN20bApplicationTest.class })
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
@@ -62,7 +59,7 @@ public class Oadr20bVENEiRegisterPartyServiceTest {
 	@Resource
 	private Oadr20bJAXBContext oadr20bJAXBContext;
 
-	@Before
+	@BeforeEach
 	public void setup() throws Exception {
 
 		OadrHttpVenClient20b client = Mockito.mock(OadrHttpVenClient20b.class);

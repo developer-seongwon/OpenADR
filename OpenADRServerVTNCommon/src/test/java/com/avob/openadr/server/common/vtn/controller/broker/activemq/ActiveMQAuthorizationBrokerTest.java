@@ -1,9 +1,10 @@
 package com.avob.openadr.server.common.vtn.controller.broker.activemq;
 
 import com.avob.openadr.server.common.vtn.AbstractVtnTest;
-import static org.junit.Assert.assertTrue;
 
 import java.security.cert.X509Certificate;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
@@ -11,13 +12,13 @@ import jakarta.annotation.Resource;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ConnectionInfo;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Answers;
 import org.mockito.Mockito;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.web.WebAppConfiguration;
 
 import com.avob.openadr.security.OadrFingerprintSecurity;
@@ -33,7 +34,7 @@ import com.avob.openadr.server.common.vtn.service.OadrUserService;
 import com.avob.openadr.server.common.vtn.service.VenService;
 import com.google.common.collect.Lists;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = { ApplicationTest.class })
 @WebAppConfiguration
 @ActiveProfiles("test")

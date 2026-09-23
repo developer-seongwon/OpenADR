@@ -1,15 +1,16 @@
 package com.avob.openadr.server.oadr20b.ven.controller;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 
 import jakarta.annotation.Resource;
 import jakarta.servlet.ServletContext;
 
 import jakarta.servlet.http.HttpServletResponse;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mock.web.MockServletContext;
@@ -17,7 +18,7 @@ import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequ
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.UserRequestPostProcessor;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -32,7 +33,7 @@ import com.avob.openadr.server.oadr20b.ven.MultiVtnConfig;
 import com.avob.openadr.server.oadr20b.ven.OadrMockMvc;
 import com.avob.openadr.server.oadr20b.ven.VEN20bApplicationTest;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = { VEN20bApplicationTest.class })
 @WebAppConfiguration
 @ActiveProfiles("test")
@@ -58,7 +59,7 @@ public class Oadr20bVENEiRegisterPartyControllerTest {
 	@Value("${oadr.vtn.myvtn.vtnid}")
 	private String vtnHttpId;
 
-	@Before
+	@BeforeEach
 	public void setup() throws Exception {
 		jaxbContext = Oadr20bJAXBContext.getInstance();
 	}
@@ -66,9 +67,9 @@ public class Oadr20bVENEiRegisterPartyControllerTest {
 	@Test
 	public void givenWac_whenServletContext_thenItProvidesOadr20aVENEiEventController() {
 		ServletContext servletContext = wac.getServletContext();
-		Assert.assertNotNull(servletContext);
-		Assert.assertTrue(servletContext instanceof MockServletContext);
-		Assert.assertNotNull(wac.getBean("oadr20bVENEiRegisterPartyController"));
+		Assertions.assertNotNull(servletContext);
+		Assertions.assertTrue(servletContext instanceof MockServletContext);
+		Assertions.assertNotNull(wac.getBean("oadr20bVENEiRegisterPartyController"));
 	}
 
 	@Test

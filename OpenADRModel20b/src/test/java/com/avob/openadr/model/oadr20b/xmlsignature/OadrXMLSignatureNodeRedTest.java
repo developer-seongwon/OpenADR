@@ -1,10 +1,13 @@
 package com.avob.openadr.model.oadr20b.xmlsignature;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+
 import jakarta.xml.bind.JAXBException;
 
-import org.junit.Test;
-
 import com.avob.openadr.model.oadr20b.Oadr20bJAXBContext;
+
+import org.junit.jupiter.api.Test;
 import com.avob.openadr.model.oadr20b.TestUtils;
 import com.avob.openadr.model.oadr20b.exception.Oadr20bUnmarshalException;
 import com.avob.openadr.model.oadr20b.exception.Oadr20bXMLSignatureValidationException;
@@ -33,10 +36,12 @@ public class OadrXMLSignatureNodeRedTest {
 	 * 거부하는 동작이 맞다. secure validation 을 끄면 예전처럼 통과시킬 수 있지만
 	 * 라이브러리 전체가 sha1 을 다시 허용하게 되므로 그렇게 하지 않는다.
 	 */
-	@Test(expected = Oadr20bXMLSignatureValidationException.class)
-	public void validateSha1IsRejected() throws Oadr20bUnmarshalException, Oadr20bXMLSignatureValidationException {
-		OadrPayload unmarshal = jaxbContext.unmarshal(payload, OadrPayload.class);
-		OadrXMLSignatureHandler.validate(payload, unmarshal, 0, 10);
+	@Test
+	public void validateSha1IsRejected() throws Oadr20bUnmarshalException {
+		assertThrows(Oadr20bXMLSignatureValidationException.class, () -> {
+			OadrPayload unmarshal = jaxbContext.unmarshal(payload, OadrPayload.class);
+			OadrXMLSignatureHandler.validate(payload, unmarshal, 0, 10);
+		});
 	}
 
 	@Test

@@ -1,23 +1,22 @@
 package com.avob.openadr.server.oadr20b.vtn.controller;
 
 import com.avob.openadr.server.oadr20b.vtn.AbstractVtn20bTest;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 import jakarta.xml.bind.JAXBException;
 
 import jakarta.servlet.http.HttpServletResponse;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
@@ -41,7 +40,6 @@ import com.avob.openadr.server.oadr20b.vtn.utils.OadrMockHttpMvc;
 import com.avob.openadr.server.oadr20b.vtn.utils.OadrMockHttpVenMvc;
 import com.avob.openadr.server.oadr20b.vtn.utils.OadrMockVen;
 
-@RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = { VTN20bSecurityApplicationTest.class })
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")

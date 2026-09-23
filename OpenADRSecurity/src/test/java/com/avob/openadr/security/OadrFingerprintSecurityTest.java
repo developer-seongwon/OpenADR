@@ -1,10 +1,10 @@
 package com.avob.openadr.security;
 
-import static org.junit.Assert.assertEquals;
-
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.avob.openadr.security.exception.OadrSecurityException;
+
+import org.junit.jupiter.api.Test;
 
 public class OadrFingerprintSecurityTest {
 

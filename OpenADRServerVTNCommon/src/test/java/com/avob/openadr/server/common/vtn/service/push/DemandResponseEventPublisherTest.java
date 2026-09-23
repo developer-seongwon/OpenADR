@@ -1,8 +1,9 @@
 package com.avob.openadr.server.common.vtn.service.push;
 
 import com.avob.openadr.server.common.vtn.AbstractVtnTest;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,20 +11,20 @@ import java.util.List;
 import jakarta.annotation.Resource;
 import jakarta.xml.bind.JAXBException;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.web.WebAppConfiguration;
 
 import com.avob.openadr.server.common.vtn.ApplicationTest;
 import com.avob.openadr.server.common.vtn.models.ven.Ven;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = { ApplicationTest.class })
 @WebAppConfiguration
 @ActiveProfiles("test")
@@ -35,7 +36,7 @@ public class DemandResponseEventPublisherTest extends AbstractVtnTest {
 	private List<String> oadrAResponse = new ArrayList<>();
 	private List<String> oadrBResponse = new ArrayList<>();
 
-	@Before
+	@BeforeEach
 	public void init() throws JAXBException {
 
 		Mockito.doAnswer((Answer<?>) invocation -> {

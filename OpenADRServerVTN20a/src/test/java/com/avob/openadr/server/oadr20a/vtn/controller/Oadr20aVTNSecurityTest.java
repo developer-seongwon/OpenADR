@@ -1,7 +1,7 @@
 package com.avob.openadr.server.oadr20a.vtn.controller;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -19,9 +19,8 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
+import org.junit.jupiter.api.Test;
 import jakarta.servlet.http.HttpServletResponse;
-import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
@@ -29,7 +28,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.avob.openadr.client.http.OadrHttpClient;
 import com.avob.openadr.client.http.OadrHttpClientBuilder;
@@ -80,7 +78,6 @@ import tools.jackson.databind.ObjectMapper;
  * ddl-auto 가 create-drop 이라 컨텍스트가 새로 뜰 때 스키마를 다시 만든다.
  * 이 애노테이션으로 클래스가 끝날 때 컨텍스트를 버리면 다음 클래스는 빈 DB 에서 시작한다.
  */
-@RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = { VTN20aSecurityApplicationTest.class })
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
