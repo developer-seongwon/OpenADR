@@ -1,6 +1,7 @@
 package com.avob.openadr.server.common.vtn.service.push;
 
 import com.avob.openadr.server.common.vtn.models.ven.Ven;
+import com.fasterxml.jackson.annotation.JsonCreator;
 
 public class VenCommandDto<T> {
 
@@ -19,6 +20,13 @@ public class VenCommandDto<T> {
 	public VenCommandDto() {
 	}
 
+	/**
+	 * Jackson 3 는 인자 있는 생성자를 크리에이터 후보로 더 적극적으로 집는다.
+	 * 그대로 두면 역직렬화 때 이 생성자를 골라 ven 에 null 을 넣고 NPE 가 난다.
+	 * 기본 생성자와 세터로 채우도록 이 생성자는 크리에이터에서 제외한다.
+	 * Jackson 2 에서는 기본 생성자를 알아서 골랐다.
+	 */
+	@JsonCreator(mode = JsonCreator.Mode.DISABLED)
 	public VenCommandDto(Ven ven, String payload, Class<T> klass) {
 		this.setVenUsername(ven.getUsername());
 		this.setVenPushUrl(ven.getPushUrl());

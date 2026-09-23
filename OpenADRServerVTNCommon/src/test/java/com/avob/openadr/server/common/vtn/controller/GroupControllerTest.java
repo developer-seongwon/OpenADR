@@ -34,10 +34,9 @@ import org.springframework.web.context.WebApplicationContext;
 import com.avob.openadr.server.common.vtn.ApplicationTest;
 import com.avob.openadr.server.common.vtn.models.vengroup.VenGroupDto;
 import com.avob.openadr.server.common.vtn.models.venmarketcontext.VenMarketContextDto;
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = { ApplicationTest.class })
@@ -205,14 +204,14 @@ public class GroupControllerTest extends AbstractVtnTest {
 	}
 
 	private VenGroupDto convertMvcResultToVenGroupDto(MvcResult result)
-			throws JsonParseException, JsonMappingException, IOException {
+			throws IOException {
 		MockHttpServletResponse mockHttpServletResponse = result.getResponse();
 		byte[] contentAsByteArray = mockHttpServletResponse.getContentAsByteArray();
 		return mapper.readValue(contentAsByteArray, VenGroupDto.class);
 	}
 
 	private List<VenGroupDto> convertMvcResultToVenGroupDtoList(MvcResult result)
-			throws JsonParseException, JsonMappingException, IOException {
+			throws IOException {
 		MockHttpServletResponse mockHttpServletResponse = result.getResponse();
 		byte[] contentAsByteArray = mockHttpServletResponse.getContentAsByteArray();
 		return mapper.readValue(contentAsByteArray, new TypeReference<List<VenGroupDto>>() {

@@ -44,11 +44,10 @@ import com.avob.openadr.server.common.vtn.models.user.OadrUserDto;
 import com.avob.openadr.server.common.vtn.service.OadrAppService;
 import com.avob.openadr.server.common.vtn.service.OadrUserService;
 import com.avob.openadr.server.common.vtn.service.dtomapper.DtoMapper;
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
+
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = { ApplicationTest.class })
@@ -116,7 +115,7 @@ public class AccountControllerTest extends AbstractVtnTest {
 	}
 
 	private <S> List<S> convertMvcResultToList(MvcResult result, TypeReference<List<S>> listType)
-			throws JsonParseException, JsonMappingException, IOException {
+			throws IOException {
 
 		MockHttpServletResponse mockHttpServletResponse = result.getResponse();
 		byte[] contentAsByteArray = mockHttpServletResponse.getContentAsByteArray();
@@ -124,7 +123,7 @@ public class AccountControllerTest extends AbstractVtnTest {
 	}
 
 	private <S> S convertMvcResultToObject(MvcResult result, Class<S> klass)
-			throws JsonParseException, JsonMappingException, IOException {
+			throws IOException {
 		MockHttpServletResponse mockHttpServletResponse = result.getResponse();
 		byte[] contentAsByteArray = mockHttpServletResponse.getContentAsByteArray();
 		return mapper.readValue(contentAsByteArray, klass);

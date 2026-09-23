@@ -75,7 +75,6 @@ import com.avob.openadr.server.oadr20b.vtn.utils.OadrMockHttpDemandResponseEvent
 import com.avob.openadr.server.oadr20b.vtn.utils.OadrMockHttpVenMvc;
 import com.avob.openadr.server.oadr20b.vtn.utils.OadrMockVen;
 import com.avob.openadr.server.oadr20b.vtn.xmpp.XmppConnector;
-import com.fasterxml.jackson.core.JsonProcessingException;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = { VTN20bSecurityApplicationTest.class })
@@ -577,7 +576,6 @@ public class EventScenarioTest extends AbstractVtn20bTest {
 	 * 'far'/'near'/'active'
 	 * 
 	 * @throws Exception
-	 * @throws JsonProcessingException
 	 * 
 	 * 
 	 */
@@ -592,7 +590,7 @@ public class EventScenarioTest extends AbstractVtn20bTest {
 		}
 	}
 
-	public void _testScenario2(OadrMockVen mockVen) throws JsonProcessingException, Exception {
+	public void _testScenario2(OadrMockVen mockVen) throws Exception {
 
 		List<DemandResponseEventReadDto> created = new ArrayList<DemandResponseEventReadDto>();
 

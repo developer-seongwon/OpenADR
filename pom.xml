@@ -11,14 +11,16 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.5.16</version>
+		<version>4.1.1</version>
 		<relativePath></relativePath>
 	</parent>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<java.version>17</java.version>
+		<java.version>25</java.version>
+		<!-- surefire argLine 의 @{argLine} 기본값. jacoco 를 쓰는 모듈에서는 prepare-agent 가 덮어쓴다 -->
+		<argLine></argLine>
 		<project.version>0.1.0-SNAPSHOT</project.version>
 
 		<!-- Spring Boot 3 로 올리면서 손댄 버전들 -->
@@ -26,8 +28,10 @@
 		<amq.version>6.1.4</amq.version>
 		<!-- smack 4.4 에서 smack-java7 아티팩트가 없어져 XMPPClient 가 깨진다. 4.3.4 유지 -->
 		<smack.version>4.3.4</smack.version>
-		<!-- jacoco 0.8.5 는 Java 17 바이트코드를 못 읽는다 -->
-		<jacoco-plugin.version>0.8.12</jacoco-plugin.version>
+		<!-- jacoco 는 JDK 메이저마다 새 버전이 필요하다. 0.8.12 는 Java 22 까지라서
+		     Java 25 클래스(major 69)를 만나면 "Unsupported class file major version 69" 를
+		     테스트마다 찍어 댄다. 테스트는 통과하지만 커버리지가 비므로 0.8.14 로 올린다 -->
+		<jacoco-plugin.version>0.8.14</jacoco-plugin.version>
 		<postgres.version>42.6.0</postgres.version>
 		<!-- 테스트는 H2 대신 도커의 PostgreSQL 을 쓴다. 운영과 같은 DB 라야 DDL 이 어긋나지 않는다. -->
 		<!-- 1.x 는 도커 API 1.32 로 붙는데 엔진 29 는 1.44 이상만 받는다. 2.x 라야 붙는다 -->
@@ -35,17 +39,17 @@
 		<!-- rabbitmq-jms 3.x 가 jakarta.jms 대응 버전이다 -->
 		<rabbitmq-jms.version>3.3.0</rabbitmq-jms.version>
 		<!-- springfox 는 Boot 3 에서 동작하지 않아 springdoc 으로 교체한다.
-		     2.2.0 은 Boot 3.1(Spring 6.0) 용이다. 3.5(Spring 6.2)에서는 /v3/api-docs 가
-		     GenericResponseService 안에서 500 으로 터진다. 2.8 계열이 3.4/3.5 대응 버전이다.
-		     3.x 는 Boot 4(Spring 7) 용이라 지금 올리면 안 된다 -->
-		<springdoc.version>2.8.17</springdoc.version>
+		     springdoc 버전은 스프링 버전을 따라간다. 2.2 는 Spring 6.0, 2.8 은 6.2,
+		     3.x 가 Boot 4(Spring 7) 대응이다. 어긋나면 빌드는 통과하고
+		     런타임에 /v3/api-docs 가 500 으로 터진다 -->
+		<springdoc.version>3.1.1</springdoc.version>
 		<commons-compress.version>1.26.2</commons-compress.version>
-		<!-- commons-compress 1.26 은 commons-lang3 3.14 를 요구하는데
-		     Boot 3.1.5 의 BOM 이 3.12.0 으로 눌러 버린다.
-		     3.12.0 에는 SystemProperties 클래스가 없어서 (3.13 에서 추가됐다)
-		     인증서 생성 경로에서 NoClassDefFoundError 가 난다.
-		     Boot 이 노출하는 프로퍼티라 여기서 덮어쓰면 BOM 쪽도 같이 올라간다 -->
-		<commons-lang3.version>3.14.0</commons-lang3.version>
+		<!-- commons-lang3 는 고정하지 않는다.
+		     Boot 3.1.5 때는 BOM 이 3.12.0 이라 commons-compress 가 요구하는
+		     SystemProperties 가 없어서 3.14.0 으로 올려 두었다.
+		     Boot 4 의 BOM 은 3.20.0 이라 그 고정이 오히려 버전을 끌어내렸고,
+		     springdoc 3 이 쓰는 org.apache.commons.lang3.Strings(3.18 에서 추가)가
+		     없어서 /v3/api-docs 가 NoClassDefFoundError 로 500 이 났다 -->
 		<guava.version>32.1.3-jre</guava.version>
 		<common-logging.version>1.2</common-logging.version>
 		<junit4.version>4.13.2</junit4.version>
@@ -70,6 +74,17 @@
 		<dependency>
 			<groupId>org.junit.vintage</groupId>
 			<artifactId>junit-vintage-engine</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<!-- Java 21 부터 JVM 이 런타임에 에이전트를 붙이는 걸 경고하고 (JEP 451),
+		     나중에는 막을 예정이다. Mockito 의 inline mock maker 가 그렇게 자기 자신을
+		     붙이므로 surefire 가 -javaagent 로 미리 올려 준다.
+		     모든 모듈에 넣는 이유는 아래 dependency:properties 가 만드는
+		     org.mockito:mockito-core:jar 프로퍼티가 의존성 없는 모듈에서는
+		     비어 있어 argLine 이 깨지기 때문이다. 테스트 스코프라 배포 jar 에는 안 들어간다 -->
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
@@ -246,6 +261,14 @@
 							<goal>copy</goal>
 						</goals>
 					</execution>
+					<!-- 의존성마다 groupId:artifactId:type 이름의 프로퍼티에 jar 경로를 넣어 준다.
+					     아래 surefire 의 -javaagent 가 mockito-core 경로를 이걸로 받는다 -->
+					<execution>
+						<id>mockito-agent-path</id>
+						<goals>
+							<goal>properties</goal>
+						</goals>
+					</execution>
 				</executions>
 				<configuration>
 					<artifactItems>
@@ -259,10 +282,19 @@
 					</artifactItems>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<!-- @{argLine} 은 jacoco prepare-agent 가 채우는 값이다.
+					     jacoco 를 안 쓰는 모듈은 properties 의 빈 argLine 이 들어간다 -->
+					<argLine>@{argLine} -javaagent:${org.mockito:mockito-core:jar}</argLine>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 
-	<!-- 전 모듈이 Spring Boot 3 / Java 17 로 이관됐다.
+	<!-- 전 모듈이 Spring Boot 4 / Java 25 로 이관됐다.
 	     빌드 순서는 메이븐이 의존 관계를 보고 알아서 잡는다 -->
 	<modules>
 		<module>./OpenADRSecurity</module>

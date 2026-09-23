@@ -108,9 +108,10 @@ import com.avob.openadr.server.oadr20b.vtn.service.report.OtherReportRequestServ
 import com.avob.openadr.server.oadr20b.vtn.service.report.SelfReportCapabilityDescriptionService;
 import com.avob.openadr.server.oadr20b.vtn.service.report.SelfReportCapabilityService;
 import com.avob.openadr.server.oadr20b.vtn.service.report.SelfReportRequestService;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
+
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 @Service
 public class Oadr20bVTNEiReportService implements Oadr20bVTNEiService {
@@ -799,7 +800,7 @@ public class Oadr20bVTNEiReportService implements Oadr20bVTNEiService {
 									}
 								}
 
-							} catch (JsonProcessingException e) {
+							} catch (JacksonException e) {
 								LOGGER.error("Can't marshall token to string", e);
 							}
 

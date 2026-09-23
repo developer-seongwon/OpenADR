@@ -1,5 +1,7 @@
 package com.avob.openadr.server.common.vtn.models.ven;
 
+import java.util.stream.Stream;
+import java.util.Objects;
 import java.util.List;
 
 import jakarta.persistence.criteria.Join;
@@ -129,10 +131,12 @@ public class VenSpecification {
 
 			}
 		}
-		// Specification.where 는 Spring Data JPA 4 에서 제거된다.
-		// allOf 가 후속이고 where 처럼 null 인자를 그대로 받아준다
-		final Specification<Ven> finalRes = Specification.allOf(eventIdPredicates, marketContextPredicates,
-				groupPredicates, registeredPredicates, venIdPredicates);
+		// Spring Data JPA 4 부터 Specification.and 가 null 을 거부한다(Assert.notNull).
+		// 3.x 의 where/and 는 null 을 그냥 넘겨줬다. 조건이 안 걸린 자리는 null 이므로
+		// allOf 에 넘기기 전에 걸러야 한다
+		final Specification<Ven> finalRes = Specification.allOf(Stream
+				.of(eventIdPredicates, marketContextPredicates, groupPredicates, registeredPredicates, venIdPredicates)
+				.filter(Objects::nonNull).toList());
 
 		return (ven, cq, cb) -> {
 			if (finalRes != null) {

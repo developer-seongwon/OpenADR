@@ -36,6 +36,15 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security</artifactId>
+					<exclusions>
+				<!-- 부트 기본 로깅(logback)을 뺀다. 이 프로젝트는 log4j2 를 쓴다.
+				     둘이 같이 있으면 log4j-slf4j2-impl 과 log4j-to-slf4j 가 충돌해서
+				     "cannot be present with" 로 컨텍스트가 아예 안 뜬다 -->
+				<exclusion>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-logging</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<dependency>
@@ -67,6 +76,15 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
+					<exclusions>
+				<!-- 부트 기본 로깅(logback)을 뺀다. 이 프로젝트는 log4j2 를 쓴다.
+				     둘이 같이 있으면 log4j-slf4j2-impl 과 log4j-to-slf4j 가 충돌해서
+				     "cannot be present with" 로 컨텍스트가 아예 안 뜬다 -->
+				<exclusion>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-logging</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>

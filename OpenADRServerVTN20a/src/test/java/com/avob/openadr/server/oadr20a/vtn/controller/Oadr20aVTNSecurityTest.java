@@ -64,9 +64,10 @@ import com.avob.openadr.server.common.vtn.service.VenMarketContextService;
 import com.avob.openadr.server.common.vtn.service.VenService;
 import com.avob.openadr.server.oadr20a.vtn.VTN20aSecurityApplicationTest;
 import com.avob.openadr.server.oadr20a.vtn.service.push.Oadr20aPushService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Sets;
+
+import tools.jackson.databind.ObjectMapper;
 
 /*
  * 테스트 클래스마다 컨텍스트를 새로 띄운다.

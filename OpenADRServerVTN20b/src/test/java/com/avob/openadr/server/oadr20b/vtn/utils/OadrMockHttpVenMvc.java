@@ -29,8 +29,8 @@ import com.avob.openadr.server.oadr20b.vtn.models.venreport.request.OtherReportR
 import com.avob.openadr.server.oadr20b.vtn.models.venreport.request.OtherReportRequestDtoCreateSubscriptionDto;
 import com.avob.openadr.server.oadr20b.vtn.models.venreport.request.OtherReportRequestSpecifierDto;
 import com.avob.openadr.server.oadr20b.vtn.models.venreport.request.OtherReportRequestSpecifierSearchCriteria;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
+import tools.jackson.databind.ObjectMapper;
 
 @Service
 public class OadrMockHttpVenMvc {
@@ -189,7 +189,7 @@ public class OadrMockHttpVenMvc {
 
 	public void subscribe(UserRequestPostProcessor authSession, String venId,
 			List<OtherReportRequestDtoCreateSubscriptionDto> subscriptions, int status)
-			throws JsonProcessingException, Exception {
+			throws Exception {
 		oadrMockHttpMvc
 				.perform(MockMvcRequestBuilders.post(VEN_ENDPOINT + venId + "/report/available/description/subscribe")
 						.header(CONTENT_TYPE_HEADER_NAME, APPLICATION_JSON_HEADER_VALUE)
@@ -199,7 +199,7 @@ public class OadrMockHttpVenMvc {
 
 	public void request(UserRequestPostProcessor authSession, String venId,
 			List<OtherReportRequestDtoCreateRequestDto> requests, int status)
-			throws JsonProcessingException, Exception {
+			throws Exception {
 		oadrMockHttpMvc
 				.perform(MockMvcRequestBuilders.post(VEN_ENDPOINT + venId + "/report/available/description/request")
 						.header(CONTENT_TYPE_HEADER_NAME, APPLICATION_JSON_HEADER_VALUE)

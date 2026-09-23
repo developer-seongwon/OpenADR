@@ -1,6 +1,5 @@
 package com.avob.openadr.server.oadr20b.vtn.models.venreport.data;
 
-import java.io.IOException;
 import java.util.List;
 
 import jakarta.persistence.AttributeConverter;
@@ -9,8 +8,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.avob.openadr.model.oadr20b.avob.KeyTokenType;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 public class OtherReportDataKeyTokenFieldConverter implements AttributeConverter<List<KeyTokenType>, String> {
 
@@ -24,7 +24,7 @@ public class OtherReportDataKeyTokenFieldConverter implements AttributeConverter
 		String customerInfoJson = null;
 		try {
 			customerInfoJson = objectMapper.writeValueAsString(customerInfo);
-		} catch (final JsonProcessingException e) {
+		} catch (final JacksonException e) {
 			LOGGER.error("JSON writing error", e);
 		}
 
@@ -38,7 +38,9 @@ public class OtherReportDataKeyTokenFieldConverter implements AttributeConverter
 		List<KeyTokenType> customerInfo = null;
 		try {
 			customerInfo = objectMapper.readValue(customerInfoJSON, List.class);
-		} catch (final IOException e) {
+		} catch (final JacksonException e) {
+			// Jackson 3 의 readValue 는 IOException 이 아니라 unchecked 인
+			// JacksonException 을 던진다
 			LOGGER.error("JSON reading error", e);
 		}
 

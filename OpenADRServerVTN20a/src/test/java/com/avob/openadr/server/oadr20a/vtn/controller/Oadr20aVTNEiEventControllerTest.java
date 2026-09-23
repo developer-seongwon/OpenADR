@@ -77,9 +77,9 @@ import com.avob.openadr.server.common.vtn.service.VenMarketContextService;
 import com.avob.openadr.server.common.vtn.service.VenService;
 import com.avob.openadr.server.oadr20a.vtn.VTN20aSecurityApplicationTest;
 import com.avob.openadr.server.oadr20a.vtn.service.Oadr20aVTNEiEventService;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Sets;
+
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * 
@@ -654,12 +654,11 @@ public class Oadr20aVTNEiEventControllerTest {
 	 * 'far'/'near'/'active'
 	 * 
 	 * @throws Exception
-	 * @throws JsonProcessingException
 	 * 
 	 * 
 	 */
 	@Test
-	public void testScenario2() throws JsonProcessingException, Exception {
+	public void testScenario2() throws Exception {
 		VenMarketContext marketContext = venMarketContextService.prepare(new VenMarketContextDto(MARKET_CONTEXT_NAME));
 		venMarketContextService.save(marketContext);
 

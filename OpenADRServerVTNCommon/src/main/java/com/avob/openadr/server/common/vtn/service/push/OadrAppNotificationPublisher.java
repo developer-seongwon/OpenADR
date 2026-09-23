@@ -11,10 +11,11 @@ import org.springframework.jms.core.MessagePostProcessor;
 import org.springframework.stereotype.Service;
 
 import com.avob.openadr.server.common.vtn.VtnConfig;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbitmq.jms.admin.RMQDestination;
 import com.rabbitmq.jms.client.message.RMQTextMessage;
+
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 @Service
 public class OadrAppNotificationPublisher {
@@ -62,7 +63,7 @@ public class OadrAppNotificationPublisher {
 
 						});
 			}
-		} catch (JsonProcessingException e) {
+		} catch (JacksonException e) {
 			LOGGER.error("Can't marshall message for notification", e);
 		}
 

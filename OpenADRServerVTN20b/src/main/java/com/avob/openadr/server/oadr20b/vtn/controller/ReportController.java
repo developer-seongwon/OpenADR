@@ -1,5 +1,7 @@
 package com.avob.openadr.server.oadr20b.vtn.controller;
 
+import java.util.stream.Stream;
+import java.util.Objects;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -93,10 +95,12 @@ public class ReportController {
 				? OtherReportCapabilityDescriptionSpecification.hasReportType(reportType)
 				: null;
 
-		// Specification.where 는 Spring Data JPA 4 에서 제거된다.
-		// allOf 가 후속이고 where 처럼 null 인자를 그대로 받아준다
-		Specification<OtherReportCapabilityDescription> spec = Specification.allOf(hasReportspecifierId,
-				hasReadingType, hasReportName, hasReportType);
+		// Spring Data JPA 4 부터 Specification.and 가 null 을 거부한다(Assert.notNull).
+		// 3.x 의 where/and 는 null 을 그냥 넘겨줬다. 조건이 안 걸린 자리는 null 이므로
+		// allOf 에 넘기기 전에 걸러야 한다
+		Specification<OtherReportCapabilityDescription> spec = Specification.allOf(
+				Stream.of(hasReportspecifierId, hasReadingType, hasReportName, hasReportType)
+						.filter(Objects::nonNull).toList());
 
 		List<OtherReportCapabilityDescription> search = otherReportCapabilityDescriptionService.search(spec);
 

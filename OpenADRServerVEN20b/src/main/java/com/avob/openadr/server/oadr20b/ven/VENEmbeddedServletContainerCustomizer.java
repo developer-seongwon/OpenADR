@@ -14,7 +14,7 @@ import org.apache.tomcat.util.net.SSLHostConfigCertificate;
 import org.apache.tomcat.util.net.SSLHostConfigCertificate.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
+import org.springframework.boot.tomcat.servlet.TomcatServletWebServerFactory;
 import org.springframework.boot.web.server.WebServerFactoryCustomizer;
 
 import com.avob.openadr.security.OadrPKISecurity;
@@ -78,7 +78,8 @@ public class VENEmbeddedServletContainerCustomizer
 				Connector connector = new Connector(Http11NioProtocol.class.getName());
 				connector.setPort(session.getPort());
 				configureSsl(connector, session);
-				factory.addAdditionalTomcatConnectors(connector);
+				// Boot 4 에서 addAdditionalTomcatConnectors 가 addAdditionalConnectors 로 바뀌었다
+				factory.addAdditionalConnectors(connector);
 			}
 		}
 	}

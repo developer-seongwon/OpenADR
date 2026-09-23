@@ -103,13 +103,13 @@ missing_modules() {
   echo "$missing"
 }
 
-# 자바 17 과 메이븐을 찾는다. mvn 이 PATH 에 없으면 IntelliJ 번들을 쓴다
+# 자바 25 와 메이븐을 찾는다. mvn 이 PATH 에 없으면 IntelliJ 번들을 쓴다
 resolve_build_tools() {
   if [ -z "${JAVA_HOME:-}" ] && [ -x /usr/libexec/java_home ]; then
-    JAVA_HOME=$(/usr/libexec/java_home -v 17 2>/dev/null || true)
+    JAVA_HOME=$(/usr/libexec/java_home -v 25 2>/dev/null || true)
     export JAVA_HOME
   fi
-  [ -n "${JAVA_HOME:-}" ] || { echo "JAVA_HOME 을 못 찾았다. 자바 17 을 지정해라"; exit 1; }
+  [ -n "${JAVA_HOME:-}" ] || { echo "JAVA_HOME 을 못 찾았다. 자바 25 를 지정해라"; exit 1; }
 
   if [ -z "${MVN:-}" ]; then
     if command -v mvn >/dev/null 2>&1; then

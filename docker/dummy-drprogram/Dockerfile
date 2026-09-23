@@ -1,5 +1,6 @@
-# 자바 17 런타임. openjdk 공식 이미지는 폐기됐고 Temurin 이 후속이다
-FROM eclipse-temurin:17-jre
+# 자바 25 런타임. 빌드 이미지(docker/build)의 JDK 와 같은 메이저라야 한다.
+# openjdk 공식 이미지는 폐기됐고 Temurin 이 후속이다
+FROM eclipse-temurin:25-jre
 
 RUN mkdir /opt/dummy-drprogram
 RUN mkdir /var/log/dummy-drprogram

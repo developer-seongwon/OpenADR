@@ -18,8 +18,9 @@ import com.avob.openadr.model.oadr20b.oadr.OadrRequestReregistrationType;
 import com.avob.openadr.model.oadr20b.oadr.OadrUpdateReportType;
 import com.avob.openadr.server.common.vtn.models.ven.Ven;
 import com.avob.openadr.server.common.vtn.service.push.VenCommandDto;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 @Service
 public class VenDistributeService {
@@ -34,7 +35,9 @@ public class VenDistributeService {
 
 	private ObjectMapper mapper = new ObjectMapper();
 
-	private <T> void publish(Ven ven, String payload, Class<T> klass) throws JsonProcessingException {
+	// Jackson 3 의 JacksonException 은 unchecked 라 throws 선언이 필요 없다.
+	// 예전에는 throws JsonProcessingException 이었다
+	private <T> void publish(Ven ven, String payload, Class<T> klass) {
 		VenCommandDto<T> command = new VenCommandDto<T>(ven, payload, klass);
 		this.send(mapper.writeValueAsString(command));
 
@@ -78,7 +81,7 @@ public class VenDistributeService {
 			} else {
 				throw new Oadr20bApplicationLayerException("Can't distribute an unknown payload type");
 			}
-		} catch (JsonProcessingException | Oadr20bMarshalException e) {
+		} catch (JacksonException | Oadr20bMarshalException e) {
 			throw new Oadr20bApplicationLayerException(e);
 		}
 	}

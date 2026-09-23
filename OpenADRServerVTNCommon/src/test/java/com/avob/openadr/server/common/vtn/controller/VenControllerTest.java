@@ -48,10 +48,9 @@ import com.avob.openadr.server.common.vtn.models.vengroup.VenGroupDto;
 import com.avob.openadr.server.common.vtn.models.venmarketcontext.VenMarketContextDto;
 import com.avob.openadr.server.common.vtn.models.venresource.VenResourceDto;
 import com.avob.openadr.server.common.vtn.service.VenService;
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
+import tools.jackson.databind.JavaType;
+import tools.jackson.databind.ObjectMapper;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = { ApplicationTest.class })
@@ -783,14 +782,14 @@ public class VenControllerTest extends AbstractVtnTest {
 	}
 
 	private <T> T convertMvcResultToDto(MvcResult result, Class<T> klass)
-			throws JsonParseException, JsonMappingException, IOException {
+			throws IOException {
 		MockHttpServletResponse mockHttpServletResponse = result.getResponse();
 		byte[] contentAsByteArray = mockHttpServletResponse.getContentAsByteArray();
 		return mapper.readValue(contentAsByteArray, klass);
 	}
 
 	private <T> List<T> convertMvcResultToDtoList(MvcResult result, Class<T> klass)
-			throws JsonParseException, JsonMappingException, IOException {
+			throws IOException {
 		MockHttpServletResponse mockHttpServletResponse = result.getResponse();
 		byte[] contentAsByteArray = mockHttpServletResponse.getContentAsByteArray();
 		JavaType type = mapper.getTypeFactory().constructCollectionType(List.class, klass);

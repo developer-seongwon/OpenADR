@@ -1,18 +1,17 @@
 # OpenADR 실행 가이드 (한글)
 
-Spring Boot 3 / Java 17 로 이관한 뒤의 빌드와 실행 방법이다.
+Spring Boot 4 / Java 25 로 이관한 뒤의 빌드와 실행 방법이다.
 프로토콜 자체와 모듈 설명은 영문 `README.md` 를 보면 된다.
 
 ## 준비물
 
-Docker Desktop, Java 17, Maven 이 필요하다.
+Docker Desktop, Java 25, Maven 이 필요하다.
 Node 는 따로 깔 필요 없다. 프론트엔드 빌드에 쓰는 Node 16 은 메이븐이 알아서 받아 쓴다.
 
-Java 17 이 아닌 버전으로 빌드하면 안 된다. 상위 JDK 에서는 Mockito 가
-`OadrHttpClient` 를 목킹하지 못해 `OpenADRHTTPClient20a` 테스트가 깨진다.
+pom 의 `java.version` 이 25 라서 25 미만 JDK 로는 컴파일 자체가 안 된다.
 
 ```
-export JAVA_HOME=$(/usr/libexec/java_home -v 17)
+export JAVA_HOME=$(/usr/libexec/java_home -v 25)
 ```
 
 맥에서 `mvn` 이 PATH 에 없으면 IntelliJ 번들 메이븐을 쓰면 된다.
@@ -184,7 +183,7 @@ DB 만 따로 비우려면 이렇게 한다.
 8083 이 `ERR_CONNECTION_RESET` 을 내는 건 정상이다. http 가 아니라 https 이고
 클라이언트 인증서를 요구한다.
 
-빌드가 `Mockito cannot mock this class` 로 깨지면 Java 17 이 아닌 JDK 로 돌린 것이다.
+빌드가 `invalid target release: 25` 로 깨지면 25 미만 JDK 로 돌린 것이다.
 `JAVA_HOME` 을 확인해라.
 
 VEN20b 테스트는 실제로 서버 소켓을 연다. 포트는 18081, 18082 를 쓴다.

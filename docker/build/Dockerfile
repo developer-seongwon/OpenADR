@@ -1,6 +1,6 @@
-# 자바 17 로 올리면서 기반 이미지도 바꾼다.
+# 빌드 JDK 는 pom 의 java.version(25) 과 맞춘다.
 # adoptopenjdk 는 Eclipse Temurin 으로 넘어가면서 더 이상 갱신되지 않는다
-FROM maven:3.9-eclipse-temurin-17
+FROM maven:3.9-eclipse-temurin-25
 
 RUN mkdir /opt/oadr
 RUN mkdir /opt/oadr/lib

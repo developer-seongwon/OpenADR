@@ -1,6 +1,5 @@
 package com.avob.openadr.server.oadr20b.vtn.service.push;
 
-import java.io.IOException;
 
 import jakarta.annotation.Resource;
 import jakarta.xml.bind.JAXBException;
@@ -18,7 +17,9 @@ import com.avob.openadr.server.common.vtn.service.VenService;
 import com.avob.openadr.server.common.vtn.service.push.VenCommandDto;
 import com.avob.openadr.server.oadr20b.vtn.service.VenDistributeService;
 import com.avob.openadr.server.oadr20b.vtn.service.VenPollService;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 @Service
 public class Oadr20bPushListener {
@@ -68,7 +69,9 @@ public class Oadr20bPushListener {
 
 			}
 
-		} catch (Oadr20bUnmarshalException | IOException e) {
+		} catch (Oadr20bUnmarshalException | JacksonException e) {
+			// Jackson 3 의 readValue 는 IOException 이 아니라 unchecked 인
+			// JacksonException 을 던진다
 			LOGGER.error(e.getMessage(), e);
 		}
 	}

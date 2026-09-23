@@ -128,11 +128,14 @@
 				     startClass 는 Boot 3 의 플러그인에 없는 파라미터라
 				     "Parameter 'startClass' is unknown" 경고만 내고 무시됐다.
 				     그 결과 매니페스트의 Start-Class 가 앱이 아니라 PropertiesLauncher 로
-				     잡혀서, loader.properties 의 loader.main 이 없으면 뜨지 못하는 상태였다 -->
+				     잡혀서, loader.properties 의 loader.main 이 없으면 뜨지 못하는 상태였다.
+
+				     executable 도 빠졌다. jar 앞에 기동 스크립트를 붙여 주는 기능인데
+				     Boot 4 에서 없어졌다. 도커가 jar 를 직접 실행하고 있어서
+				     "Permission denied" 로 죽었고, 지금은 java -jar 로 띄운다 -->
 				<configuration>
 					<layout>ZIP</layout>
 					<mainClass>com.avob.openadr.server.oadr20b.vtn.VTN20bApplication</mainClass>
-					<executable>true</executable>
 				</configuration>
 			</plugin>
 			<plugin>

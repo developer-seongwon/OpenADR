@@ -62,12 +62,10 @@ import com.avob.openadr.server.common.vtn.service.VenGroupService;
 import com.avob.openadr.server.common.vtn.service.VenMarketContextService;
 import com.avob.openadr.server.common.vtn.service.VenService;
 import com.avob.openadr.server.common.vtn.service.dtomapper.DtoMapper;
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Sets;
+
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = { ApplicationTest.class })
@@ -941,7 +939,7 @@ public class DemandResponseControllerTest extends AbstractVtnTest {
 	}
 
 	private void searchAndExpect(List<DemandResponseEventFilter> filters, int expected)
-			throws JsonProcessingException, Exception {
+			throws Exception {
 		MvcResult andReturn = this.mockMvc
 				.perform(MockMvcRequestBuilders.post(DEMAND_RESPONSE_EVENT_URL + "search")
 						.content(mapper.writeValueAsString(filters))
@@ -952,7 +950,7 @@ public class DemandResponseControllerTest extends AbstractVtnTest {
 	}
 
 	private void searchAndExpect(List<DemandResponseEventFilter> filters, Long start, Long end, int expected)
-			throws JsonProcessingException, Exception {
+			throws Exception {
 		String url = DEMAND_RESPONSE_EVENT_URL + "search";
 		List<String> params = new ArrayList<>();
 		if (start != null) {
@@ -1142,14 +1140,14 @@ public class DemandResponseControllerTest extends AbstractVtnTest {
 	}
 
 	private DemandResponseEventReadDto convertMvcResultToDemandResponseDto(MvcResult result)
-			throws JsonParseException, JsonMappingException, IOException {
+			throws IOException {
 		MockHttpServletResponse mockHttpServletResponse = result.getResponse();
 		byte[] contentAsByteArray = mockHttpServletResponse.getContentAsByteArray();
 		return mapper.readValue(contentAsByteArray, DemandResponseEventReadDto.class);
 	}
 
 	private List<DemandResponseEventReadDto> convertMvcResultToDemandResponseDtoList(MvcResult result)
-			throws JsonParseException, JsonMappingException, IOException {
+			throws IOException {
 		MockHttpServletResponse mockHttpServletResponse = result.getResponse();
 		byte[] contentAsByteArray = mockHttpServletResponse.getContentAsByteArray();
 		return mapper.readValue(contentAsByteArray, new TypeReference<List<DemandResponseEventReadDto>>() {
@@ -1157,7 +1155,7 @@ public class DemandResponseControllerTest extends AbstractVtnTest {
 	}
 
 	private List<VenDemandResponseEventDto> convertMvcResultToVenDemandResponseEventDtoList(MvcResult result)
-			throws JsonParseException, JsonMappingException, IOException {
+			throws IOException {
 		MockHttpServletResponse mockHttpServletResponse = result.getResponse();
 		byte[] contentAsByteArray = mockHttpServletResponse.getContentAsByteArray();
 		return mapper.readValue(contentAsByteArray, new TypeReference<List<VenDemandResponseEventDto>>() {
