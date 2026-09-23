@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="theme-color" content="#000000">
+    <!-- CRA 는 public/index.html 을 템플릿으로 쓰고 %PUBLIC_URL% 을 치환했다.
+         Vite 는 프로젝트 루트의 index.html 이 곧 진입점이고,
+         / 로 시작하는 경로 앞에 vite.config.js 의 base(/testvtn/) 를 알아서 붙인다 -->
+    <link rel="manifest" href="/manifest.json">
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500">
+    <title>OpenADR VTN</title>
+  </head>
+  <body>
+    <noscript>
+      You need to enable JavaScript to run this app.
+    </noscript>
+    <div id="root"></div>
+    <!-- CRA 는 번들을 알아서 꽂아 줬지만 Vite 는 진입 스크립트를 직접 적는다 -->
+    <script type="module" src="/src/index.jsx"></script>
+  </body>
+</html>

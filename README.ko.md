@@ -6,7 +6,7 @@ Spring Boot 4 / Java 25 로 이관한 뒤의 빌드와 실행 방법이다.
 ## 준비물
 
 Docker Desktop, Java 25, Maven 이 필요하다.
-Node 는 따로 깔 필요 없다. 프론트엔드 빌드에 쓰는 Node 16 은 메이븐이 알아서 받아 쓴다.
+Node 는 따로 깔 필요 없다. 프론트엔드 빌드에 쓰는 Node 24 는 메이븐이 알아서 받아 쓴다.
 
 pom 의 `java.version` 이 25 라서 25 미만 JDK 로는 컴파일 자체가 안 된다.
 
@@ -126,6 +126,16 @@ jar 는 컨테이너 안이 아니라 로컬에서 만든다. 프로파일이 �
 브로커가 rabbitmq 컨테이너라 `external` 이어야 하고, 기본값인 `standalone` 으로 만들면
 rabbitmq 드라이버가 빠져서 VTN 이 `RMQConnectionFactory` 를 못 찾고 죽는다.
 `frontend` 는 React UI 를 jar 안에 넣는 프로파일이다.
+
+프론트엔드는 `OpenADRServerVTN20b/frontend` 에 있고 Vite 로 빌드한다(예전엔 react-scripts).
+`npm run build` 결과가 `frontend/build` 에 생기고, 메이븐이 그걸
+`src/main/resources/public` 으로 옮긴다. 옮기기 전에 public 을 비우므로 옛 번들이 섞이지 않는다.
+번들은 `static/` 아래에 둔다. `HttpSecurityConfig` 가 인증 없이 여는 경로가 `/static/**` 라서다.
+JSX 가 든 파일은 확장자가 `.jsx` 여야 한다. Vite 는 `.js` 안의 JSX 를 읽지 않는다.
+
+화면은 React 19, MUI 9, react-router 8 이다. 원래 MUI 3 으로 그려진 화면이라
+`src/theme.js` 가 MUI 3 시절 기본값(색, 입력창 모양, Grid 폭, 탭 폭, 표 글씨)을 되살린다.
+화면 모양이 이상하면 거기부터 보면 된다. 컴포넌트 스타일은 `tss-react` 의 `withStyles` 로 입힌다.
 
 VTN 은 `fake-data,rabbitmq-broker,external` 프로파일로 뜬다.
 `fake-data` 가 마켓 컨텍스트와 초기 계정을 심는다.

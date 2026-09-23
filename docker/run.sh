@@ -190,8 +190,14 @@ build_images() {
   # 기본값인 standalone 으로 만들면 rabbitmq 드라이버가 빠져서
   # VTN 이 RMQConnectionFactory 를 못 찾고 죽는다.
   # frontend 는 React UI 를 jar 안에 넣는 프로파일이다.
+  #
+  # clean 이 꼭 있어야 한다. 프로파일은 의존성만 바꾸고 소스는 그대로라서,
+  # 직전에 IntelliJ 나 mvn install 로 standalone jar 가 만들어져 있으면
+  # 메이븐이 jar 를 최신이라고 보고 다시 묶지 않는다. 그러면 standalone jar 가
+  # 그대로 이미지에 들어가서 위에 적은 대로 VTN 이 기동 중에 죽는다.
+  # pom 만 고쳤을 때 이미지에 반영이 안 되던 것도 같은 이유다
   echo "Building jars (profile: external, frontend)"
-  "$MVN" -B package -P external,frontend -DskipTests
+  "$MVN" -B clean package -P external,frontend -DskipTests
 
   echo "Building openadr_build image"
   docker compose -p "$APP_PROJECT" -f "$APP_COMPOSE" build build

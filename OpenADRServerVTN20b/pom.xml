@@ -179,7 +179,8 @@
 					<plugin>
 						<groupId>com.github.eirslett</groupId>
 						<artifactId>frontend-maven-plugin</artifactId>
-						<version>1.8.0</version>
+						<!-- 1.8.0 은 2019년 버전이다. 새 node 배포본 경로를 따라가려고 올린다 -->
+						<version>1.15.1</version>
 						<configuration>
 							<workingDirectory>frontend</workingDirectory>
 							<installDirectory>target</installDirectory>
@@ -192,12 +193,12 @@
 									<goal>install-node-and-npm</goal>
 								</goals>
 								<configuration>
-									<!-- node 12 는 darwin-arm64 빌드가 없어 애플 실리콘에서 내려받지 못한다.
-									     한편 react-scripts 3.2.0 은 OpenSSL 3 을 쓰는 node 17 이상에서
-									     digital envelope routines 오류로 깨진다.
-									     둘을 모두 만족하는 게 node 16 이다 -->
-									<nodeVersion>v16.20.2</nodeVersion>
-									<npmVersion>8.19.4</npmVersion>
+									<!-- react-scripts 3.2 가 OpenSSL 3 에서 깨져서 node 16 에 묶여 있었다.
+									     빌드 도구를 Vite 로 바꾸면서 그 제약이 없어져 현재 LTS 인 24 로 올린다.
+									     Vite 8 은 node 20.19 또는 22.12 이상을 요구한다.
+									     npm 은 이 node 에 번들된 버전과 맞춘다 -->
+									<nodeVersion>v24.21.0</nodeVersion>
+									<npmVersion>11.19.0</npmVersion>
 								</configuration>
 							</execution>
 							<execution>
@@ -215,11 +216,9 @@
 									<goal>npm</goal>
 								</goals>
 								<configuration>
+									<!-- CRA 때는 PUBLIC_URL, REACT_APP_BASENAME 으로 /testvtn/ 을 넘겼다.
+									     Vite 는 frontend/vite.config.js 의 base 에 적어 두고 코드는 BASE_URL 로 읽는다 -->
 									<arguments>run build</arguments>
-									<environmentVariables>
-										<PUBLIC_URL>/testvtn/</PUBLIC_URL>
-										<REACT_APP_BASENAME>/testvtn/</REACT_APP_BASENAME>
-									</environmentVariables>
 								</configuration>
 							</execution>
 						</executions>
@@ -231,6 +230,9 @@
 								<phase>generate-resources</phase>
 								<configuration>
 									<target>
+										<!-- public 은 mvn clean 으로 안 지워진다. 비우지 않고 덮어쓰기만 하면
+										     CRA 때 번들(static/js, precache-manifest 등)이 계속 jar 에 같이 들어간다 -->
+										<delete dir="${project.basedir}/src/main/resources/public" />
 										<copy
 											todir="${project.basedir}/src/main/resources/public">
 											<fileset dir="${project.basedir}/frontend/build" />
