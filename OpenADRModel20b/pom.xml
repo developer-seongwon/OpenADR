@@ -108,7 +108,7 @@
 					<dependency>
 						<groupId>org.glassfish.jaxb</groupId>
 						<artifactId>jaxb-runtime</artifactId>
-						<version>${jaxb.version}</version>
+						<version>${glassfish-jaxb.version}</version>
 					</dependency>
 					<dependency>
 						<groupId>org.jvnet.jaxb2_commons</groupId>
@@ -128,17 +128,17 @@
 					<dependency>
 						<groupId>com.sun.xml.bind</groupId>
 						<artifactId>jaxb-impl</artifactId>
-						<version>${jaxb.version}</version>
+						<version>${glassfish-jaxb.version}</version>
 					</dependency>
 					<dependency>
 						<groupId>com.sun.xml.bind</groupId>
 						<artifactId>jaxb-core</artifactId>
-						<version>${jaxb.version}</version>
+						<version>${glassfish-jaxb.version}</version>
 					</dependency>
 					<dependency>
 						<groupId>com.sun.xml.bind</groupId>
 						<artifactId>jaxb-xjc</artifactId>
-						<version>${jaxb.version}</version>
+						<version>${glassfish-jaxb.version}</version>
 					</dependency>
 				</dependencies>
 			</plugin>

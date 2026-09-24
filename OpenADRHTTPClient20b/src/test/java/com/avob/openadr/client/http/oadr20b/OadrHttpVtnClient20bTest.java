@@ -2,6 +2,7 @@ package com.avob.openadr.client.http.oadr20b;
 
 import static org.mockito.Mockito.when;
 
+import java.net.HttpURLConnection;
 import java.net.URISyntaxException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -10,7 +11,6 @@ import java.security.UnrecoverableKeyException;
 import jakarta.xml.bind.JAXBElement;
 import jakarta.xml.bind.JAXBException;
 
-import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
@@ -60,7 +60,7 @@ public class OadrHttpVtnClient20bTest {
 		OadrHttpVtnClient20b OadrHttpVtnClient20b = new OadrHttpVtnClient20b(OadrHttpClient20b);
 
 		OadrResponseType mockOadrResponseType = Oadr20bResponseBuilders
-				.newOadr20bResponseBuilder("", HttpStatus.SC_OK, "venId").build();
+				.newOadr20bResponseBuilder("", HttpURLConnection.HTTP_OK, "venId").build();
 
 		when(OadrHttpClient20b.<OadrResponseType, JAXBElement<OadrDistributeEventType>>post(
 				ArgumentMatchers.<JAXBElement<OadrDistributeEventType>>any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
@@ -132,7 +132,7 @@ public class OadrHttpVtnClient20bTest {
 		OadrHttpVtnClient20b oadrHttpVtnClient20b = new OadrHttpVtnClient20b(OadrHttpClient20b);
 
 		OadrResponseType mockOadrResponseType = Oadr20bResponseBuilders
-				.newOadr20bResponseBuilder("", HttpStatus.SC_OK, "venId").build();
+				.newOadr20bResponseBuilder("", HttpURLConnection.HTTP_OK, "venId").build();
 
 		when(OadrHttpClient20b.<OadrResponseType, JAXBElement<OadrResponseType>>post(
 				ArgumentMatchers.<JAXBElement<OadrResponseType>>any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
@@ -151,7 +151,7 @@ public class OadrHttpVtnClient20bTest {
 		OadrHttpVtnClient20b oadrHttpVtnClient20b = new OadrHttpVtnClient20b(OadrHttpClient20b);
 
 		OadrCreatedReportType build = Oadr20bEiReportBuilders
-				.newOadr20bCreatedReportBuilder("", HttpStatus.SC_OK, "venId").build();
+				.newOadr20bCreatedReportBuilder("", HttpURLConnection.HTTP_OK, "venId").build();
 
 		when(OadrHttpClient20b.<OadrCreatedReportType, JAXBElement<OadrCreatedReportType>>post(
 				ArgumentMatchers.<JAXBElement<OadrCreatedReportType>>any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
@@ -170,7 +170,7 @@ public class OadrHttpVtnClient20bTest {
 		OadrHttpVtnClient20b oadrHttpVtnClient20b = new OadrHttpVtnClient20b(OadrHttpClient20b);
 
 		OadrUpdatedReportType build = Oadr20bEiReportBuilders
-				.newOadr20bUpdatedReportBuilder("", HttpStatus.SC_OK, "venId").build();
+				.newOadr20bUpdatedReportBuilder("", HttpURLConnection.HTTP_OK, "venId").build();
 
 		when(OadrHttpClient20b.<OadrUpdatedReportType, JAXBElement<OadrUpdatedReportType>>post(
 				ArgumentMatchers.<JAXBElement<OadrUpdatedReportType>>any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
@@ -188,7 +188,7 @@ public class OadrHttpVtnClient20bTest {
 		OadrHttpVtnClient20b oadrHttpVtnClient20b = new OadrHttpVtnClient20b(OadrHttpClient20b);
 
 		OadrCanceledReportType build = Oadr20bEiReportBuilders
-				.newOadr20bCanceledReportBuilder("", HttpStatus.SC_OK, "venId").build();
+				.newOadr20bCanceledReportBuilder("", HttpURLConnection.HTTP_OK, "venId").build();
 
 		when(OadrHttpClient20b.<OadrCanceledReportType, JAXBElement<OadrCanceledReportType>>post(
 				ArgumentMatchers.<JAXBElement<OadrCanceledReportType>>any(), ArgumentMatchers.any(), ArgumentMatchers.any()))
@@ -206,7 +206,7 @@ public class OadrHttpVtnClient20bTest {
 		OadrHttpVtnClient20b oadrHttpVtnClient20b = new OadrHttpVtnClient20b(OadrHttpClient20b);
 
 		OadrRegisteredReportType build = Oadr20bEiReportBuilders
-				.newOadr20bRegisteredReportBuilder("", HttpStatus.SC_OK, "venId").build();
+				.newOadr20bRegisteredReportBuilder("", HttpURLConnection.HTTP_OK, "venId").build();
 
 		when(OadrHttpClient20b.<OadrRegisteredReportType, JAXBElement<OadrRegisteredReportType>>post(
 				ArgumentMatchers.<JAXBElement<OadrRegisteredReportType>>any(), ArgumentMatchers.any(), ArgumentMatchers.any()))

@@ -68,20 +68,16 @@
 		<!-- swagger 코드젠이 만든 클라이언트가 쓰는 것들.
 		     예전에는 io.swagger:swagger-codegen-maven-plugin 을 컴파일 의존성으로
 		     걸어 두고 여기 딸려 오는 guava, joda-time, httpclient 를 그냥 썼다.
-		     코드젠 도구 전체가 런타임 jar 로 들어가던 셈이라, 실제로 쓰는 것만 남긴다 -->
+		     코드젠 도구 전체가 런타임 jar 로 들어가던 셈이라, 실제로 쓰는 것만 남긴다.
+		     httpclient 는 HttpStatus 상수 하나 때문에 남아 있어서 java.net.HttpURLConnection 으로 바꾸고 뺐다 -->
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
-			<version>33.3.1-jre</version>
 		</dependency>
 		<dependency>
 			<groupId>joda-time</groupId>
 			<artifactId>joda-time</artifactId>
 			<version>2.12.7</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.httpcomponents</groupId>
-			<artifactId>httpclient</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.threeten</groupId>

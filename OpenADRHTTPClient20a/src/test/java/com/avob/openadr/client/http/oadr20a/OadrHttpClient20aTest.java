@@ -5,22 +5,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
+import java.net.http.HttpResponse;
 
 import jakarta.xml.bind.JAXBException;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.ProtocolVersion;
-import org.apache.http.StatusLine;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.BasicHttpEntity;
-import org.apache.http.message.BasicHttpResponse;
-import org.apache.http.message.BasicStatusLine;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
@@ -91,29 +82,28 @@ public class OadrHttpClient20aTest {
 		return Oadr20aBuilders.newOadr20aDistributeEventBuilder("", "").addOadrEvent(oadrEvent).build();
 	}
 
-	private HttpResponse createHttpResponse(int responseCode, String payload)
-			throws Oadr20aMarshalException, JAXBException {
-
-		StatusLine statusLine = new BasicStatusLine(new ProtocolVersion("HTTP", 1, 0), responseCode, "");
-		HttpResponse response = new BasicHttpResponse(statusLine);
-		BasicHttpEntity entity = new BasicHttpEntity();
-		entity.setContent(new ByteArrayInputStream(payload.getBytes(StandardCharsets.UTF_8)));
-		response.setEntity(entity);
+	// 예전에는 Apache 의 BasicHttpResponse 를 직접 만들었다.
+	// 자바 표준 HttpResponse 는 인터페이스라서 상태 코드와 본문만 돌려주는 목으로 만든다
+	@SuppressWarnings("unchecked")
+	private HttpResponse<String> createHttpResponse(int responseCode, String payload) {
+		HttpResponse<String> response = Mockito.mock(HttpResponse.class);
+		when(response.statusCode()).thenReturn(responseCode);
+		when(response.body()).thenReturn(payload);
 		return response;
 	}
 
 	@Test
-	public void validPostTest() throws ClientProtocolException, IOException, JAXBException, Oadr20aException,
+	public void validPostTest() throws IOException, JAXBException, Oadr20aException,
 			Oadr20aMarshalException, URISyntaxException, Oadr20aHttpLayerException {
 
 		OadrHttpClient oadrHttpClient = Mockito.mock(OadrHttpClient.class);
-		int scOk = HttpStatus.SC_OK;
+		int scOk = HttpURLConnection.HTTP_OK;
 
 		OadrResponse mockOadrResponse = Oadr20aBuilders.newOadr20aResponseBuilder("", scOk).build();
 		String marshal = jaxbContext.marshal(mockOadrResponse);
 
-		HttpResponse response = this.createHttpResponse(scOk, marshal);
-		when(oadrHttpClient.execute(ArgumentMatchers.<HttpPost>any(), any(), any(), any())).thenReturn(response);
+		HttpResponse<String> response = this.createHttpResponse(scOk, marshal);
+		when(oadrHttpClient.post(any(), any(), any())).thenReturn(response);
 
 		OadrHttpClient20a client = new OadrHttpClient20a(oadrHttpClient);
 
@@ -125,18 +115,18 @@ public class OadrHttpClient20aTest {
 	}
 
 	@Test
-	public void httpLayerErrorPostTest() throws ClientProtocolException, IOException, JAXBException, Oadr20aException,
+	public void httpLayerErrorPostTest() throws IOException, JAXBException, Oadr20aException,
 			Oadr20aMarshalException, URISyntaxException, Oadr20aHttpLayerException {
 
 		// HTTP layer error
 		OadrHttpClient oadrHttpClient = Mockito.mock(OadrHttpClient.class);
-		int scForbidden = HttpStatus.SC_FORBIDDEN;
+		int scForbidden = HttpURLConnection.HTTP_FORBIDDEN;
 
 		OadrResponse mockOadrResponse = Oadr20aBuilders.newOadr20aResponseBuilder("", scForbidden).build();
 		String marshal = jaxbContext.marshal(mockOadrResponse);
 
-		HttpResponse response = this.createHttpResponse(scForbidden, marshal);
-		when(oadrHttpClient.execute(ArgumentMatchers.<HttpPost>any(), any(), any(), any())).thenReturn(response);
+		HttpResponse<String> response = this.createHttpResponse(scForbidden, marshal);
+		when(oadrHttpClient.post(any(), any(), any())).thenReturn(response);
 
 		OadrHttpClient20a client = new OadrHttpClient20a(oadrHttpClient);
 
@@ -154,17 +144,17 @@ public class OadrHttpClient20aTest {
 	}
 
 	@Test
-	public void requestMarshallingErrorPostTest() throws ClientProtocolException, IOException, JAXBException,
+	public void requestMarshallingErrorPostTest() throws IOException, JAXBException,
 			Oadr20aException, Oadr20aMarshalException, URISyntaxException, Oadr20aHttpLayerException {
 
 		OadrHttpClient oadrHttpClient = Mockito.mock(OadrHttpClient.class);
-		int scOk = HttpStatus.SC_OK;
+		int scOk = HttpURLConnection.HTTP_OK;
 
 		OadrResponse mockOadrResponse = Oadr20aBuilders.newOadr20aResponseBuilder("", scOk).build();
 		String marshal = jaxbContext.marshal(mockOadrResponse);
 
-		HttpResponse response = this.createHttpResponse(scOk, marshal);
-		when(oadrHttpClient.execute(ArgumentMatchers.<HttpPost>any(), any(), any(), any())).thenReturn(response);
+		HttpResponse<String> response = this.createHttpResponse(scOk, marshal);
+		when(oadrHttpClient.post(any(), any(), any())).thenReturn(response);
 
 		OadrHttpClient20a client = new OadrHttpClient20a(oadrHttpClient);
 
@@ -182,16 +172,16 @@ public class OadrHttpClient20aTest {
 	}
 
 	@Test
-	public void responseUnmarshallingErrorPostTest() throws ClientProtocolException, IOException, JAXBException,
+	public void responseUnmarshallingErrorPostTest() throws IOException, JAXBException,
 			Oadr20aException, Oadr20aMarshalException, URISyntaxException, Oadr20aHttpLayerException {
 
 		OadrHttpClient oadrHttpClient = Mockito.mock(OadrHttpClient.class);
-		int scOk = HttpStatus.SC_OK;
+		int scOk = HttpURLConnection.HTTP_OK;
 
 		String marshal = "";
 
-		HttpResponse response = this.createHttpResponse(scOk, marshal);
-		when(oadrHttpClient.execute(ArgumentMatchers.<HttpPost>any(), any(), any(), any())).thenReturn(response);
+		HttpResponse<String> response = this.createHttpResponse(scOk, marshal);
+		when(oadrHttpClient.post(any(), any(), any())).thenReturn(response);
 
 		OadrHttpClient20a client = new OadrHttpClient20a(oadrHttpClient);
 

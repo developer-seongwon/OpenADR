@@ -24,41 +24,49 @@
 		<project.version>0.1.0-SNAPSHOT</project.version>
 
 		<!-- Spring Boot 3 로 올리면서 손댄 버전들 -->
-		<!-- activemq 6.x 부터 jakarta.jms 를 쓴다. 5.x 는 javax.jms 라 Boot 3 에서 못 쓴다 -->
-		<amq.version>6.1.4</amq.version>
+		<!-- activemq 6.x 부터 jakarta.jms 를 쓴다. 5.x 는 javax.jms 라 Boot 3 에서 못 쓴다.
+		     Boot 4.1 BOM 은 6.2.9 를 관리한다. Boot 의 프로퍼티 이름(activemq.version)으로 최신 6.3 까지 올린다.
+		     예전에는 따로 amq.version 을 두어서 Boot 관리 값과 우리 값이 따로 놀았다 -->
+		<activemq.version>6.3.2</activemq.version>
 		<!-- smack 4.4 에서 smack-java7 아티팩트가 없어져 XMPPClient 가 깨진다. 4.3.4 유지 -->
 		<smack.version>4.3.4</smack.version>
 		<!-- jacoco 는 JDK 메이저마다 새 버전이 필요하다. 0.8.12 는 Java 22 까지라서
 		     Java 25 클래스(major 69)를 만나면 "Unsupported class file major version 69" 를
 		     테스트마다 찍어 댄다. 테스트는 통과하지만 커버리지가 비므로 0.8.14 로 올린다 -->
 		<jacoco-plugin.version>0.8.14</jacoco-plugin.version>
-		<postgres.version>42.6.0</postgres.version>
-		<!-- 테스트는 H2 대신 도커의 PostgreSQL 을 쓴다. 운영과 같은 DB 라야 DDL 이 어긋나지 않는다. -->
-		<!-- 1.x 는 도커 API 1.32 로 붙는데 엔진 29 는 1.44 이상만 받는다. 2.x 라야 붙는다 -->
-		<testcontainers.version>2.0.2</testcontainers.version>
-		<!-- rabbitmq-jms 3.x 가 jakarta.jms 대응 버전이다 -->
-		<rabbitmq-jms.version>3.3.0</rabbitmq-jms.version>
+		<!-- PostgreSQL 드라이버와 testcontainers 는 고정하지 않고 Boot BOM 값(postgresql.version,
+		     testcontainers.version)을 쓴다. 예전 고정값 42.6.0, 2.0.2 가 Boot 의 최신값(42.7.13, 2.0.5)을
+		     끌어내리고 있었다. 테스트는 H2 대신 도커의 PostgreSQL 을 쓴다(운영과 같은 DB 라야 DDL 이 안 어긋난다).
+		     testcontainers 는 2.x 라야 도커 엔진 29(API 1.44 이상)에 붙는다 -->
+		<!-- rabbitmq-jms 3.x 가 jakarta.jms 대응 버전이다. Boot 가 관리하지 않아서 직접 고정한다 -->
+		<rabbitmq-jms.version>3.9.0</rabbitmq-jms.version>
 		<!-- springfox 는 Boot 3 에서 동작하지 않아 springdoc 으로 교체한다.
 		     springdoc 버전은 스프링 버전을 따라간다. 2.2 는 Spring 6.0, 2.8 은 6.2,
 		     3.x 가 Boot 4(Spring 7) 대응이다. 어긋나면 빌드는 통과하고
 		     런타임에 /v3/api-docs 가 500 으로 터진다 -->
 		<springdoc.version>3.1.1</springdoc.version>
-		<commons-compress.version>1.26.2</commons-compress.version>
+		<!-- commons-compress, guava 는 Boot 가 관리하지 않아서 직접 고정한다 -->
+		<commons-compress.version>1.28.0</commons-compress.version>
 		<!-- commons-lang3 는 고정하지 않는다.
 		     Boot 3.1.5 때는 BOM 이 3.12.0 이라 commons-compress 가 요구하는
 		     SystemProperties 가 없어서 3.14.0 으로 올려 두었다.
 		     Boot 4 의 BOM 은 3.20.0 이라 그 고정이 오히려 버전을 끌어내렸고,
 		     springdoc 3 이 쓰는 org.apache.commons.lang3.Strings(3.18 에서 추가)가
 		     없어서 /v3/api-docs 가 NoClassDefFoundError 로 500 이 났다 -->
-		<guava.version>32.1.3-jre</guava.version>
-		<common-logging.version>1.2</common-logging.version>
+		<guava.version>33.7.1-jre</guava.version>
 		<!-- Boot 4.1 BOM 은 JUnit 6.0.3 을 관리한다. 최신 6.1 로 올린다.
 		     junit-jupiter.version 은 Boot BOM 이 쓰는 프로퍼티라 여기서 덮으면 junit-bom 전체가 따라온다 -->
 		<junit-jupiter.version>6.1.3</junit-jupiter.version>
-		<!-- Boot 3 부터 httpclient 4.x 를 관리해 주지 않는다. 코드가 4.x API 를 쓰므로 직접 고정한다 -->
-		<httpclient.version>4.5.14</httpclient.version>
-		<jaxb.version>4.0.3</jaxb.version>
-		<jakarta-xml-bind.version>4.0.0</jakarta-xml-bind.version>
+		<!-- Apache httpclient 4 와 commons-logging 은 고정하지 않는다.
+		     OpenADRHTTPClient 가 자바 표준 java.net.http.HttpClient 로 바뀌어서 httpclient 를 쓰는 곳이 없다.
+		     commons-logging 1.2 고정은 httpclient 때문에 걸어 둔 것이었는데, 그게 스프링 앱까지
+		     1.2 로 끌어내리고 있었다(Spring 7 은 1.3.5 이상을 요구한다).
+		     Boot 4.1 BOM 은 1.3.6 이라 Boot 의 프로퍼티 이름으로 최신 1.4 까지 올린다 -->
+		<commons-logging.version>1.4.0</commons-logging.version>
+		<!-- JAXB 는 Boot BOM 값(glassfish-jaxb.version, jakarta-xml-bind.version)을 쓴다.
+		     예전 jaxb.version 4.0.3 고정은 Boot 의 4.0.9 를 끌어내렸고, jakarta-xml-bind.version 은
+		     Boot 와 이름이 같아서 Boot 의 4.0.5 를 4.0.0 으로 덮고 있었다.
+		     XJC 플러그인 의존성에는 BOM 이 안 먹어서 같은 프로퍼티를 직접 적는다(Model20a, Model20b) -->
 		<activation.version>1.1.1</activation.version>
 	</properties>
 
@@ -158,7 +166,7 @@
 			<dependency>
 				<groupId>org.postgresql</groupId>
 				<artifactId>postgresql</artifactId>
-				<version>${postgres.version}</version>
+				<version>${postgresql.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.rabbitmq.jms</groupId>
@@ -168,12 +176,12 @@
 			<dependency>
 				<groupId>org.apache.activemq</groupId>
 				<artifactId>activemq-broker</artifactId>
-				<version>${amq.version}</version>
+				<version>${activemq.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.activemq</groupId>
 				<artifactId>activemq-client</artifactId>
-				<version>${amq.version}</version>
+				<version>${activemq.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.springdoc</groupId>
@@ -190,16 +198,6 @@
 				<artifactId>guava</artifactId>
 				<version>${guava.version}</version>
 			</dependency>
-			<dependency>
-				<groupId>commons-logging</groupId>
-				<artifactId>commons-logging</artifactId>
-				<version>${common-logging.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.httpcomponents</groupId>
-				<artifactId>httpclient</artifactId>
-				<version>${httpclient.version}</version>
-			</dependency>
 
 			<!-- JAXB. XJC 가 jakarta 애노테이션으로 코드를 생성하게 하려면
 			     런타임과 플러그인 양쪽에 4.x 를 고정해야 한다 -->
@@ -211,22 +209,22 @@
 			<dependency>
 				<groupId>com.sun.xml.bind</groupId>
 				<artifactId>jaxb-impl</artifactId>
-				<version>${jaxb.version}</version>
+				<version>${glassfish-jaxb.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.sun.xml.bind</groupId>
 				<artifactId>jaxb-core</artifactId>
-				<version>${jaxb.version}</version>
+				<version>${glassfish-jaxb.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.sun.xml.bind</groupId>
 				<artifactId>jaxb-xjc</artifactId>
-				<version>${jaxb.version}</version>
+				<version>${glassfish-jaxb.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.glassfish.jaxb</groupId>
 				<artifactId>jaxb-runtime</artifactId>
-				<version>${jaxb.version}</version>
+				<version>${glassfish-jaxb.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>javax.activation</groupId>
@@ -272,7 +270,7 @@
 						<artifactItem>
 							<groupId>org.postgresql</groupId>
 							<artifactId>postgresql</artifactId>
-							<version>${postgres.version}</version>
+							<version>${postgresql.version}</version>
 							<type>jar</type>
 							<outputDirectory>${project.build.directory}/</outputDirectory>
 						</artifactItem>

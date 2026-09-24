@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.KeyStoreException;
@@ -17,9 +18,6 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 import jakarta.xml.bind.JAXBException;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
 import org.junit.jupiter.api.Test;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
@@ -293,14 +291,12 @@ public class Oadr20bVTNSecurityTest extends AbstractVtn20bTest {
 		dto.getDescriptor().setOadrProfile(DemandResponseEventOadrProfileEnum.OADR20B);
 		dto.setPublished(true);
 		String payload = mapper.writeValueAsString(dto);
-		HttpPost post = new HttpPost(demandResponseEnpointUrl);
-		StringEntity stringEntity = new StringEntity(payload);
-		post.setEntity(stringEntity);
+		// OadrHttpClient 가 자바 표준 HttpClient 로 바뀌면서 Apache 의 HttpPost 대신 본문 문자열을 넘긴다.
+		// 주소는 예전처럼 기본 호스트(demandResponseEnpointUrl) 뒤에 "" 를 붙인 것이다
+		HttpResponse<String> execute = userBasicHttpClient.post(payload, "");
+		assertEquals(HttpServletResponse.SC_CREATED, execute.statusCode());
 
-		HttpResponse execute = userBasicHttpClient.execute(post, "");
-		assertEquals(HttpServletResponse.SC_CREATED, execute.getStatusLine().getStatusCode());
-
-		DemandResponseEventReadDto readdto = mapper.readValue(execute.getEntity().getContent(),
+		DemandResponseEventReadDto readdto = mapper.readValue(execute.body(),
 				DemandResponseEventReadDto.class);
 		assertNotNull(readdto.getId());
 

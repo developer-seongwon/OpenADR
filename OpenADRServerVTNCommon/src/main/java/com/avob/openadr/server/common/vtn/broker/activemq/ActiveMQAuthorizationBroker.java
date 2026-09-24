@@ -9,7 +9,6 @@ import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.security.SecurityContext;
-import org.apache.http.auth.BasicUserPrincipal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.GrantedAuthority;
@@ -24,6 +23,19 @@ public class ActiveMQAuthorizationBroker extends BrokerFilter {
 	private static final Logger LOGGER = LoggerFactory.getLogger(ActiveMQAuthorizationBroker.class);
 
 	private OadrSecurityRoleService oadrSecurityRoleService;
+
+	/**
+	 * 인증서 지문을 이름으로 갖는 Principal.
+	 *
+	 * 예전에는 Apache httpclient 4 의 BasicUserPrincipal 을 빌려 썼다. httpclient 를 걷어내면서
+	 * 같은 일(이름만 들고 있고 이름으로 같음을 판단)을 하는 record 로 바꿨다
+	 */
+	private record FingerprintPrincipal(String name) implements Principal {
+		@Override
+		public String getName() {
+			return name;
+		}
+	}
 
 	public ActiveMQAuthorizationBroker(Broker next) {
 		super(next);
@@ -58,7 +70,7 @@ public class ActiveMQAuthorizationBroker extends BrokerFilter {
 
 								@Override
 								public Set<Principal> getPrincipals() {
-									return Sets.newHashSet(new BasicUserPrincipal(fingerprint));
+									return Sets.newHashSet(new FingerprintPrincipal(fingerprint));
 								}
 
 							};

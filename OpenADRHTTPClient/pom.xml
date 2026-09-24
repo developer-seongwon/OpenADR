@@ -10,18 +10,12 @@
 		<artifactId>OpenADR</artifactId>
 		<version>0.1.0-SNAPSHOT</version>
 	</parent>
+	<!-- HTTP 는 자바 표준 java.net.http.HttpClient 로 보낸다. 예전에는 Apache httpclient 4 와
+	     그 로깅용 commons-logging 을 썼다. 외부 HTTP 라이브러리 없이 동작하는 순수 라이브러리다 -->
 	<dependencies>
-		<dependency>
-			<groupId>org.apache.httpcomponents</groupId>
-			<artifactId>httpclient</artifactId>
-		</dependency>
 		<dependency>
 			<groupId>com.avob.openadr</groupId>
 			<artifactId>OpenADRSecurity</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>commons-logging</groupId>
-			<artifactId>commons-logging</artifactId>
 		</dependency>
 	</dependencies>
 

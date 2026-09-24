@@ -1,5 +1,6 @@
 package com.avob.openadr.dummy;
 
+import java.net.HttpURLConnection;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
@@ -16,7 +17,6 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 import jakarta.jms.JMSException;
 
-import org.apache.http.HttpStatus;
 import org.bouncycastle.asn1.x500.RDN;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.style.BCStyle;
@@ -85,7 +85,7 @@ public class DummyVENManager {
 			LOGGER.warn(
 					"Ven market context: " + DummyVTN20bControllerConfig.MARKET_CONTEXT + " is already provisioned");
 		} catch (ApiException e) {
-			if (e.getCode() != HttpStatus.SC_NOT_FOUND) {
+			if (e.getCode() != HttpURLConnection.HTTP_NOT_FOUND) {
 				LOGGER.error(
 						"Ven market context: " + DummyVTN20bControllerConfig.MARKET_CONTEXT + " can't be provisioned",
 						e);
@@ -136,7 +136,7 @@ public class DummyVENManager {
 				}
 				return;
 			} catch (ApiException e) {
-				if (e.getCode() != org.apache.http.HttpStatus.SC_NOT_FOUND) {
+				if (e.getCode() != HttpURLConnection.HTTP_NOT_FOUND) {
 					LOGGER.error("Ven certificate: " + crt + " can't be provisioned", e);
 					return;
 				} else {

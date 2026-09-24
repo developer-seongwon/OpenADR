@@ -42,6 +42,6 @@ public class OadrHttpVtnClient20a {
 
     public OadrResponse oadrDistributeEvent(String url, OadrDistributeEvent event)
             throws Oadr20aException, Oadr20aHttpLayerException {
-        return client.post(url, Oadr20aUrlPath.EI_EVENT_SERVICE, null, event, OadrResponse.class);
+        return client.post(url, Oadr20aUrlPath.EI_EVENT_SERVICE, event, OadrResponse.class);
     }
 }

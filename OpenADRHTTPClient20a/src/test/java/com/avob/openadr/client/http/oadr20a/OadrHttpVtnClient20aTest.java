@@ -2,6 +2,7 @@ package com.avob.openadr.client.http.oadr20a;
 
 import static org.mockito.Mockito.when;
 
+import java.net.HttpURLConnection;
 import java.net.URISyntaxException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -10,7 +11,6 @@ import java.util.Arrays;
 
 import jakarta.xml.bind.JAXBException;
 
-import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
@@ -40,7 +40,7 @@ public class OadrHttpVtnClient20aTest {
 
 		OadrHttpVtnClient20a oadrHttpVtnClient20a = new OadrHttpVtnClient20a(oadrHttpClient20a);
 
-		OadrResponse mockOadrResponse = Oadr20aBuilders.newOadr20aResponseBuilder("", HttpStatus.SC_OK).build();
+		OadrResponse mockOadrResponse = Oadr20aBuilders.newOadr20aResponseBuilder("", HttpURLConnection.HTTP_OK).build();
 
 		when(oadrHttpClient20a.<OadrResponse>post(ArgumentMatchers.<OadrDistributeEvent>any(), ArgumentMatchers.any(),
 				ArgumentMatchers.any())).thenReturn(mockOadrResponse);

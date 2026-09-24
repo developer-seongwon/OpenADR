@@ -2,6 +2,7 @@ package com.avob.openadr.dummy;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.net.HttpURLConnection;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
@@ -12,7 +13,6 @@ import java.util.List;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 
-import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -57,7 +57,7 @@ public class DummyEventManager {
 			LOGGER.warn(
 					"Ven market context: " + DummyVTN20bControllerConfig.MARKET_CONTEXT + " is already provisioned");
 		} catch (ApiException e) {
-			if (e.getCode() != HttpStatus.SC_NOT_FOUND) {
+			if (e.getCode() != HttpURLConnection.HTTP_NOT_FOUND) {
 				LOGGER.error(
 						"Ven market context: " + DummyVTN20bControllerConfig.MARKET_CONTEXT + " can't be provisioned",
 						e);

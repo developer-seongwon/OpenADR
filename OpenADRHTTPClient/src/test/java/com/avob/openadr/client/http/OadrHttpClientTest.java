@@ -10,7 +10,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.util.Arrays;
 
-import org.apache.http.client.ClientProtocolException;
 import org.junit.jupiter.api.Test;
 
 import com.avob.openadr.security.OadrFingerprintSecurity;
@@ -79,7 +78,7 @@ public class OadrHttpClientTest {
 	}
 
 	@Test
-	public void testInitECCClient() throws OadrSecurityException, ClientProtocolException, IOException,
+	public void testInitECCClient() throws OadrSecurityException, IOException,
 			NoSuchAlgorithmException, UnrecoverableKeyException, KeyStoreException {
 
 		String[] certs = { eccTrustedRootCertificate, eccTrustedIntermediateCertificate };

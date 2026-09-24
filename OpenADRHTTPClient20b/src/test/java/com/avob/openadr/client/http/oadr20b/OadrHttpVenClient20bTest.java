@@ -2,6 +2,7 @@ package com.avob.openadr.client.http.oadr20b;
 
 import static org.mockito.Mockito.when;
 
+import java.net.HttpURLConnection;
 import java.net.URISyntaxException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -10,7 +11,6 @@ import java.security.UnrecoverableKeyException;
 import jakarta.xml.bind.JAXBElement;
 import jakarta.xml.bind.JAXBException;
 
-import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
@@ -118,7 +118,7 @@ public class OadrHttpVenClient20bTest {
 		OadrHttpClient20b oadrHttpClient20b = Mockito.mock(OadrHttpClient20b.class);
 
 		OadrResponseType mockOadrResponseType = Oadr20bResponseBuilders
-				.newOadr20bResponseBuilder("", HttpStatus.SC_OK, "venId").build();
+				.newOadr20bResponseBuilder("", HttpURLConnection.HTTP_OK, "venId").build();
 
 		OadrHttpVenClient20b oadrHttpVenClient20bTestClass = new OadrHttpVenClient20b(oadrHttpClient20b);
 
@@ -138,7 +138,7 @@ public class OadrHttpVenClient20bTest {
 		OadrHttpClient20b oadrHttpClient20b = Mockito.mock(OadrHttpClient20b.class);
 
 		OadrResponseType mockOadrResponseType = Oadr20bResponseBuilders
-				.newOadr20bResponseBuilder("", HttpStatus.SC_OK, "venId").build();
+				.newOadr20bResponseBuilder("", HttpURLConnection.HTTP_OK, "venId").build();
 
 		OadrHttpVenClient20b oadrHttpVenClient20bTestClass = new OadrHttpVenClient20b(oadrHttpClient20b);
 
@@ -157,7 +157,7 @@ public class OadrHttpVenClient20bTest {
 		OadrHttpClient20b oadrHttpClient20b = Mockito.mock(OadrHttpClient20b.class);
 
 		OadrCreatedReportType build = Oadr20bEiReportBuilders
-				.newOadr20bCreatedReportBuilder("", HttpStatus.SC_OK, "venId").build();
+				.newOadr20bCreatedReportBuilder("", HttpURLConnection.HTTP_OK, "venId").build();
 
 		OadrHttpVenClient20b oadrHttpVenClient20bTestClass = new OadrHttpVenClient20b(oadrHttpClient20b);
 
@@ -176,7 +176,7 @@ public class OadrHttpVenClient20bTest {
 		OadrHttpClient20b oadrHttpClient20b = Mockito.mock(OadrHttpClient20b.class);
 
 		OadrUpdatedReportType build = Oadr20bEiReportBuilders
-				.newOadr20bUpdatedReportBuilder("", HttpStatus.SC_OK, "venId").build();
+				.newOadr20bUpdatedReportBuilder("", HttpURLConnection.HTTP_OK, "venId").build();
 		OadrHttpVenClient20b oadrHttpVenClient20bTestClass = new OadrHttpVenClient20b(oadrHttpClient20b);
 
 		when(oadrHttpClient20b.<OadrUpdatedReportType, JAXBElement<OadrUpdatedReportType>>post(
@@ -194,7 +194,7 @@ public class OadrHttpVenClient20bTest {
 		OadrHttpClient20b oadrHttpClient20b = Mockito.mock(OadrHttpClient20b.class);
 
 		OadrRegisteredReportType build = Oadr20bEiReportBuilders
-				.newOadr20bRegisteredReportBuilder("", HttpStatus.SC_OK, "venId").build();
+				.newOadr20bRegisteredReportBuilder("", HttpURLConnection.HTTP_OK, "venId").build();
 		OadrHttpVenClient20b oadrHttpVenClient20bTestClass = new OadrHttpVenClient20b(oadrHttpClient20b);
 
 		when(oadrHttpClient20b.<OadrRegisteredReportType, JAXBElement<OadrRegisteredReportType>>post(
@@ -212,7 +212,7 @@ public class OadrHttpVenClient20bTest {
 		OadrHttpClient20b oadrHttpClient20b = Mockito.mock(OadrHttpClient20b.class);
 
 		OadrResponseType mockOadrResponseType = Oadr20bResponseBuilders
-				.newOadr20bResponseBuilder("", HttpStatus.SC_OK, "venId").build();
+				.newOadr20bResponseBuilder("", HttpURLConnection.HTTP_OK, "venId").build();
 		OadrHttpVenClient20b oadrHttpVenClient20bTestClass = new OadrHttpVenClient20b(oadrHttpClient20b);
 
 		when(oadrHttpClient20b.<OadrResponseType, JAXBElement<OadrResponseType>>post(
@@ -230,7 +230,7 @@ public class OadrHttpVenClient20bTest {
 		OadrHttpClient20b oadrHttpClient20b = Mockito.mock(OadrHttpClient20b.class);
 
 		OadrResponseType mockOadrResponseType = Oadr20bResponseBuilders
-				.newOadr20bResponseBuilder("", HttpStatus.SC_OK, "venId").build();
+				.newOadr20bResponseBuilder("", HttpURLConnection.HTTP_OK, "venId").build();
 		OadrHttpVenClient20b oadrHttpVenClient20bTestClass = new OadrHttpVenClient20b(oadrHttpClient20b);
 
 		when(oadrHttpClient20b.<OadrResponseType, JAXBElement<OadrResponseType>>post(
@@ -248,7 +248,7 @@ public class OadrHttpVenClient20bTest {
 		OadrHttpClient20b oadrHttpClient20b = Mockito.mock(OadrHttpClient20b.class);
 
 		OadrCanceledReportType build = Oadr20bEiReportBuilders
-				.newOadr20bCanceledReportBuilder("", HttpStatus.SC_OK, "venId").build();
+				.newOadr20bCanceledReportBuilder("", HttpURLConnection.HTTP_OK, "venId").build();
 		OadrHttpVenClient20b oadrHttpVenClient20bTestClass = new OadrHttpVenClient20b(oadrHttpClient20b);
 
 		when(oadrHttpClient20b.<OadrCanceledReportType, JAXBElement<OadrCanceledReportType>>post(
@@ -266,7 +266,7 @@ public class OadrHttpVenClient20bTest {
 		OadrHttpClient20b oadrHttpClient20b = Mockito.mock(OadrHttpClient20b.class);
 
 		OadrResponseType mockOadrResponseType = Oadr20bResponseBuilders
-				.newOadr20bResponseBuilder("", HttpStatus.SC_OK, "venId").build();
+				.newOadr20bResponseBuilder("", HttpURLConnection.HTTP_OK, "venId").build();
 		OadrHttpVenClient20b oadrHttpVenClient20bTestClass = new OadrHttpVenClient20b(oadrHttpClient20b);
 
 		when(oadrHttpClient20b.<OadrResponseType, JAXBElement<OadrResponseType>>post(
@@ -339,7 +339,7 @@ public class OadrHttpVenClient20bTest {
 		OadrHttpClient20b oadrHttpClient20b = Mockito.mock(OadrHttpClient20b.class);
 
 		OadrResponseType mockOadrResponseType = Oadr20bResponseBuilders
-				.newOadr20bResponseBuilder("", HttpStatus.SC_OK, "venId").build();
+				.newOadr20bResponseBuilder("", HttpURLConnection.HTTP_OK, "venId").build();
 		OadrHttpVenClient20b oadrHttpVenClient20bTestClass = new OadrHttpVenClient20b(oadrHttpClient20b);
 
 		when(oadrHttpClient20b.<OadrResponseType, JAXBElement<OadrResponseType>>post(
@@ -357,7 +357,7 @@ public class OadrHttpVenClient20bTest {
 		OadrHttpClient20b oadrHttpClient20b = Mockito.mock(OadrHttpClient20b.class);
 
 		OadrResponseType mockOadrResponseType = Oadr20bResponseBuilders
-				.newOadr20bResponseBuilder("", HttpStatus.SC_OK, "venId").build();
+				.newOadr20bResponseBuilder("", HttpURLConnection.HTTP_OK, "venId").build();
 		OadrHttpVenClient20b oadrHttpVenClient20bTestClass = new OadrHttpVenClient20b(oadrHttpClient20b);
 
 		when(oadrHttpClient20b.<OadrResponseType, JAXBElement<OadrResponseType>>post(
@@ -394,7 +394,7 @@ public class OadrHttpVenClient20bTest {
 
 		OadrHttpClient20b oadrHttpClient20b = Mockito.mock(OadrHttpClient20b.class);
 
-		OadrCreatedOptType build = Oadr20bEiOptBuilders.newOadr20bCreatedOptBuilder("", HttpStatus.SC_OK, "OPT_IN")
+		OadrCreatedOptType build = Oadr20bEiOptBuilders.newOadr20bCreatedOptBuilder("", HttpURLConnection.HTTP_OK, "OPT_IN")
 				.build();
 		OadrHttpVenClient20b oadrHttpVenClient20bTestClass = new OadrHttpVenClient20b(oadrHttpClient20b);
 
@@ -412,7 +412,7 @@ public class OadrHttpVenClient20bTest {
 
 		OadrHttpClient20b oadrHttpClient20b = Mockito.mock(OadrHttpClient20b.class);
 
-		OadrCanceledOptType build = Oadr20bEiOptBuilders.newOadr20bCanceledOptBuilder("", HttpStatus.SC_OK, "OPT_IN")
+		OadrCanceledOptType build = Oadr20bEiOptBuilders.newOadr20bCanceledOptBuilder("", HttpURLConnection.HTTP_OK, "OPT_IN")
 				.build();
 		OadrHttpVenClient20b oadrHttpVenClient20bTestClass = new OadrHttpVenClient20b(oadrHttpClient20b);
 
