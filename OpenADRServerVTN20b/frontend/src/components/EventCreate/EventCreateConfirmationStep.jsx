@@ -20,6 +20,8 @@ import Grid from '@mui/material/Grid';
 
 import Divider from '@mui/material/Divider';
 
+import { signalTypeLabel } from '../common/EventSignalPanel';
+
 
 export class EventCreateConfirmationStep extends React.Component {
 
@@ -94,7 +96,18 @@ export class EventCreateConfirmationStep extends React.Component {
         {eventSignal.map((signal, index) => {
             return (
               <Grid container spacing={ 3 }  key={"signal_confirmation_panel_"+index}>
-                <Grid size={2} />
+                <Grid size={2}>
+                  {/* 비워 두면 VTN 이 순번을 쓴다 */}
+                  <TextField label="Signal ID"
+                             value={ signal.signalId ? signal.signalId : "(" + index + ")" }
+                             className={ classes.textField }
+                             margin="dense"
+                             variant="outlined"
+                             fullWidth={ true }
+                             slotProps={{
+                               input: { readOnly: true }
+                             }} />
+                </Grid>
                 <Grid size={2}>
                   <TextField label="Signal Name"
                              value={ signal.signalName }
@@ -108,7 +121,7 @@ export class EventCreateConfirmationStep extends React.Component {
                 </Grid>
                 <Grid size={2}>
                   <TextField label="Signal Type"
-                             value={ signal.signalType }
+                             value={ signalTypeLabel(signal.signalType) }
                              className={ classes.textField }
                              margin="dense"
                              variant="outlined"

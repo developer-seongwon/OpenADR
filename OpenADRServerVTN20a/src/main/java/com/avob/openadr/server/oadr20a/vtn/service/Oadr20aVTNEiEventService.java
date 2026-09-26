@@ -334,8 +334,10 @@ public class Oadr20aVTNEiEventService {
 				currentValue = demandResponseEventSignal.getCurrentValue();
 			}
 
+			// 이벤트 입력 화면과 API 는 2.0a, 2.0b 가 같이 쓴다. 2.0b 처럼 지정한 signalID 가 있으면 그 값을 쓴다
 			Oadr20aEiEventSignalTypeBuilder newOadr20bEiEventSignalTypeBuilder = Oadr20aBuilders
-					.newOadr20aEiEventSignalTypeBuilder("" + signalId, demandResponseEventSignal.getSignalName().getLabel(),
+					.newOadr20aEiEventSignalTypeBuilder(demandResponseEventSignal.signalIdOrIndex(signalId),
+							demandResponseEventSignal.getSignalName().getLabel(),
 							SignalTypeEnumeratedType.fromValue(demandResponseEventSignal.getSignalType().getLabel()),
 							currentValue);
 

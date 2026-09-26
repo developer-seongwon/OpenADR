@@ -2,6 +2,7 @@ package com.avob.openadr.server.common.vtn.models.demandresponseevent;
 
 import java.util.List;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -27,6 +28,16 @@ public class DemandResponseEventSignal {
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
 
+	/**
+	 * oadrDistributeEvent 에 그대로 나가는 signalID. 자유 문자열이다.
+	 * 예를 들어 연계 VTN 규격은 기본 지령을 SIG_01, 특정 참여자는 SIG_01-C:{참여자ID},
+	 * 특정 자원은 SIG_01-R:{자원ID} 로 구분한다. 비어 있으면 예전처럼 이벤트 안의 순번(0, 1, 2 ...)을 쓴다.
+	 * 운영 DB(ddl-auto 가 update 가 아닌 곳)에는 이 컬럼을 직접 추가해야 한다:
+	 * ALTER TABLE demandresponseeventsignal ADD COLUMN signal_id varchar(255);
+	 */
+	@Column(name = "signal_id")
+	private String signalId;
+
 	@NotNull
 	private DemandResponseEventSignalNameEnum signalName;
 
@@ -51,6 +62,25 @@ public class DemandResponseEventSignal {
 	@ManyToOne
 	@JoinColumn(name = "demandresponseevent_id")
 	private DemandResponseEvent event;
+
+	public String getSignalId() {
+		return signalId;
+	}
+
+	public void setSignalId(String signalId) {
+		this.signalId = signalId;
+	}
+
+	/**
+	 * oadrDistributeEvent 에 실을 signalID. 지정한 값이 없거나 공백뿐이면 이벤트 안의 순번을 쓴다.
+	 * DTO 매퍼가 공백을 null 로 바꿔 저장하지만, 다른 경로로 들어온 값도 같은 규칙을 따르게 여기서 한 번 더 본다.
+	 * 2.0a, 2.0b VTN 이 같이 쓴다
+	 *
+	 * @param index 이벤트 안에서 이 시그널의 순서(0 부터)
+	 */
+	public String signalIdOrIndex(int index) {
+		return (signalId == null || signalId.isBlank()) ? String.valueOf(index) : signalId;
+	}
 
 	public DemandResponseEventSignalNameEnum getSignalName() {
 		return signalName;

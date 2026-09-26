@@ -9,7 +9,10 @@ import org.springframework.data.repository.query.Param;
 
 public interface DemandResponseEventSignalDao extends JpaRepository<DemandResponseEventSignal, Long> {
 
-	public List<DemandResponseEventSignal> findByEvent(DemandResponseEvent event);
+	// 저장 순서(id) 대로 돌려준다. oadrDistributeEvent 의 시그널 순서가 이 순서다.
+	// 연계 규격은 기본 지령(SIG_01) 다음에 참여자, 자원별 시그널이 오는 순서를 쓴다.
+	// 정렬이 없으면 DB 가 내주는 순서라 보장이 없었다
+	public List<DemandResponseEventSignal> findByEventOrderByIdAsc(DemandResponseEvent event);
 
 	@Modifying
 	@Query

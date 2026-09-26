@@ -21,6 +21,7 @@ export class EventCreateEventSignalStep extends React.Component {
   handleAddSignalClick = () => {
     var eventSignal = this.props.eventSignal;
     eventSignal.push({
+        signalId: "",
         signalName: "",
         signalType: "",
         unitType: "",

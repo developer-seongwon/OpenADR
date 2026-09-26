@@ -1,5 +1,8 @@
 package com.avob.openadr.server.common.vtn.models.demandresponseevent.dto.validator;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 
@@ -7,8 +10,11 @@ import org.springframework.validation.Errors;
 
 import com.avob.openadr.server.common.vtn.models.demandresponseevent.dto.DemandResponseEventContentDto;
 import com.avob.openadr.server.common.vtn.models.demandresponseevent.dto.DemandResponseEventDto;
+import com.avob.openadr.server.common.vtn.models.demandresponseevent.dto.embedded.DemandResponseEventSignalDto;
 
 public class DemandResponseEventDtoValidator {
+
+	private static final int SIGNAL_ID_MAX_LENGTH = 255;
 
 	private DatatypeFactory datatypeFactory = null;
 
@@ -44,7 +50,35 @@ public class DemandResponseEventDtoValidator {
 		if (dto.getSignals().isEmpty()) {
 			errors.rejectValue("signals", "field.required", "At least one signal must be configured");
 		}
+		validateSignalIds(dto, errors);
+	}
 
+	/**
+	 * signalID 는 자유 문자열이지만 한 이벤트 안에서는 겹치면 안 된다. VEN 이 시그널을 이 값으로 구분한다.
+	 * 비워 둔 시그널은 순번(0, 1, 2 ...)을 쓰므로 직접 넣은 값이 순번 숫자와 겹쳐도 거절한다.
+	 * 길이는 DB 컬럼(varchar 255)에 맞춘다
+	 */
+	private void validateSignalIds(DemandResponseEventContentDto dto, Errors errors) {
+		Set<String> seen = new HashSet<>();
+		for (int i = 0; i < dto.getSignals().size(); i++) {
+			DemandResponseEventSignalDto signal = dto.getSignals().get(i);
+			if (signal == null) {
+				// 빈 시그널 자체는 여기서 다루지 않는다. 순번 자리만 잡아 둔다(null 원소에는 필드 경로를 걸 수 없다)
+				seen.add(String.valueOf(i));
+				continue;
+			}
+			String signalId = signal.getSignalId() == null ? "" : signal.getSignalId().trim();
+			String effective = signalId.isEmpty() ? String.valueOf(i) : signalId;
+			String field = "signals[" + i + "].signalId";
+			if (signalId.length() > SIGNAL_ID_MAX_LENGTH) {
+				errors.rejectValue(field, "field.signalId.tooLong",
+						"signalId MUST be at most " + SIGNAL_ID_MAX_LENGTH + " characters");
+			}
+			if (!seen.add(effective)) {
+				errors.rejectValue(field, "field.signalId.duplicate",
+						"signalId MUST be unique in an event: " + effective);
+			}
+		}
 	}
 
 	protected void validateDescriptor(DemandResponseEventDto dto, Errors errors) {

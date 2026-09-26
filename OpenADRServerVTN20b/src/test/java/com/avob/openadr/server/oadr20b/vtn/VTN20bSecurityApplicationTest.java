@@ -8,19 +8,16 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
 
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
 import javax.sql.DataSource;
 
 import com.avob.openadr.server.common.vtn.VtnDatabaseContainer;
-import com.avob.openadr.server.oadr20b.vtn.utils.MockVenDistributeService;
 
 @Configuration
 @EnableAutoConfiguration(exclude = { SecurityAutoConfiguration.class })
 @ComponentScan(basePackages = { "com.avob.openadr.server.oadr20b.vtn" })
-@ContextConfiguration(classes = MockVenDistributeService.class)
 @ActiveProfiles("test")
 public class VTN20bSecurityApplicationTest {
 

@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Map.Entry;
@@ -55,10 +56,15 @@ import com.avob.openadr.server.common.vtn.models.demandresponseevent.dto.DemandR
 import com.avob.openadr.server.common.vtn.models.demandresponseevent.dto.embedded.DemandResponseEventSignalDto;
 import com.avob.openadr.server.common.vtn.models.demandresponseevent.dto.embedded.DemandResponseEventSignalIntervalDto;
 import com.avob.openadr.server.common.vtn.models.demandresponseevent.filter.DemandResponseEventFilter;
+import com.avob.openadr.server.common.vtn.models.ven.Ven;
 import com.avob.openadr.server.common.vtn.models.ven.VenDto;
+import com.avob.openadr.server.common.vtn.models.vengroup.VenGroup;
+import com.avob.openadr.server.common.vtn.models.vengroup.VenGroupDto;
 import com.avob.openadr.server.common.vtn.models.vendemandresponseevent.VenDemandResponseEventDto;
 import com.avob.openadr.server.common.vtn.models.venmarketcontext.VenMarketContext;
+import com.avob.openadr.server.common.vtn.service.VenGroupService;
 import com.avob.openadr.server.common.vtn.service.VenMarketContextService;
+import com.avob.openadr.server.common.vtn.service.VenService;
 import com.avob.openadr.server.common.vtn.service.push.DemandResponseEventPublisher;
 import com.avob.openadr.server.oadr20b.vtn.VTN20bSecurityApplicationTest;
 import com.avob.openadr.server.oadr20b.vtn.service.VenDistributeService;
@@ -87,6 +93,12 @@ public class EventScenarioTest extends AbstractVtn20bTest {
 
 	@Resource
 	private VenMarketContextService venMarketContextService;
+
+	@Resource
+	private VenService venService;
+
+	@Resource
+	private VenGroupService venGroupService;
 
 	@Resource
 	private OadrMockEiHttpMvc oadrMockEiHttpMvc;
@@ -327,6 +339,153 @@ public class EventScenarioTest extends AbstractVtn20bTest {
 		oadrMockHttpDemandResponseEventMvc.get(OadrDataBaseSetup.ADMIN_SECURITY_SESSION, eventActive.getId(),
 				HttpServletResponse.SC_NOT_FOUND);
 
+	}
+
+	/**
+	 * 연계 VTN 규격(OpenADR 2.0b 연계 가이드 7장 case 2, 3) 모양으로 이벤트를 낼 수 있는지 본다.
+	 *
+	 * - 시그널마다 signalID 를 직접 준다. 기본 지령 SIG_01, 참여자 SIG_01-C:{참여자ID}, 자원 SIG_01-R:{자원ID}.
+	 *   앞뒤 공백은 걷고, 비워 둔 시그널은 순번을 쓴다
+	 * - 시그널은 등록한 순서대로 나간다
+	 * - 이벤트 대상이 그룹이면 eiTarget 에 받는 VEN 이 속한 그룹만 groupID 로 venID 와 같이 나간다
+	 * - 한 이벤트 안에서 signalID 가 겹치면 400
+	 *
+	 * 테스트용 그룹을 VEN 하나에만 붙여서 다른 VEN 의 poll 큐에 이벤트가 쌓이지 않게 한다
+	 */
+	@Test
+	public void testSignalIdAndGroupTarget() throws Exception {
+		for (Entry<String, UserRequestPostProcessor> entry : OadrDataBaseSetup.getTestVen().entrySet()) {
+			VenDto ven = oadrMockHttpVenMvc.getVen(OadrDataBaseSetup.ADMIN_SECURITY_SESSION, entry.getKey(),
+					HttpServletResponse.SC_OK);
+			OadrMockVen mockVen = new OadrMockVen(ven, entry.getValue(), oadrMockEiHttpMvc, oadrMockEiXmpp,
+					xmlSignatureService);
+			_testSignalIdAndGroupTarget(mockVen);
+		}
+	}
+
+	private void _testSignalIdAndGroupTarget(OadrMockVen mockVen) throws Exception {
+		String resourceGroupName = "PP0000000690";
+		VenGroup resourceGroup = venGroupService.findByName(resourceGroupName);
+		if (resourceGroup == null) {
+			resourceGroup = venGroupService.save(venGroupService.prepare(new VenGroupDto(resourceGroupName)));
+		}
+		Ven ven = venService.findOneByUsername(mockVen.getVenId());
+		ven.getVenGroups().add(resourceGroup);
+		venService.save(ven);
+
+		VenMarketContext marketContext = venMarketContextService.findOneByName(OadrDataBaseSetup.MARKET_CONTEXT_NAME);
+		mockVen.pollForEmpty();
+
+		DemandResponseEventCreateDto dto = guideStyleEvent(marketContext.getName());
+		dto.getSignals().add(loadControlSignal("SIG_01", 50F));
+		dto.getSignals().add(loadControlSignal(" SIG_01-C:VEU00000424B ", 30F));
+		dto.getSignals().add(loadControlSignal("SIG_01-R:R00000008A99", 15F));
+		dto.getSignals().add(loadControlSignal(null, 10F));
+		dto.getTargets().add(new TargetDto(TargetTypeEnum.GROUP, resourceGroupName));
+		// 받는 VEN 이 속하지 않은 그룹은 eiTarget 에 안 나가야 한다
+		dto.getTargets().add(new TargetDto(TargetTypeEnum.GROUP, OadrDataBaseSetup.ANOTHER_GROUP));
+		DemandResponseEventReadDto created = oadrMockHttpDemandResponseEventMvc
+				.create(OadrDataBaseSetup.ADMIN_SECURITY_SESSION, dto, HttpServletResponse.SC_CREATED);
+		try {
+			assertGuideStyleEvent(mockVen, created, resourceGroupName, marketContext.getName());
+		} finally {
+			// 실패해도 다음 테스트에 이벤트와 그룹 소속이 남지 않게 정리한다
+			oadrMockHttpDemandResponseEventMvc.delete(OadrDataBaseSetup.ADMIN_SECURITY_SESSION, created.getId(),
+					HttpServletResponse.SC_OK);
+			// VenGroup 에 equals 가 없어서 새로 읽은 엔티티에서는 removeGroup 이 안 먹는다. 이름으로 뺀다
+			ven = venService.findOneByUsername(mockVen.getVenId());
+			ven.getVenGroups().removeIf(group -> resourceGroupName.equals(group.getName()));
+			venService.save(ven);
+			// 다른 테스트의 그룹 수 검사에 걸리지 않게 테스트 그룹도 지운다
+			venGroupService.delete(venGroupService.findByName(resourceGroupName));
+		}
+	}
+
+	private void assertGuideStyleEvent(OadrMockVen mockVen, DemandResponseEventReadDto created,
+			String resourceGroupName, String marketContextName) throws Exception {
+		// 조회 DTO 도 등록 순서 그대로, 공백은 걷고 빈 값은 비워 둔다
+		List<String> storedIds = new ArrayList<>();
+		created.getSignals().forEach(signal -> storedIds.add(signal.getSignalId()));
+		assertEquals(Arrays.asList("SIG_01", "SIG_01-C:VEU00000424B", "SIG_01-R:R00000008A99", null), storedIds);
+
+		mockVen.pollForValidOadrDistributeEvent();
+		mockVen.pollForEmpty();
+
+		OadrDistributeEventType distribute = mockVen.event(
+				Oadr20bEiEventBuilders.newOadrRequestEventBuilder(mockVen.getVenId(), "0").build(),
+				HttpServletResponse.SC_OK, OadrDistributeEventType.class);
+		EiEventType eiEvent = distribute.getOadrEvent().stream()
+				.filter(e -> String.valueOf(created.getId()).equals(e.getEiEvent().getEventDescriptor().getEventID()))
+				.findFirst().orElseThrow().getEiEvent();
+
+		List<EiEventSignalType> signals = eiEvent.getEiEventSignals().getEiEventSignal();
+		assertEquals(4, signals.size());
+		assertEquals("SIG_01", signals.get(0).getSignalID());
+		assertEquals("SIG_01-C:VEU00000424B", signals.get(1).getSignalID());
+		assertEquals("SIG_01-R:R00000008A99", signals.get(2).getSignalID());
+		assertEquals("3", signals.get(3).getSignalID());
+		for (EiEventSignalType signal : signals) {
+			assertEquals("LOAD_CONTROL", signal.getSignalName());
+			assertEquals(SignalTypeEnumeratedType.X_LOAD_CONTROL_LEVEL_OFFSET, signal.getSignalType());
+			assertEquals(4, signal.getIntervals().getInterval().size());
+			assertEquals("0", signal.getIntervals().getInterval().get(0).getUid().getText());
+			assertEquals("3", signal.getIntervals().getInterval().get(3).getUid().getText());
+		}
+
+		assertEquals(Arrays.asList(resourceGroupName), eiEvent.getEiTarget().getGroupID());
+		assertEquals(Arrays.asList(mockVen.getVenId()), eiEvent.getEiTarget().getVenID());
+
+		// 한 이벤트 안에서 signalID 가 겹치면 거절한다. 비워 둔 시그널의 순번과 겹쳐도 마찬가지다
+		DemandResponseEventCreateDto duplicated = guideStyleEvent(marketContextName);
+		duplicated.getSignals().add(loadControlSignal("SIG_01", 50F));
+		duplicated.getSignals().add(loadControlSignal("SIG_01", 30F));
+		duplicated.getTargets().add(new TargetDto(TargetTypeEnum.GROUP, resourceGroupName));
+		oadrMockHttpDemandResponseEventMvc.create(OadrDataBaseSetup.ADMIN_SECURITY_SESSION, duplicated,
+				HttpServletResponse.SC_BAD_REQUEST);
+		DemandResponseEventCreateDto clash = guideStyleEvent(marketContextName);
+		clash.getSignals().add(loadControlSignal("1", 50F));
+		clash.getSignals().add(loadControlSignal(null, 30F));
+		clash.getTargets().add(new TargetDto(TargetTypeEnum.GROUP, resourceGroupName));
+		oadrMockHttpDemandResponseEventMvc.create(OadrDataBaseSetup.ADMIN_SECURITY_SESSION, clash,
+				HttpServletResponse.SC_BAD_REQUEST);
+	}
+
+	/**
+	 * 연계 가이드 예시와 같은 activePeriod(PT60M, 통지 PT120M) 로 30분 뒤 시작하는 이벤트를 만든다.
+	 * 통지 시작(시작 2시간 전)이 이미 지나야 VEN 에 나간다
+	 */
+	private DemandResponseEventCreateDto guideStyleEvent(String marketContextName) {
+		DemandResponseEventCreateDto dto = new DemandResponseEventCreateDto();
+		dto.getDescriptor().setMarketContext(marketContextName);
+		dto.getDescriptor().setOadrProfile(DemandResponseEventOadrProfileEnum.OADR20B);
+		dto.getDescriptor().setResponseRequired(DemandResponseEventResponseRequiredEnum.ALWAYS);
+		dto.getDescriptor().setState(DemandResponseEventStateEnum.ACTIVE);
+		dto.getActivePeriod().setStart(System.currentTimeMillis() + 30 * 60 * 1000L);
+		dto.getActivePeriod().setDuration("PT60M");
+		dto.getActivePeriod().setNotificationDuration("PT120M");
+		dto.getActivePeriod().setToleranceDuration("PT0M");
+		dto.getActivePeriod().setRampUpDuration("PT0M");
+		dto.getActivePeriod().setRecoveryDuration("PT0M");
+		dto.setPublished(true);
+		return dto;
+	}
+
+	/** LOAD_CONTROL / x-loadControlLevelOffset, 15분 구간 4개, currentValue 1.0 */
+	private DemandResponseEventSignalDto loadControlSignal(String signalId, float value) {
+		DemandResponseEventSignalDto signal = new DemandResponseEventSignalDto();
+		signal.setSignalId(signalId);
+		signal.setSignalName(DemandResponseEventSignalNameEnum.LOAD_CONTROL);
+		signal.setSignalType(DemandResponseEventSignalTypeEnum.X_LOAD_CONTROL_LEVEL_OFFSET);
+		signal.setCurrentValue(1F);
+		List<DemandResponseEventSignalIntervalDto> intervals = new ArrayList<>();
+		for (int i = 0; i < 4; i++) {
+			DemandResponseEventSignalIntervalDto interval = new DemandResponseEventSignalIntervalDto();
+			interval.setDuration("PT15M");
+			interval.setValue(value);
+			intervals.add(interval);
+		}
+		signal.setIntervals(intervals);
+		return signal;
 	}
 
 	@Test

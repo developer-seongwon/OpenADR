@@ -317,7 +317,7 @@ public class DemandResponseEventService {
 	}
 
 	public List<DemandResponseEventSignal> getSignals(DemandResponseEvent event) {
-		return demandResponseEventSignalDao.findByEvent(event);
+		return demandResponseEventSignalDao.findByEventOrderByIdAsc(event);
 	}
 
 	@Transactional(readOnly = false)

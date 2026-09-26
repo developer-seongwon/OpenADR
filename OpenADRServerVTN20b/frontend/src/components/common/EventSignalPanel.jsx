@@ -98,6 +98,12 @@ const signalTypeMenuItems = [{
   } 
 ]
 
+// 확인 단계처럼 선택 목록 없이 보여 줄 때 쓴다. 모르는 이름은 그대로 돌려준다
+export const signalTypeLabel = (name) => {
+  const item = signalTypeMenuItems.find(i => i.name === name);
+  return item ? item.label : name;
+}
+
 const signalNameMenuItems = [{
     name: "BID_ENERGY",
     label: "Bid Energy",
@@ -511,6 +517,12 @@ export class EventSignalPanel extends React.Component {
     signal.currentValue = e.target.value;
     this.props.onChange(signal);
   }
+
+  handleSignalIdChange = (e) => {
+    let signal = this.props.eventSignal;
+    signal.signalId = e.target.value;
+    this.props.onChange(signal);
+  }
   
   handleCreateIntervalClick = () => {
     let signal = this.props.eventSignal;
@@ -612,6 +624,20 @@ export class EventSignalPanel extends React.Component {
               justifyContent: "center"
             }}>
 
+        {/* oadrDistributeEvent 의 signalID. 자유 문자열이고 비우면 VTN 이 이벤트 안의 순번(0, 1, 2 ...)을 쓴다.
+            연계 규격 예: 기본 지령 SIG_01, 참여자 SIG_01-C:{참여자ID}, 자원 SIG_01-R:{자원ID}.
+            한 이벤트 안에서 겹치면 VTN 이 400 으로 거절한다 */}
+        <Grid container spacing={ 3 }>
+          <Grid size={4}>
+              <TextField label="Signal ID"
+                         placeholder="SIG_01"
+                         helperText="Empty: index (0, 1, 2 ...)"
+                         value={ eventSignal.signalId || "" }
+                         className={ classes.textField }
+                         onChange={ this.handleSignalIdChange }
+                         fullWidth={ true } />
+          </Grid>
+        </Grid>
         <Grid container spacing={ 3 }>
           <Grid size={4}>
             <FormControl className={ classes.formControl }>

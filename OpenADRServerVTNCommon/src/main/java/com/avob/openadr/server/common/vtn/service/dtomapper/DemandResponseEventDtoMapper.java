@@ -226,6 +226,7 @@ public class DemandResponseEventDtoMapper {
 			return null;
 		}
 		DemandResponseEventSignalDto dst = new DemandResponseEventSignalDto();
+		dst.setSignalId(src.getSignalId());
 		dst.setSignalName(src.getSignalName());
 		dst.setSignalType(src.getSignalType());
 		dst.setCurrentValue(src.getCurrentValue());
@@ -255,6 +256,9 @@ public class DemandResponseEventDtoMapper {
 			return null;
 		}
 		DemandResponseEventSignal dst = new DemandResponseEventSignal();
+		// 앞뒤 공백만 걷고, 빈 문자열은 없는 것으로 본다(순번을 쓴다)
+		String signalId = src.getSignalId() == null ? null : src.getSignalId().trim();
+		dst.setSignalId(signalId == null || signalId.isEmpty() ? null : signalId);
 		dst.setSignalName(src.getSignalName());
 		dst.setSignalType(src.getSignalType());
 		dst.setCurrentValue(src.getCurrentValue());

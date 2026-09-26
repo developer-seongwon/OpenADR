@@ -8,12 +8,22 @@ import com.avob.openadr.server.common.vtn.models.demandresponseevent.DemandRespo
 import com.avob.openadr.server.common.vtn.models.demandresponseevent.DemandResponseEventSignalTypeEnum;
 
 public class DemandResponseEventSignalDto {
+	/** oadrDistributeEvent 의 signalID. 비우면 이벤트 안의 순번을 쓴다(DemandResponseEventSignal 참고) */
+	private String signalId;
 	private DemandResponseEventSignalNameEnum signalName;
 	private DemandResponseEventSignalTypeEnum signalType;
 	private List<DemandResponseEventSignalIntervalDto> intervals;
 	private Float currentValue;
 	private ItemBaseDto itemBase;
 	private List<TargetDto> targets; 
+
+	public String getSignalId() {
+		return signalId;
+	}
+
+	public void setSignalId(String signalId) {
+		this.signalId = signalId;
+	}
 
 	public DemandResponseEventSignalNameEnum getSignalName() {
 		return signalName;

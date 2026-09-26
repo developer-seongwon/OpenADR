@@ -11,6 +11,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 
@@ -52,7 +53,10 @@ public class DemandResponseEvent {
 	@OneToOne(fetch = FetchType.EAGER)
 	private DemandResponseEventBaseline baseline;
 
+	// 입력 순서(id)를 지킨다. @OrderBy 가 있으면 하이버네이트가 Set 을 LinkedHashSet 으로 채운다.
+	// 조회 DTO 와 화면의 시그널 순서가 등록한 순서와 같아진다
 	@OneToMany(fetch = FetchType.EAGER, mappedBy = "event")
+	@OrderBy("id ASC")
 	private Set<DemandResponseEventSignal> signals;
 
 	// @LazyCollection(FALSE) 는 하이버네이트 6 에서 deprecated, 7 에서 제거된다.

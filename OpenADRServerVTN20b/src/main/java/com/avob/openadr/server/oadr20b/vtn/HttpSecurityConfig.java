@@ -17,9 +17,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
@@ -41,8 +39,9 @@ import com.avob.openadr.server.common.vtn.security.DigestUserDetailsService;
  * Spring security configuration
  *
  * Spring Security 6 에서 WebSecurityConfigurerAdapter 가 제거돼
- * SecurityFilterChain 빈 방식으로 옮겼다. WebSecurity 쪽 ignoring 도
- * WebSecurityCustomizer 빈으로 바뀌었다.
+ * SecurityFilterChain 빈 방식으로 옮겼다.
+ * 예전 configure(WebSecurity) 의 /health ignoring 은 뺐다. /health 엔드포인트가 없고(actuator 도 없음),
+ * Security 가 ignoring 대신 permitAll 을 쓰라고 기동 때마다 WARN 을 남겼다.
  * EnableGlobalMethodSecurity 는 EnableMethodSecurity 로 대체됐다
  * (prePostEnabled 는 기본값이 true 다).
  *
@@ -113,6 +112,7 @@ public class HttpSecurityConfig {
 
 		http.authorizeHttpRequests(auth -> auth
 				.requestMatchers(RegexRequestMatcher.regexMatcher(HttpMethod.OPTIONS, ".*")).permitAll()
+				// RabbitMQ http 인증 백엔드용(RabbitmqHTTPAuthController, @Deprecated). 컨트롤러를 지울 때 같이 지운다
 				.requestMatchers(RegexRequestMatcher.regexMatcher(HttpMethod.POST, ".*/auth/.*")).permitAll()
 				// React 앱의 정적 번들은 공개한다.
 				//
@@ -163,15 +163,6 @@ public class HttpSecurityConfig {
 		}));
 
 		return http.build();
-	}
-
-	/**
-	 * 헬스 체크 경로는 시큐리티 필터 체인을 아예 타지 않는다.
-	 * 예전 configure(WebSecurity) 의 ignoring 과 같은 역할이다.
-	 */
-	@Bean
-	public WebSecurityCustomizer webSecurityCustomizer() {
-		return (WebSecurity web) -> web.ignoring().requestMatchers(RegexRequestMatcher.regexMatcher("/health"));
 	}
 
 	@Bean

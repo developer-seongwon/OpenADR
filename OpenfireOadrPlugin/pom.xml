@@ -10,7 +10,7 @@
 
 	  루트 pom 의 <modules> 에는 넣지 않는다. 부모가 Openfire 의 plugins pom 이고 의존성이
 	  igniterealtime 저장소에 있어서, 앱 빌드와 섞으면 매번 Openfire 서버 전체를 받아야 한다.
-	  docker/openfire/Dockerfile 이 이미지를 만들 때 이 디렉토리를 빌드한다.
+	  docker/run.sh 가 호스트에서 빌드하고(build_openfire_plugin) docker/openfire/Dockerfile 은 jar 만 넣는다.
 	  직접 빌드: cd OpenfireOadrPlugin && mvn package
 	  결과물: target/OpenfireOadrPlugin-openfire-plugin-assembly.jar
 	-->
@@ -18,6 +18,8 @@
 		<groupId>org.igniterealtime.openfire</groupId>
 		<artifactId>plugins</artifactId>
 		<version>5.1.2</version>
+		<!-- 부모는 저장소에서 받는다. 비워 두지 않으면 ../pom.xml(OpenADR 루트)을 먼저 보고 경고를 낸다 -->
+		<relativePath/>
 	</parent>
 
 	<groupId>com.avob.server.openfire</groupId>

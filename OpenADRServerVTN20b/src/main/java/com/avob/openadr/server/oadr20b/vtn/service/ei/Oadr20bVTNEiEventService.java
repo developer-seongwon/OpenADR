@@ -2,8 +2,11 @@ package com.avob.openadr.server.oadr20b.vtn.service.ei;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import jakarta.annotation.Resource;
 import jakarta.xml.bind.JAXBElement;
@@ -46,6 +49,8 @@ import com.avob.openadr.model.oadr20b.oadr.OadrRequestEventType;
 import com.avob.openadr.model.oadr20b.oadr.OadrResponseType;
 import com.avob.openadr.model.oadr20b.pyld.EiCreatedEvent;
 import com.avob.openadr.server.common.vtn.VtnConfig;
+import com.avob.openadr.server.common.vtn.models.Target;
+import com.avob.openadr.server.common.vtn.models.TargetTypeEnum;
 import com.avob.openadr.server.common.vtn.models.demandresponseevent.DemandResponseEvent;
 import com.avob.openadr.server.common.vtn.models.demandresponseevent.DemandResponseEventBaseline;
 import com.avob.openadr.server.common.vtn.models.demandresponseevent.DemandResponseEventResponseRequiredEnum;
@@ -53,6 +58,7 @@ import com.avob.openadr.server.common.vtn.models.demandresponseevent.DemandRespo
 import com.avob.openadr.server.common.vtn.models.demandresponseevent.DemandResponseEventSignalInterval;
 import com.avob.openadr.server.common.vtn.models.demandresponseevent.DemandResponseEventStateEnum;
 import com.avob.openadr.server.common.vtn.models.ven.Ven;
+import com.avob.openadr.server.common.vtn.models.vengroup.VenGroup;
 import com.avob.openadr.server.common.vtn.models.venmarketcontext.VenMarketContext;
 import com.avob.openadr.server.common.vtn.service.DemandResponseEventService;
 import com.avob.openadr.server.common.vtn.service.VenRequestCountService;
@@ -191,6 +197,9 @@ public class Oadr20bVTNEiEventService implements Oadr20bVTNEiService {
 				.newOadr20bDistributeEventBuilder(vtnConfig.getVtnId(), Long.toString(andIncrease))
 				.withEiResponse(eiResponse);
 
+		// 이벤트 eiTarget 에 넣을 그룹을 고르려고 요청한 VEN 이 속한 그룹 이름을 한 번만 읽어 둔다
+		Set<String> venGroupNames = findVenGroupNames(venId);
+
 		for (DemandResponseEvent drEvent : events) {
 			EventDescriptorType createEventDescriptor = createEventDescriptor(drEvent);
 
@@ -205,7 +214,7 @@ public class Oadr20bVTNEiEventService implements Oadr20bVTNEiService {
 			builder.addOadrEvent(Oadr20bEiEventBuilders.newOadr20bDistributeEventOadrEventBuilder()
 					.withEventDescriptor(createEventDescriptor).withActivePeriod(createActivePeriod(drEvent))
 					.addEiEventSignal(createEventSignal(drEvent, createEventDescriptor))
-					.withEiTarget(createEventTarget(venId)).withResponseRequired(needResponse)
+					.withEiTarget(createEventTarget(venId, venGroupNames, drEvent)).withResponseRequired(needResponse)
 					.withEiEventBaseline(createBaseline(drEvent)).build());
 
 		}
@@ -266,14 +275,41 @@ public class Oadr20bVTNEiEventService implements Oadr20bVTNEiService {
 
 	}
 
+	private Set<String> findVenGroupNames(String venUsername) {
+		Ven ven = venService.findOneByUsername(venUsername);
+		if (ven == null || ven.getVenGroups() == null) {
+			return Set.of();
+		}
+		Set<String> names = new HashSet<>();
+		for (VenGroup group : ven.getVenGroups()) {
+			names.add(group.getName());
+		}
+		return names;
+	}
+
 	/**
-	 * Calling ven is the only target onf the drEvent
-	 * 
-	 * @param drEvent
-	 * @return
+	 * 이벤트의 eiTarget. 받는 VEN 의 venID 는 항상 넣는다.
+	 *
+	 * 이벤트 대상에 그룹(GROUP)이 있고 받는 VEN 이 그 그룹에 속해 있으면 groupID 로 같이 넣는다.
+	 * 연계 규격은 자원그룹 단위로 발령한 이벤트를 groupID + venID 로 알려 준다(예: PP0000000690 + VE0000004107).
+	 * 예전에는 이벤트 대상을 보지 않고 venID 하나만 넣었다.
+	 * VEN 이 속하지 않은 그룹은 넣지 않는다. 그 그룹 때문에 이 VEN 에 온 이벤트가 아니다
 	 */
-	private EiTargetType createEventTarget(String callingVenUsername) {
+	private EiTargetType createEventTarget(String callingVenUsername, Set<String> venGroupNames,
+			DemandResponseEvent drEvent) {
 		Oadr20bEiTargetTypeBuilder builder = Oadr20bEiBuilders.newOadr20bEiTargetTypeBuilder();
+		if (drEvent.getTargets() != null) {
+			Set<String> groupIds = new LinkedHashSet<>();
+			for (Target target : drEvent.getTargets()) {
+				if (TargetTypeEnum.GROUP.equals(target.getTargetType())
+						&& venGroupNames.contains(target.getTargetId())) {
+					groupIds.add(target.getTargetId());
+				}
+			}
+			if (!groupIds.isEmpty()) {
+				builder.addGroupId(groupIds);
+			}
+		}
 		builder.addVenId(callingVenUsername);
 		return builder.build();
 	}
@@ -303,8 +339,11 @@ public class Oadr20bVTNEiEventService implements Oadr20bVTNEiService {
 				currentValue = demandResponseEventSignal.getCurrentValue();
 			}
 
+			// signalID 를 지정했으면 그 값을 그대로 쓰고(예: SIG_01, SIG_01-C:VEU00000424B), 없으면 순번을 쓴다
+			String eiSignalId = demandResponseEventSignal.signalIdOrIndex(signalId);
+
 			Oadr20bEiEventSignalTypeBuilder newOadr20bEiEventSignalTypeBuilder = Oadr20bEiEventBuilders
-					.newOadr20bEiEventSignalTypeBuilder("" + signalId,
+					.newOadr20bEiEventSignalTypeBuilder(eiSignalId,
 							SignalNameEnumeratedType.fromValue(demandResponseEventSignal.getSignalName().getLabel()),
 							SignalTypeEnumeratedType.fromValue(demandResponseEventSignal.getSignalType().getLabel()),
 							currentValue);

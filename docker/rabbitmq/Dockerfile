@@ -12,4 +12,5 @@ ENV RABBITMQ_DEFAULT_USER=admin
 ENV RABBITMQ_DEFAULT_PASS=admin
 
 # rabbitmq_amqp1_0 은 뺐다. 4.x 부터 AMQP 1.0 이 코어에 들어갔고 이 플러그인은 빈 껍데기다
-RUN rabbitmq-plugins enable --offline rabbitmq_auth_backend_http rabbitmq_federation rabbitmq_management rabbitmq_tracing rabbitmq_auth_mechanism_ssl rabbitmq_auth_backend_cache
+# rabbitmq_auth_backend_http, rabbitmq_auth_backend_cache 도 뺐다. 인증은 내부 계정만 쓴다(rabbitmq.config 주석 참고)
+RUN rabbitmq-plugins enable --offline rabbitmq_federation rabbitmq_management rabbitmq_tracing rabbitmq_auth_mechanism_ssl

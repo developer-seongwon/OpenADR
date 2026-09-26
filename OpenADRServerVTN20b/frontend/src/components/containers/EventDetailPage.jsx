@@ -183,6 +183,7 @@ export class EventDetailPage extends React.Component {
    addCopySignals = (index) => {
     var copySignals = this.state.copySignals;
     copySignals.push({
+        signalId: "",
         signalName: "",
         signalType: "",
         unitType: "",
