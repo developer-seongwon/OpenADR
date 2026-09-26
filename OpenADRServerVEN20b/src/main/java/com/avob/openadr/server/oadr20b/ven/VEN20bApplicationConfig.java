@@ -3,7 +3,6 @@ package com.avob.openadr.server.oadr20b.ven;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
-import jakarta.annotation.Resource;
 import jakarta.xml.bind.JAXBException;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -27,9 +26,6 @@ public class VEN20bApplicationConfig {
 	@Value("${oadr.security.validateOadrPayloadAgainstXsdFilePath:#{null}}")
 	private String validateOadrPayloadAgainstXsdFilePath;
 
-	@Resource
-	private MultiVtnConfig multiVtnConfig;
-
 	@Bean
 	@Profile("!test")
 	public Oadr20bJAXBContext jaxbContextProd() throws OadrSecurityException, JAXBException {
@@ -49,8 +45,12 @@ public class VEN20bApplicationConfig {
 		return Executors.newScheduledThreadPool(5);
 	}
 
+	// MultiVtnConfig 를 필드로 받으면 이 설정 클래스 자체가 MultiVtnConfig 에 기대게 된다.
+	// MultiVtnConfig -> VtnSessionFactory -> 여기서 만드는 jaxbContextProd 로 다시 돌아와서 순환 참조가 된다.
+	// 쓰는 곳이 이 빈 하나뿐이라 메서드 인자로 받는다
 	@Bean
-	public WebServerFactoryCustomizer<TomcatServletWebServerFactory> servletContainerCustomizer() {
+	public WebServerFactoryCustomizer<TomcatServletWebServerFactory> servletContainerCustomizer(
+			MultiVtnConfig multiVtnConfig) {
 		return new VENEmbeddedServletContainerCustomizer(multiVtnConfig.getMultiConfig(),
 				Oadr20bSecurity.getProtocols(), Oadr20bSecurity.getCiphers());
 	}

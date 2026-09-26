@@ -141,17 +141,30 @@ assert_cert() {
 #
 # 앱까지 띄우는 경우에는 docker-compose.yml 하나만 쓰고,
 # 앱은 IntelliJ 에서 돌리고 인프라만 필요한 경우에만 middleware 파일을 쓴다.
+# Openfire 이미지에 넣을 OpenADR 플러그인을 호스트에서 빌드한다(docker/openfire/Dockerfile 참고).
+# 루트 리액터에 없는 별도 프로젝트라 -f 로 따로 부른다. Openfire 의존성은 처음 한 번만 ~/.m2 로 받는다
+build_openfire_plugin() {
+  resolve_build_tools
+  echo "Building Openfire OpenADR plugin"
+  "$MVN" -B -ntp -f OpenfireOadrPlugin/pom.xml clean package -DskipTests
+}
+
 start_infra() {
   assert_cert
+  build_openfire_plugin
+  # --renew-anon-volumes: rabbitmq, openfire 이미지는 데이터 디렉토리를 익명 볼륨으로 잡는다.
+  # compose 는 컨테이너를 다시 만들어도 익명 볼륨을 이어 붙여서, 예전 실행의 큐 메시지가 남고
+  # 이미지 메이저 버전을 올리면(rabbitmq 3 -> 4) 옛 데이터 때문에 뜨지 못한다. 매번 새로 만든다.
+  # postgres 는 이름 있는 볼륨(oadr_pgdata)이라 영향이 없다(비우는 건 drop_db 가 한다)
   if [ -n "$SERVICES" ]; then
     echo "Starting infra (postgres, rabbitmq, openfire)"
-    docker compose -p "$APP_PROJECT" -f "$APP_COMPOSE" up -d --build postgres rabbitmq openfire
+    docker compose -p "$APP_PROJECT" -f "$APP_COMPOSE" up -d --build --renew-anon-volumes postgres rabbitmq openfire
   else
     stop_app_stack_if_running
     echo "Starting infra (postgres, rabbitmq, openfire)"
     # 서비스를 직접 나열한다. compose 파일에 자바 빌드용 build 서비스도 들어 있는데
     # 그건 인프라만 띄울 때는 필요 없다
-    docker compose -p "$INFRA_PROJECT" -f "$INFRA_COMPOSE" up -d --build postgres rabbitmq openfire
+    docker compose -p "$INFRA_PROJECT" -f "$INFRA_COMPOSE" up -d --build --renew-anon-volumes postgres rabbitmq openfire
   fi
 }
 
@@ -198,6 +211,9 @@ build_images() {
   # pom 만 고쳤을 때 이미지에 반영이 안 되던 것도 같은 이유다
   echo "Building jars (profile: external, frontend)"
   "$MVN" -B clean package -P external,frontend -DskipTests
+  # VTN 의 loader.path 로 들어갈 PostgreSQL 드라이버를 루트 target 에 복사한다.
+  # 예전에는 openadr_build 이미지 안에서 돌렸다. -N 은 루트 pom 에서만 돌린다는 뜻이다
+  "$MVN" -B -N dependency:copy@copy-external-dependency
 
   echo "Building openadr_build image"
   docker compose -p "$APP_PROJECT" -f "$APP_COMPOSE" build build

@@ -12,10 +12,10 @@
 		<version>0.1.0-SNAPSHOT</version>
 	</parent>
 	<dependencies>
+		<!-- jdk15on 아티팩트는 1.70 에서 끝났고 이후는 jdk18on 으로 나온다. 버전은 루트 pom 이 관리한다 -->
 		<dependency>
 			<groupId>org.bouncycastle</groupId>
-			<artifactId>bcpkix-jdk15on</artifactId>
-			<version>1.64</version>
+			<artifactId>bcpkix-jdk18on</artifactId>
 		</dependency>
 	</dependencies>
 	<build>

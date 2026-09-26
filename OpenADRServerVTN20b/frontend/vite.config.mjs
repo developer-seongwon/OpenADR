@@ -33,5 +33,21 @@ export default defineConfig( {
     // Vite 기본값은 assets/ 인데, HttpSecurityConfig 가 인증 없이 열어 주는 경로가 /static/** 이다.
     // CRA 때와 같은 자리에 두면 자바 쪽은 손대지 않아도 된다
     assetsDir: 'static',
+    // 여러 화면이 같이 쓰는 큰 라이브러리를 따로 떼어 둔다. 앱 코드만 바뀌었을 때 브라우저가 이 조각들은
+    // 캐시에서 쓰고, 화면 조각(App.jsx 의 lazy)끼리 같은 라이브러리를 중복으로 싣지 않는다.
+    // 어느 그룹에도 안 걸린 것은 rolldown 이 알아서 나눈다. 높은 priority 가 먼저 가져간다
+    // swagger-client 는 라이브러리 하나가 약 545KB 라 더 쪼갤 수 없다. 경고 기준을 그 위로 둔다
+    chunkSizeWarningLimit: 600,
+    rolldownOptions: {
+      output: {
+        codeSplitting: {
+          groups: [
+            { name: 'react', test: /node_modules[\\/](react|react-dom|scheduler|react-router|react-redux|redux|redux-thunk)[\\/]/, priority: 3 },
+            { name: 'mui', test: /node_modules[\\/](@mui|@emotion|tss-react|@popperjs|react-transition-group)[\\/]/, priority: 2 },
+            { name: 'swagger', test: /node_modules[\\/]swagger-client[\\/]/, priority: 1 },
+          ],
+        },
+      },
+    },
   },
 } );

@@ -1,7 +1,6 @@
 package com.avob.openadr.server.oadr20b.vtn.xmpp;
 
 import jakarta.annotation.Resource;
-import javax.net.ssl.SSLContext;
 
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
@@ -52,11 +51,11 @@ public class XmppConnector {
 	}
 	private XMPPTCPConnection getXmppConnection(String domain, Oadr20bVTNEiService service) throws OadrXmppException {
 		String resource = (service != null) ? service.getServiceName() : "uplink";
-		SSLContext sslContext = vtnConfig.getXmppSslContext();
 		String host = vtnConfig.getXmppHost();
 		int port = vtnConfig.getXmppPort();
+		// smack 4.5 는 SSLContext 대신 키 매니저, 트러스트 매니저를 받는다(OadrXmppClient20b 주석 참고)
 		XMPPTCPConnectionConfiguration anonymousConnection = OadrXmppClient20b.anonymousConnection(host, port, domain,
-				resource, sslContext);
+				resource, vtnConfig.getXmppKeyManagerFactory(), vtnConfig.getXmppTrustManagerFactory());
 		return new XMPPTCPConnection(anonymousConnection);
 	}
 

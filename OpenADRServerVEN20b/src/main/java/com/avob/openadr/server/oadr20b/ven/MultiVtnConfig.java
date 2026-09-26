@@ -14,7 +14,8 @@ import java.util.stream.StreamSupport;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
-import javax.net.ssl.SSLContext;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.TrustManagerFactory;
 import jakarta.xml.bind.JAXBException;
 
 import org.jivesoftware.smack.SmackException.NotConnectedException;
@@ -22,6 +23,7 @@ import org.jxmpp.stringprep.XmppStringprepException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.AbstractEnvironment;
 import org.springframework.core.env.EnumerablePropertySource;
@@ -84,6 +86,19 @@ public class MultiVtnConfig {
 	@Autowired
 	private Environment env;
 
+	/*
+	 * XMPP VTN 연결 재시도. VEN 이 뜰 때 XMPP 서버(Openfire)는 VTN 에 이 VEN 이 등록돼 있는지 물어보고
+	 * 모르는 VEN 이면 세션을 끊는다. 도커 스택처럼 VTN 쪽 VEN 등록(DummyDRProgram)과 VEN 기동이 동시에
+	 * 일어나면 첫 연결이 바인드 단계에서 NoResponseException 으로 실패한다.
+	 * 예전에는 그 VTN 설정을 통째로 포기해서 VEN 을 재시작해야 했다. 몇 번 기다렸다 다시 붙는다.
+	 * 프로퍼티 이름에 oadr.vtn. 을 쓰면 VTN 별 설정으로 읽히므로 oadr.xmpp. 로 둔다
+	 */
+	@Value("${oadr.xmpp.connectAttempts:6}")
+	private int xmppConnectAttempts;
+
+	@Value("${oadr.xmpp.connectRetryDelaySeconds:5}")
+	private long xmppConnectRetryDelaySeconds;
+
 	private Map<String, VtnSessionConfiguration> multiConfig = new HashMap<String, VtnSessionConfiguration>();
 
 	private Map<String, OadrHttpVenClient20b> multiHttpClientConfig = new HashMap<String, OadrHttpVenClient20b>();
@@ -105,6 +120,34 @@ public class MultiVtnConfig {
 			throw new IllegalStateException(String.format(
 					"Invalid config: %s - vtnUrl must be defined for HTTP ven, xmppHost and xmppPort for XMPP ven",
 					session.getSessionId()));
+		}
+	}
+
+	/**
+	 * XMPP 설정이면 연결 실패 때 xmppConnectAttempts 번까지 다시 시도한다. HTTP 는 한 번만 한다
+	 * (HTTP 클라이언트 구성은 네트워크에 붙지 않아서 재시도할 일이 없다).
+	 */
+	private void configureClientWithRetry(VtnSessionConfiguration session)
+			throws OadrSecurityException, JAXBException, OadrVTNInitializationException {
+		boolean xmpp = session.getVtnXmppHost() != null && session.getVtnXmppPort() != null;
+		int attempts = xmpp ? Math.max(1, xmppConnectAttempts) : 1;
+		for (int attempt = 1;; attempt++) {
+			try {
+				configureClient(session);
+				return;
+			} catch (OadrVTNInitializationException e) {
+				if (attempt >= attempts) {
+					throw e;
+				}
+				LOGGER.warn(String.format("XMPP connection to %s failed (%d/%d), retrying in %d s: %s",
+						session.getSessionId(), attempt, attempts, xmppConnectRetryDelaySeconds, e.getMessage()));
+				try {
+					Thread.sleep(xmppConnectRetryDelaySeconds * 1000L);
+				} catch (InterruptedException ie) {
+					Thread.currentThread().interrupt();
+					throw e;
+				}
+			}
 		}
 	}
 
@@ -145,12 +188,22 @@ public class MultiVtnConfig {
 
 			LOGGER.info("Init XMPP VEN client");
 			String password = UUID.randomUUID().toString();
-			SSLContext sslContext = OadrPKISecurity.createSSLContext(session.getVenPrivateKeyPath(),
-					session.getVenCertificatePath(), session.getTrustCertificates(), password);
+			// smack 4.5 는 SSLContext 를 다시 init 해서 안의 키가 사라진다. 키 매니저와 트러스트 매니저를 넘긴다.
+			// 예전 OadrPKISecurity.createSSLContext 와 같게, 키가 없으면 클라이언트 인증서 없이,
+			// 신뢰 인증서가 없으면 아무것도 신뢰하지 않는 빈 저장소로 만든다
+			KeyManagerFactory keyManagerFactory = null;
+			if (session.getVenPrivateKeyPath() != null && session.getVenCertificatePath() != null) {
+				keyManagerFactory = OadrPKISecurity.createKeyManagerFactory(session.getVenPrivateKeyPath(),
+						session.getVenCertificatePath(), password);
+			}
+			List<String> trustCertificates = (session.getTrustCertificates() != null) ? session.getTrustCertificates()
+					: List.of();
+			TrustManagerFactory trustManagerFactory = OadrPKISecurity.createTrustManagerFactory(trustCertificates);
 
 			OadrXmppClient20bBuilder builder = new OadrXmppClient20bBuilder()
 					.withHostAndPort(session.getVtnXmppHost(), session.getVtnXmppPort()).withVenID(session.getVenId())
-					.withResource("client").withSSLContext(sslContext).withListener(xmppVenListeners);
+					.withResource("client").withKeyManagerFactory(keyManagerFactory)
+					.withTrustManagerFactory(trustManagerFactory).withListener(xmppVenListeners);
 
 			if (session.getVtnXmppDomain() != null) {
 				builder.withDomain(session.getVtnXmppDomain());
@@ -218,7 +271,7 @@ public class MultiVtnConfig {
 
 				LOGGER.debug("Valid vtn configuration: " + entry.getKey());
 				LOGGER.info(session.toString());
-				configureClient(session);
+				configureClientWithRetry(session);
 				multiConfig.put(getSessionKey(session.getVtnId(), session.getVenUrl()), session);
 
 				knownVtnId.add(session.getVtnId());

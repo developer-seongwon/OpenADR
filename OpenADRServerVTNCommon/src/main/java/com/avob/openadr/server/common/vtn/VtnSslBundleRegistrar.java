@@ -21,7 +21,8 @@ import com.avob.openadr.server.common.vtn.exception.OadrVTNInitializationExcepti
  * 키스토어와 트러스트스토어만 넘기고 커넥터 구성은 프레임워크가 알아서 한다.
  * 컨테이너가 톰캣이든 Jetty 든 코드가 같고, Boot 4 로 올라가도 이 영역은 그대로다.
  *
- * VtnConfig 의 SSLContext 는 지우지 않았다. XMPP 전송 쪽에서 계속 쓴다.
+ * VtnConfig 의 SSLContext(getSslContext)는 지우지 않았다. 지금은 쓰는 곳이 없다.
+ * XMPP 는 smack 4.5 로 올리면서 SSLContext 대신 키 매니저, 트러스트 매니저를 받는다.
  * 여기서는 같은 PEM 경로를 다시 읽어 키스토어 객체를 만든다.
  * 톰캣 커넥터 설정이 번들의 KeyStore 를 그대로 받아 쓰기 때문이다.
  *

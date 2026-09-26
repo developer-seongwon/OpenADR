@@ -96,12 +96,12 @@ public class Oadr20bVTNEiReportControllerTest extends AbstractVtn20bTest {
 		jaxbContext = Oadr20bJAXBContext.getInstance();
 
 		Mockito.doAnswer((Answer<?>) invocation -> {
-			oadr20bPushListener.receiveCommand(invocation.getArgument(1));
+			runAsJmsListener(() -> oadr20bPushListener.receiveCommand(invocation.getArgument(1)));
 			return null;
 		}).when(jmsTemplate).convertAndSend(Mockito.eq(VenDistributeService.OADR20B_QUEUE), Mockito.any(String.class));
 
 		Mockito.doAnswer((Answer<?>) invocation -> {
-			oadr20bDemandResponseEventCreateListener.receiveEvent(invocation.getArgument(1));
+			runAsJmsListener(() -> oadr20bDemandResponseEventCreateListener.receiveEvent(invocation.getArgument(1)));
 			return null;
 		}).when(jmsTemplate).convertAndSend(Mockito.eq(DemandResponseEventPublisher.OADR20B_QUEUE),
 				Mockito.any(String.class));

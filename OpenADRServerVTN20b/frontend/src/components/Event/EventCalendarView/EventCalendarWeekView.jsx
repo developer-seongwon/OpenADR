@@ -4,7 +4,8 @@ import { Navigate } from 'react-big-calendar/lib'
 
 import TimeGrid from 'react-big-calendar/lib/TimeGrid'
 import { timeGridDefaults } from './timeGridDefaults'
-import moment from 'moment'
+// dayjs 는 불변이라 add() 결과를 다시 받아야 한다(utils/dayjs.js 참고)
+import dayjs from '../../../utils/dayjs'
 
 
 class EventCalendarWeekView extends React.Component {
@@ -28,31 +29,28 @@ class EventCalendarWeekView extends React.Component {
 EventCalendarWeekView.range = date => {
 
 
-  let start = moment(date).startOf('week');;
-  let end = moment(start.toDate())
-  end.add(7, 'day');
+  let start = dayjs(date).startOf('week');
+  let end = start.add(7, 'day');
 
-  let current = moment(start.toDate());
+  let current = start;
   let range = []
 
-  while (current.toDate().getTime() < end.toDate().getTime()) {
+  while (current.isBefore(end)) {
     range.push(current.toDate())
-    current.add(1, 'day')
+    current = current.add(1, 'day')
   }
 
   return range;
 }
 
 EventCalendarWeekView.navigate = (date, action) => {
-  let d = moment(new Date(date));
+  let d = dayjs(date);
   switch (action) {
     case Navigate.PREVIOUS:
-      d.add(-7, 'day')
-      return d.toDate();
+      return d.add(-7, 'day').toDate();
 
     case Navigate.NEXT:
-      d.add(7, 'day');
-      return d.toDate();
+      return d.add(7, 'day').toDate();
 
     case Navigate.TODAY:
     console.log("today")
@@ -67,9 +65,8 @@ EventCalendarWeekView.navigate = (date, action) => {
 
 
 EventCalendarWeekView.title = date => {
-  let start = moment(date).startOf('week');
-  let end = moment(start.toDate());
-  end.add(7, 'day');
+  let start = dayjs(date).startOf('week');
+  let end = start.add(7, 'day');
   return (
     <span>
       <span style={{paddingTop:10}}>{start.format( "MMM Do")} - {end.format( "MMM Do")}</span>

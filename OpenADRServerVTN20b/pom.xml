@@ -45,6 +45,7 @@
 		<dependency>
 			<groupId>org.springframework.security</groupId>
 			<artifactId>spring-security-test</artifactId>
+			<scope>test</scope>
 			<exclusions>
 				<exclusion>
 					<groupId>org.springframework.boot</groupId>
@@ -174,8 +175,8 @@
 					<plugin>
 						<groupId>com.github.eirslett</groupId>
 						<artifactId>frontend-maven-plugin</artifactId>
-						<!-- 1.8.0 은 2019년 버전이다. 새 node 배포본 경로를 따라가려고 올린다 -->
-						<version>1.15.1</version>
+						<!-- 1.8.0 은 2019년 버전이다. 새 node 배포본 경로를 따라가려고 최신으로 올린다(2.x 는 메이븐 3.6 이상) -->
+						<version>2.0.2</version>
 						<configuration>
 							<workingDirectory>frontend</workingDirectory>
 							<installDirectory>target</installDirectory>

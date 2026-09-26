@@ -78,7 +78,7 @@ export class EventCreate extends React.Component {
         intervals: [],
         currentValue: "97.5",
         signalName: "ENERGY_PRICE",
-        signalType: "price",
+        signalType: "PRICE",
         unitType: "euro_per_kwh",
         
       }],

@@ -1,4 +1,6 @@
-FROM rabbitmq:3.8.9-alpine
+# 3.8.9 -> 4.3. 컨테이너를 새로 만들 때 3.x 데이터가 남아 있으면 4.x 가 뜨지 못한다(feature flag).
+# run.sh 가 rabbitmq 컨테이너를 익명 볼륨까지 새로 만든다
+FROM rabbitmq:4.3-alpine
 
 # 빌드 컨텍스트가 리포지토리 루트다(compose 의 context 와 dockerfile 지정).
 # 예전에는 빌드 이미지에서 인증서를 꺼냈는데, 그러면 자바 모듈을 전부 빌드해야
@@ -9,4 +11,5 @@ COPY cert/vtn.oadr.com-rsa.key /opt/oadr-vtn20b/cert/vtn.oadr.com-rsa.key
 ENV RABBITMQ_DEFAULT_USER=admin
 ENV RABBITMQ_DEFAULT_PASS=admin
 
-RUN rabbitmq-plugins enable --offline rabbitmq_amqp1_0 rabbitmq_auth_backend_http rabbitmq_federation rabbitmq_management rabbitmq_tracing rabbitmq_auth_mechanism_ssl rabbitmq_auth_backend_cache 
+# rabbitmq_amqp1_0 은 뺐다. 4.x 부터 AMQP 1.0 이 코어에 들어갔고 이 플러그인은 빈 껍데기다
+RUN rabbitmq-plugins enable --offline rabbitmq_auth_backend_http rabbitmq_federation rabbitmq_management rabbitmq_tracing rabbitmq_auth_mechanism_ssl rabbitmq_auth_backend_cache

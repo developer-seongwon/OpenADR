@@ -10,6 +10,7 @@ import jakarta.annotation.Resource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import com.avob.openadr.model.oadr20b.Oadr20bFactory;
@@ -38,6 +39,10 @@ public class Oadr20bPollService {
 	@Resource
 	private MultiVtnConfig multiVtnConfig;
 
+	// @Lazy: 순환 참조를 끊는다(registerPartyService -> 이 폴링 서비스 -> 페이로드 서비스 -> registerPartyService).
+	// 페이로드 서비스는 VTN 에서 받은 메시지를 각 서비스로 나눠 주는 곳이라 거의 모든 서비스에 기대고,
+	// 이 폴링 서비스는 폴링 응답을 넘길 때만 쓴다. 프록시를 넣고 진짜 서비스는 첫 폴링 때 찾는다(XmppVenListener 와 같음)
+	@Lazy
 	@Resource
 	private Oadr20bVENPayloadService oadr20bVENPayloadService;
 

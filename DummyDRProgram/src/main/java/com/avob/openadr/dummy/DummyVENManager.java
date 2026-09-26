@@ -36,6 +36,7 @@ import com.avob.server.oadrvtn20b.api.MarketContextControllerApi;
 import com.avob.server.oadrvtn20b.api.Oadr20bVenControllerApi;
 import com.avob.server.oadrvtn20b.api.ReportControllerApi;
 import com.avob.server.oadrvtn20b.api.VenControllerApi;
+import com.avob.server.oadrvtn20b.handler.ApiClient;
 import com.avob.server.oadrvtn20b.handler.ApiException;
 import com.avob.server.oadrvtn20b.model.OtherReportDataFloatDto;
 import com.avob.server.oadrvtn20b.model.OtherReportRequestDto;
@@ -45,8 +46,7 @@ import com.avob.server.oadrvtn20b.model.VenCreateDto;
 import com.avob.server.oadrvtn20b.model.VenDto;
 import com.avob.server.oadrvtn20b.model.VenMarketContextDto;
 import com.avob.server.oadrvtn20b.model.VenReportDto;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import tools.jackson.databind.ObjectMapper;
 
 @Configuration
 public class DummyVENManager {
@@ -71,7 +71,9 @@ public class DummyVENManager {
 	@Resource
 	private ReportControllerApi reportControllerApi;
 
-	private Gson gson = new GsonBuilder().create();
+	// 생성 모델이 Jackson 모델이라 Gson 대신 생성 클라이언트와 같은 설정의 ObjectMapper 를 쓴다.
+	// 모르는 필드는 무시한다(FAIL_ON_UNKNOWN_PROPERTIES false)
+	private ObjectMapper objectMapper = ApiClient.createDefaultObjectMapper();
 
 	@PostConstruct
 	public void init() {
@@ -166,7 +168,7 @@ public class DummyVENManager {
 
 	@JmsListener(destination = DummyVTN20bControllerConfig.OADR_APP_NOTIFICATION_REGISTER_REPORT_TOPIC)
 	public void onRegisterReportMessage(final Message<String> message) throws JMSException {
-		VenReportDto fromJson = gson.fromJson(message.getPayload(), VenReportDto.class);
+		VenReportDto fromJson = objectMapper.readValue(message.getPayload(), VenReportDto.class);
 		subscribe(fromJson);
 		LOGGER.info("Receive register from: " + fromJson.getUsername());
 
@@ -174,7 +176,7 @@ public class DummyVENManager {
 
 	@JmsListener(destination = DummyVTN20bControllerConfig.OADR_APP_NOTIFICATION_UPDATE_REPORT_TOPIC_FLOAT)
 	public void onUpdateReportFloatMessage(final Message<String> message) throws JMSException {
-		List<OtherReportDataFloatDto> fromJson = gson.fromJson(message.getPayload(),
+		List<OtherReportDataFloatDto> fromJson = objectMapper.readValue(message.getPayload(),
 				DummyVTN20bControllerConfig.floatListType);
 		fromJson.forEach(updateReport -> {
 			Instant ofEpochMilli = Instant.ofEpochMilli(updateReport.getStart());
@@ -241,8 +243,9 @@ public class DummyVENManager {
 		});
 
 		try {
-			oadr20bVenControllerApi.subscribeOtherReportCapabilityDescriptionRidUsingPOST(subscriptions,
-					venReport.getUsername());
+			// 생성기가 바뀌면서 인자 순서가 예전(subscriptions, venID)과 반대가 됐다
+			oadr20bVenControllerApi.subscribeOtherReportCapabilityDescriptionRidUsingPOST(venReport.getUsername(),
+					subscriptions);
 		} catch (ApiException e) {
 			LOGGER.error("Can't subcribe", e);
 		}

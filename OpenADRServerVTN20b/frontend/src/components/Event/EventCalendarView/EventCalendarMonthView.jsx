@@ -3,7 +3,8 @@ import React from 'react';
 import { Navigate } from 'react-big-calendar/lib'
 
 import MonthView from 'react-big-calendar/lib/Month'
-import moment from 'moment'
+// dayjs 는 불변이라 add() 결과를 다시 받아야 한다(utils/dayjs.js 참고)
+import dayjs from '../../../utils/dayjs'
 
 
 class EventCalendarMonthView extends MonthView {
@@ -22,30 +23,28 @@ class EventCalendarMonthView extends MonthView {
 EventCalendarMonthView.range = date => {
 
 
-  let start = moment(date).startOf('month');
-  let end = moment(date).endOf('month');
+  let start = dayjs(date).startOf('month');
+  let end = dayjs(date).endOf('month');
 
-  let current = moment(start.toDate());
+  let current = start;
   let range = []
 
-  while (current.toDate().getTime() < end.toDate().getTime()) {
+  while (current.isBefore(end)) {
     range.push(current.toDate())
-    current.add(1, 'day')
+    current = current.add(1, 'day')
   }
 
   return range;
 }
 
 EventCalendarMonthView.navigate = (date, action) => {
-  let d = moment(new Date(date));
+  let d = dayjs(date);
   switch (action) {
     case Navigate.PREVIOUS:
-      d.add(-1, 'month')
-      return d.toDate();
+      return d.add(-1, 'month').toDate();
 
     case Navigate.NEXT:
-      d.add(1, 'month');
-      return d.toDate();
+      return d.add(1, 'month').toDate();
 
     case Navigate.TODAY:
       date = new Date();     
@@ -61,7 +60,7 @@ EventCalendarMonthView.navigate = (date, action) => {
 EventCalendarMonthView.title = date => {
   return (
     <span>
-      <span style={{paddingTop:10}}>{moment(date).format( "YYYY MMMM")}</span>
+      <span style={{paddingTop:10}}>{dayjs(date).format( "YYYY MMMM")}</span>
       <span className="rbc-btn-group" style={{float:"right"}} >
         <button type="button" className={(EventCalendarMonthView.color === "status") ? "rbc-active" : ""} onClick={(e) => {EventCalendarMonthView.onColorChange("status")}}>Color Status</button>
         <button type="button" className={(EventCalendarMonthView.color  === "market") ? "rbc-active" : ""} onClick={(e) => {EventCalendarMonthView.onColorChange("market")}}>Color Market</button>

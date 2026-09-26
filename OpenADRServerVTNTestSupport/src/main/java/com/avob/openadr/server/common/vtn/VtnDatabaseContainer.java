@@ -14,7 +14,8 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
  */
 public final class VtnDatabaseContainer {
 
-	private static final PostgreSQLContainer INSTANCE = new PostgreSQLContainer("postgres:15-alpine");
+	// 도커 스택(docker/postgres)과 같은 메이저 버전을 쓴다
+	private static final PostgreSQLContainer INSTANCE = new PostgreSQLContainer("postgres:18-alpine");
 
 	static {
 		INSTANCE.start();

@@ -15,17 +15,32 @@ services:
     # DB 를 언제 비울지 스크립트가 정할 수 없었다. 볼륨으로 빼두면 컨테이너를 새로 만들어도
     # 데이터가 남고, 비우고 싶을 때만 run.sh 가 볼륨을 지운다.
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql
+    # 앱이 "컨테이너가 떴다"가 아니라 "받을 준비가 됐다"를 기다리게 한다(depends_on 의 condition).
+    # -h 127.0.0.1 로 TCP 를 본다. 첫 기동 때 init-*.sh 를 도는 임시 서버는 유닉스 소켓만 열어서,
+    # 소켓으로 보면 초기화가 끝나기 전에 준비됐다고 나온다
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U postgres"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
 
   openfire:
     build:
       context: ..
       dockerfile: docker/openfire/Dockerfile
     depends_on:
-      - "postgres"
+      postgres:
+        condition: service_healthy
     ports:
       - "5222:5222"
       - "9090:9090"
+    # 5222 가 열리면 플러그인(OpenADR)까지 올라온 뒤다. 이미지에 nc 가 없어서 bash 의 /dev/tcp 로 본다
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/5222"]
+      interval: 3s
+      timeout: 3s
+      retries: 60
     networks:
       default:
       http:
@@ -43,14 +58,24 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_port_connectivity"]
+      interval: 5s
+      timeout: 10s
+      retries: 30
 
 
+  # 기동 순서. 예전에는 depends_on 이 "컨테이너 시작"만 기다려서, Openfire 가 늦게 뜨면
+  # VTN 의 XMPP 연결(XmppConnector)이 실패해 VTN 이 죽었다. 인프라는 healthcheck 로 준비를 기다린다
   vtn20b:
     build: ./vtn20b
     depends_on:
-      - "postgres"
-      - "rabbitmq"
-      - "openfire"
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      openfire:
+        condition: service_healthy
     ports:
       - "8181:8181"
     networks:
@@ -64,8 +89,10 @@ services:
     build: ./dummy-drprogram
     restart: always
     depends_on:
-      - "rabbitmq"
-      - "vtn20b"
+      rabbitmq:
+        condition: service_healthy
+      vtn20b:
+        condition: service_started
     networks:
       default:
       http:
@@ -76,9 +103,12 @@ services:
     ports:
       - "8083:8083"
     depends_on:
-      - "openfire"
-      - "vtn20b"
-      - "dummy-drprogram"
+      openfire:
+        condition: service_healthy
+      vtn20b:
+        condition: service_started
+      dummy-drprogram:
+        condition: service_started
     networks:
       xmpp:
       http:

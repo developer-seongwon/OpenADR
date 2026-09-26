@@ -1,14 +1,15 @@
 package com.avob.openadr.dummy;
 
-import java.io.FileNotFoundException;
-import java.io.FileReader;
+import java.io.File;
 import java.net.HttpURLConnection;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import com.avob.server.oadrvtn20b.api.DemandResponseControllerApi;
 import com.avob.server.oadrvtn20b.api.MarketContextControllerApi;
+import com.avob.server.oadrvtn20b.handler.ApiClient;
 import com.avob.server.oadrvtn20b.handler.ApiException;
 import com.avob.server.oadrvtn20b.handler.ApiResponse;
 import com.avob.server.oadrvtn20b.model.DemandResponseEventCreateDto;
@@ -26,8 +28,8 @@ import com.avob.server.oadrvtn20b.model.DemandResponseEventFilter;
 import com.avob.server.oadrvtn20b.model.DemandResponseEventFilter.TypeEnum;
 import com.avob.server.oadrvtn20b.model.DemandResponseEventReadDto;
 import com.avob.server.oadrvtn20b.model.VenMarketContextDto;
-import com.google.gson.Gson;
-import com.google.gson.stream.JsonReader;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 @Service
 public class DummyEventManager {
@@ -35,6 +37,9 @@ public class DummyEventManager {
 	private static final Logger LOGGER = LoggerFactory.getLogger(DummyEventManager.class);
 
 	private static final String X_TOTAL_COUNT = "X-total-count";
+
+	/** 기동할 때 이벤트를 채워 두는 범위(시간). 이미 있는 이벤트를 찾는 조회 범위도 같아야 한다 */
+	private static final int NEXT_HOURS = 24;
 
 	@Resource
 	private MarketContextControllerApi marketContextControllerApi;
@@ -83,15 +88,15 @@ public class DummyEventManager {
 			return;
 		}
 
-		Gson gson = new Gson();
+		// 생성 모델이 Jackson 모델이라 Gson 대신 생성 클라이언트와 같은 설정의 ObjectMapper 로 읽는다
+		ObjectMapper objectMapper = ApiClient.createDefaultObjectMapper();
 
 		for (String filePath : dummyVTN20bControllerConfig.getEventTemplate()) {
-			JsonReader reader;
 			try {
-				reader = new JsonReader(new FileReader(filePath));
-				DemandResponseEventCreateDto fromJson = gson.fromJson(reader, DemandResponseEventCreateDto.class);
+				DemandResponseEventCreateDto fromJson = objectMapper.readValue(new File(filePath),
+						DemandResponseEventCreateDto.class);
 				eventTemplate.add(fromJson);
-			} catch (FileNotFoundException e) {
+			} catch (JacksonException e) {
 				LOGGER.error("Event template: " + filePath + " cannot be parsed", e);
 				return;
 			}
@@ -106,7 +111,9 @@ public class DummyEventManager {
 		OffsetDateTime now = OffsetDateTime.now();
 		OffsetDateTime truncatedTo = now.truncatedTo(ChronoUnit.HOURS);
 		Long start = truncatedTo.toEpochSecond() * 1000;
-		Long end = truncatedTo.plusHours(6).toEpochSecond() * 1000;
+		// 원래 6시간만 조회하고 24시간을 만들었다. 6시간 뒤의 이벤트는 못 찾아서 재기동마다 다시 만들었으니
+		// 만드는 범위와 같게 조회한다
+		Long end = truncatedTo.plusHours(NEXT_HOURS).toEpochSecond() * 1000;
 		Integer totalCount;
 		int page = 0;
 		try {
@@ -117,6 +124,13 @@ public class DummyEventManager {
 						.searchUsingPOSTWithHttpInfo(Arrays.asList(filter), end, page, null, start);
 				totalCount = Integer.valueOf(response.getHeaders().get(X_TOTAL_COUNT).get(0));
 				page++;
+				// 원래 받은 페이지를 events 에 안 담아서, 이벤트가 하나라도 있으면
+				// events.size() 가 0 에 머물러 페이지를 끝없이 요청했다. 빈 페이지가 오면 멈춘다
+				List<DemandResponseEventReadDto> data = response.getData();
+				if (data == null || data.isEmpty()) {
+					break;
+				}
+				events.addAll(data);
 			} while (events.size() < totalCount);
 
 			events.forEach(event -> {
@@ -129,23 +143,26 @@ public class DummyEventManager {
 			return;
 		}
 
-		this.ensureEventAreCreatedForNextHour(truncatedTo, events, 24);
+		this.ensureEventAreCreatedForNextHour(truncatedTo, events, NEXT_HOURS);
 
 	}
 
 	private void ensureEventAreCreatedForNextHour(OffsetDateTime start, List<DemandResponseEventReadDto> existingEvents,
 			int nextXHours) {
 
-		List<Long> existingStart = new ArrayList<>();
+		// 원래 existingStart 를 모아 놓고 쓰지 않아서 DummyDRProgram 을 띄울 때마다 같은 이벤트가 또 생겼다.
+		// 템플릿마다 시작 시각이 겹칠 수 있으므로(thermostat PT4H, fastDR PT30M 이 둘 다 정시에 시작)
+		// 시작 시각과 길이를 함께 본다
+		Set<String> existing = new HashSet<>();
 		for (DemandResponseEventReadDto event : existingEvents) {
-			existingStart.add(event.getActivePeriod().getStart());
+			if (event.getActivePeriod() != null) {
+				existing.add(eventKey(event.getActivePeriod().getStart(), event.getActivePeriod().getDuration()));
+			}
 		}
 
 		Long end = start.toInstant().toEpochMilli() + nextXHours * 60 * 60 * 1000;
 
 		eventTemplate.forEach(template -> {
-
-			OffsetDateTime temp = start;
 
 			String duration = template.getActivePeriod().getDuration();
 
@@ -156,13 +173,25 @@ public class DummyEventManager {
 
 			long durationMillis = parse.toMillis();
 
-			LOGGER.info(String.format("%s %s %s", temp.toInstant().toEpochMilli(), durationMillis, end));
+			// 이벤트 칸을 기동 시각(정시)이 아니라 epoch 기준 길이의 배수에 맞춘다.
+			// 기동 시각 기준이면 다른 시각에 다시 띄웠을 때 칸이 어긋나서(PT4H 가 1시, 5시 ... 대신 2시, 6시 ...)
+			// 이미 있는 이벤트와 겹치는 새 이벤트가 생긴다. 첫 칸은 지금 진행 중인 칸일 수 있다
+			long slotStart = Math.floorDiv(start.toInstant().toEpochMilli(), durationMillis) * durationMillis;
 
-			while (temp.toInstant().toEpochMilli() + durationMillis < end) {
+			LOGGER.info(String.format("%s %s %s", slotStart, durationMillis, end));
 
-				template.getActivePeriod().setStart(temp.toInstant().toEpochMilli());
+			while (slotStart + durationMillis < end) {
+
+				long eventStart = slotStart;
+				slotStart += durationMillis;
+
+				if (existing.contains(eventKey(eventStart, duration))) {
+					continue;
+				}
+
+				template.getActivePeriod().setStart(eventStart);
 				if (template.getBaseline() != null) {
-					template.getBaseline().setStart(temp.toInstant().toEpochMilli());
+					template.getBaseline().setStart(eventStart);
 				}
 
 				try {
@@ -175,12 +204,24 @@ public class DummyEventManager {
 					LOGGER.error("Event can't be created", e);
 				}
 
-				temp = temp.plus(durationMillis, ChronoUnit.MILLIS);
-
 			}
 
 		});
 
+	}
+
+	/**
+	 * 이미 있는 이벤트인지 볼 때 쓰는 키. 길이는 문자열 모양(PT1H, PT60M)이 달라도 같게 보도록 밀리초로 바꾼다
+	 */
+	private static String eventKey(Long start, String duration) {
+		long durationMillis;
+		try {
+			durationMillis = Duration.parse(duration).toMillis();
+		} catch (RuntimeException e) {
+			// 길이가 없거나 못 읽으면 시작 시각만으로 본다
+			durationMillis = -1;
+		}
+		return start + "/" + durationMillis;
 	}
 
 }

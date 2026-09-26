@@ -1,0 +1,67 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<!--
+	  OpenADR 용 Openfire 플러그인. XMPP 로 붙는 VEN, VTN 을 인증하고 메시지를 VTN 서비스별 JID 로 돌린다.
+	  원래 별도 저장소(github.com/avob/openfire-oadr-plugin, MIT, 같은 저자)에서 Openfire 4.4 용 jar 로만
+	  받아 쓰던 것을 Openfire 5 로 올리면서 이 저장소로 옮겼다.
+
+	  루트 pom 의 <modules> 에는 넣지 않는다. 부모가 Openfire 의 plugins pom 이고 의존성이
+	  igniterealtime 저장소에 있어서, 앱 빌드와 섞으면 매번 Openfire 서버 전체를 받아야 한다.
+	  docker/openfire/Dockerfile 이 이미지를 만들 때 이 디렉토리를 빌드한다.
+	  직접 빌드: cd OpenfireOadrPlugin && mvn package
+	  결과물: target/OpenfireOadrPlugin-openfire-plugin-assembly.jar
+	-->
+	<parent>
+		<groupId>org.igniterealtime.openfire</groupId>
+		<artifactId>plugins</artifactId>
+		<version>5.1.2</version>
+	</parent>
+
+	<groupId>com.avob.server.openfire</groupId>
+	<artifactId>OpenfireOadrPlugin</artifactId>
+	<version>0.1.0</version>
+	<name>OpenfireOadrPlugin</name>
+	<description>XMPP openfire openadr plugin</description>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+	</properties>
+
+	<repositories>
+		<!-- 부모 pom 과 xmppserver 가 여기 있다 -->
+		<repository>
+			<id>igniterealtime</id>
+			<name>Ignite Realtime Repository</name>
+			<url>https://igniterealtime.org/archiva/repository/maven/</url>
+		</repository>
+	</repositories>
+
+	<pluginRepositories>
+		<!-- 플러그인 묶음을 만드는 openfire-plugin-assembly-descriptor 가 여기 있다 -->
+		<pluginRepository>
+			<id>igniterealtime</id>
+			<name>Ignite Realtime Repository</name>
+			<url>https://igniterealtime.org/archiva/repository/maven/</url>
+		</pluginRepository>
+	</pluginRepositories>
+
+	<build>
+		<sourceDirectory>src/java</sourceDirectory>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+			</plugin>
+			<!-- 관리 콘솔 JSP 를 미리 컴파일한다. Openfire 5 는 Jetty 12 의 ee8(javax.servlet) 환경이다.
+			     버전과 설정은 부모 pom 이 잡는다(4.4 때는 jetty-jspc-maven-plugin 을 직접 적었다) -->
+			<plugin>
+				<groupId>org.eclipse.jetty.ee8</groupId>
+				<artifactId>jetty-ee8-jspc-maven-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</build>
+</project>

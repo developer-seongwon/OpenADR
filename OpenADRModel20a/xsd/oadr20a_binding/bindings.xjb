@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <bindings version="3.0" xmlns="https://jakarta.ee/xml/ns/jaxb"
-	xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:namespace="http://jaxb2-commons.dev.java.net/namespace-prefix">
+	xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:namespace="urn:jaxb.jvnet.org:plugin:namespace-prefix">
 	<bindings schemaLocation="../oadr20a_schema/oadr_20a.xsd">
 		<schemaBindings>
 			<package name="com.avob.openadr.model.oadr20a.oadr" />

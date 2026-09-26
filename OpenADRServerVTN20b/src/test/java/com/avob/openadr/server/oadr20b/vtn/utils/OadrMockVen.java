@@ -9,7 +9,7 @@ import java.util.Optional;
 import jakarta.xml.bind.JAXBException;
 
 import jakarta.servlet.http.HttpServletResponse;
-import org.jivesoftware.smack.packet.Message;
+import org.jivesoftware.smack.packet.StanzaBuilder;
 import org.jxmpp.jid.EntityFullJid;
 import org.jxmpp.jid.Jid;
 import org.jxmpp.jid.impl.JidCreate;
@@ -71,15 +71,12 @@ public class OadrMockVen {
 	}
 
 	public <T> T xmppCall(XmppListener listener, Object payload, Class<T> klass) throws Exception {
-		Message msg = new Message();
-
+		// smack 4.4 부터 Message 는 new 로 못 만들고 빌더로 만든다
 		EntityFullJid entityFullFrom = JidCreate.entityFullFrom(ven.getPushUrl());
-		msg.setFrom(entityFullFrom);
 		if (ven.getXmlSignature()) {
 			String sign = xmlSignatureService.sign(payload);
-			msg.setBody(sign);
 
-			listener.processStanza(msg);
+			listener.processStanza(StanzaBuilder.buildMessage().from(entityFullFrom).setBody(sign).build());
 
 			Optional<InvocationOnMock> popResponse = oadrMockEiXmpp.popResponse();
 			if (!popResponse.isPresent()) {
@@ -97,8 +94,7 @@ public class OadrMockVen {
 			return Oadr20bFactory.getSignedObjectFromOadrPayload(unmarshal, klass);
 		} else {
 			String content = jaxbcontext.marshalRoot(payload);
-			msg.setBody(content);
-			listener.processStanza(msg);
+			listener.processStanza(StanzaBuilder.buildMessage().from(entityFullFrom).setBody(content).build());
 
 			Optional<InvocationOnMock> popResponse = oadrMockEiXmpp.popResponse();
 			if (!popResponse.isPresent()) {

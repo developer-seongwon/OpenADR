@@ -48,48 +48,51 @@ import Toolbar from '@mui/material/Toolbar';
 
 
 
+// name 은 백엔드 DemandResponseEventSignalTypeEnum 의 상수 이름이다(API 가 LEVEL, PRICE_MULTIPLIER 처럼 이름으로 주고받는다).
+// 원래 OpenADR 라벨(level, priceMultiplier)을 보내서 이벤트 생성이 실패하고 상세 화면 선택값이 비었다.
+// signalName 쪽(SIMPLE, ENERGY_PRICE)은 원래부터 이름을 썼다. 화면에는 label 이 보인다
 const signalTypeMenuItems = [{
-    name: "delta",
+    name: "DELTA",
     label: "Delta",
     description: "Signal indicates the amount to change from what one would have used without the signal",
   }, {
-    name: "level",
+    name: "LEVEL",
     label: "Level",
     description: "Signal indicates a program level" 
   }, {
-    name: "multiplier",
+    name: "MULTIPLIER",
     label: "Multiplier",
     description: "Signal indicates a multiplier applied to the current rate of delivery or usage from what one would have used without the signal" 
   } , {
-    name: "price",
+    name: "PRICE",
     label: "Price",
     description: "Signal indicates the price" 
   } , {
-    name: "priceMultiplier",
+    name: "PRICE_MULTIPLIER",
     label: "Price Multiplier",
     description: "Signal indicates the price multiplier. Extended price is the computed price value multiplied by the number of units" 
   } , {
-    name: "priceRelative",
+    name: "PRICE_RELATIVE",
     label: "Price Relative",
     description: "Signal indicates the relative price" 
   } , {
-    name: "setpoint",
+    name: "SETPOINT",
     label: "Set Point",
     description: "Signal indicates a target amount of units" 
   } , {
-    name: "x-loadControlCapacity",
+    name: "X_LOAD_CONTROL_CAPACITY",
     label: "Load Control Capacity",
     description: "This is an instruction for the load controller to operate at a level that is some percentage of its maximum load consumption capacity. This can be mapped to specific load controllers to do things like duty cycling. Note that 1.0 refers to 100% consumption. In the case of simple ON/OFF type devices then 0 = OFF and 1 = ON" 
   } , {
-    name: "x-loadControlLevelOffset",
+    name: "X_LOAD_CONTROL_LEVEL_OFFSET",
     label: "Load Control Level Offset",
     description: "Discrete integer levels that are relative to normal operations where 0 is normal operations" 
   }  , {
-    name: "x-loadControlPercentOffset",
+    name: "X_LOAD_CONTROL_PERCENT_OFFSET",
     label: "Load Control Percent Offset",
     description: "Percentage change from normal load control operations" 
   } , {
-    name: "x-loadControlSetPoint",
+    name: "X_LOAD_CONTROL_SETPOINT",
     label: "Load Control Set Point",
     description: "Load controller set points" 
   } 
@@ -182,99 +185,99 @@ const unitMenuItems = {
 
 const validSignalCombination = [{
   signalName: "SIMPLE",
-  signalType: "level",
+  signalType: "LEVEL",
   unit: unitMenuItems.none
 }, {
   signalName: "ELECTRICITY_PRICE",
-  signalType: "price",
+  signalType: "PRICE",
   unit: unitMenuItems.currencyPerKwh
 } , {
   signalName: "ELECTRICITY_PRICE",
-  signalType: "priceRelative",
+  signalType: "PRICE_RELATIVE",
   unit: unitMenuItems.currencyPerKwh
 } , {
   signalName: "ELECTRICITY_PRICE",
-  signalType: "priceMultiplier",
+  signalType: "PRICE_MULTIPLIER",
   unit: unitMenuItems.none
 }, {
   signalName: "ENERGY_PRICE",
-  signalType: "priceRelative",
+  signalType: "PRICE_RELATIVE",
   unit: unitMenuItems.currencyPerKwh
 }, {
   signalName: "ENERGY_PRICE",
-  signalType: "priceMultiplier",
+  signalType: "PRICE_MULTIPLIER",
   unit: unitMenuItems.none
 }, {
   signalName: "ENERGY_PRICE",
-  signalType: "price",
+  signalType: "PRICE",
   unit: unitMenuItems.currencyPerKwh
 }, {
   signalName: "DEMAND_CHARGE",
-  signalType: "priceRelative",
+  signalType: "PRICE_RELATIVE",
   unit: unitMenuItems.currencyPerKwh
 }, {
   signalName: "DEMAND_CHARGE",
-  signalType: "priceMultiplier",
+  signalType: "PRICE_MULTIPLIER",
   unit: unitMenuItems.none
 }, {
   signalName: "DEMAND_CHARGE",
-  signalType: "price",
+  signalType: "PRICE",
   unit: unitMenuItems.currencyPerKwh
 }, {
   signalName: "BID_PRICE",
-  signalType: "price",
+  signalType: "PRICE",
   unit: unitMenuItems.currencyPerKwh
 }, {
   signalName: "BID_LOAD",
-  signalType: "setpoint",
+  signalType: "SETPOINT",
   unit: unitMenuItems.power
 }, {
   signalName: "BID_ENERGY",
-  signalType: "setpoint",
+  signalType: "SETPOINT",
   unit: unitMenuItems.energy
 }, {
   signalName: "CHARGE_STATE",
-  signalType: "setpoint",
+  signalType: "SETPOINT",
   unit: unitMenuItems.energy
 }, {
   signalName: "CHARGE_STATE",
-  signalType: "delta",
+  signalType: "DELTA",
   unit: unitMenuItems.energy
 }, {
   signalName: "CHARGE_STATE",
-  signalType: "multiplier",
+  signalType: "MULTIPLIER",
   unit: unitMenuItems.none
 }, {
   signalName: "LOAD_DISPATCH",
-  signalType: "setpoint",
+  signalType: "SETPOINT",
   unit: unitMenuItems.power
 }, {
   signalName: "LOAD_DISPATCH",
-  signalType: "delta",
+  signalType: "DELTA",
   unit: unitMenuItems.power
 }, {
   signalName: "LOAD_DISPATCH",
-  signalType: "multiplier",
+  signalType: "MULTIPLIER",
   unit: unitMenuItems.none
 }, {
   signalName: "LOAD_DISPATCH",
-  signalType: "level",
+  signalType: "LEVEL",
   unit: unitMenuItems.power
 }, {
   signalName: "LOAD_CONTROL",
-  signalType: "x-loadControlCapacity",
+  signalType: "X_LOAD_CONTROL_CAPACITY",
   unit: unitMenuItems.none
 }, {
   signalName: "LOAD_CONTROL",
-  signalType: "x-loadControlPercentOffset",
+  signalType: "X_LOAD_CONTROL_PERCENT_OFFSET",
   unit: unitMenuItems.none
 }, {
   signalName: "LOAD_CONTROL",
-  signalType: "x-loadControlSetPoint",
+  signalType: "X_LOAD_CONTROL_SETPOINT",
   unit: unitMenuItems.none
 }, {
   signalName: "LOAD_CONTROL",
-  signalType: "x-loadControlLevelOffset",
+  signalType: "X_LOAD_CONTROL_LEVEL_OFFSET",
   unit: unitMenuItems.none
 }];
 

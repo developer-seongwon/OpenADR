@@ -1,7 +1,11 @@
 package com.avob.openadr.server.oadr20b.vtn;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.TransactionTemplate;
 
 /**
  * VTN20bSecurityApplicationTest 컨텍스트를 쓰는 테스트들의 공통 상위 클래스.
@@ -23,5 +27,24 @@ public abstract class AbstractVtn20bTest {
 
 	@MockitoBean
 	protected JmsTemplate jmsTemplate;
+
+	@Autowired
+	private PlatformTransactionManager transactionManager;
+
+	/**
+	 * 목 JmsTemplate 에 걸린 큐 리스너를 운영에서처럼 트랜잭션 밖에서 돌린다.
+	 *
+	 * VTN 은 drevent, command 큐 메시지를 트랜잭션 커밋 뒤에 보낸다(AfterCommit).
+	 * 테스트는 목 JmsTemplate 의 convertAndSend 에서 리스너를 바로 부르므로 리스너가 커밋 직후(afterCommit)에
+	 * 같은 스레드에서 돈다. 이때는 끝난 트랜잭션이 아직 묶여 있어서 그대로 부르면 리스너 안의 DB 작업이
+	 * 이미 커밋된 트랜잭션에 끼어들어 반영되지 않는다.
+	 * NOT_SUPPORTED 로 그 트랜잭션을 잠시 떼어 내면, 운영의 리스너 스레드처럼 트랜잭션 없이 시작하고
+	 * 안에서 부르는 서비스(@Transactional)는 저마다 새 트랜잭션을 연다.
+	 */
+	protected void runAsJmsListener(Runnable listener) {
+		TransactionTemplate template = new TransactionTemplate(transactionManager);
+		template.setPropagationBehavior(TransactionDefinition.PROPAGATION_NOT_SUPPORTED);
+		template.executeWithoutResult(status -> listener.run());
+	}
 
 }

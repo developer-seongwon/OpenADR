@@ -2,27 +2,31 @@
 import { Routes, Route, Navigate, useLocation, useParams } from 'react-router';
 
 import LoginPage from './components/LoginPage';
-import AboutPage from './components/AboutPage';
 import HomePage from './components/HomePage';
 import NotFoundPage from './components/NotFoundPage';
-import VtnConfigurationPage from './components/containers/VtnConfigurationPage';
-import VenPage from './components/containers/VenPage'
-import AccountPage from './components/containers/AccountPage'
-import AccountUserCreatePage from './components/containers/AccountUserCreatePage'
-import AccountAppCreatePage from './components/containers/AccountAppCreatePage'
-import EventPage from './components/containers/EventPage'
-import EventDetailPage from './components/containers/EventDetailPage'
-import EventCreatePage from './components/containers/EventCreatePage'
-import VenDetailPage from './components/containers/VenDetailPage'
-import VenDetailCreateReportPage from './components/containers/VenDetailCreateReportPage'
-import VenDetailReportPage from './components/containers/VenDetailReportPage'
-import VenDetailReportRequestPage from './components/containers/VenDetailReportRequestPage'
-
-
-import VenCreatePage from './components/containers/VenCreatePage'
 
 import PropTypes from 'prop-types';
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
+import LinearProgress from '@mui/material/LinearProgress';
+
+// 화면별 코드 분할. 예전에는 모든 화면을 여기서 바로 import 해서 번들 하나(약 1.8MB)에 다 들어갔다.
+// 로그인, 홈, 404 처럼 처음에 바로 보이는 화면만 그대로 두고 나머지는 처음 열 때 따로 받아 온다.
+// 이벤트 캘린더(react-big-calendar, dayjs) 같은 화면 전용 의존성도 그 화면 조각으로 빠진다.
+// 받는 동안은 아래 <Suspense> 의 진행 막대가 보인다
+const AboutPage = lazy( () => import( './components/AboutPage' ) );
+const VtnConfigurationPage = lazy( () => import( './components/containers/VtnConfigurationPage' ) );
+const VenPage = lazy( () => import( './components/containers/VenPage' ) );
+const AccountPage = lazy( () => import( './components/containers/AccountPage' ) );
+const AccountUserCreatePage = lazy( () => import( './components/containers/AccountUserCreatePage' ) );
+const AccountAppCreatePage = lazy( () => import( './components/containers/AccountAppCreatePage' ) );
+const EventPage = lazy( () => import( './components/containers/EventPage' ) );
+const EventDetailPage = lazy( () => import( './components/containers/EventDetailPage' ) );
+const EventCreatePage = lazy( () => import( './components/containers/EventCreatePage' ) );
+const VenDetailPage = lazy( () => import( './components/containers/VenDetailPage' ) );
+const VenDetailCreateReportPage = lazy( () => import( './components/containers/VenDetailCreateReportPage' ) );
+const VenDetailReportPage = lazy( () => import( './components/containers/VenDetailReportPage' ) );
+const VenDetailReportRequestPage = lazy( () => import( './components/containers/VenDetailReportRequestPage' ) );
+const VenCreatePage = lazy( () => import( './components/containers/VenCreatePage' ) );
 
 
 
@@ -307,7 +311,7 @@ class App extends React.Component {
         </Drawer>
         <main className={ classes.content }>
           <div className={ classes.appBarSpacer } />
-          {(config.connectionError == null) ? <Routes>
+          {(config.connectionError == null) ? <Suspense fallback={ <LinearProgress /> }><Routes>
             { privateRoute( '/', HomePage ) }
 
             { publicRoute( '/login', LoginPage ) }
@@ -344,7 +348,7 @@ class App extends React.Component {
             {/* <Switch> 안에 AccountAppCreatePage 라는 글자가 그냥 적혀 있었다. <Routes> 는
                 Route 가 아닌 자식을 받으면 에러를 내서 지웠다 */}
             { publicRoute( '*', NotFoundPage ) }
-          </Routes>: null}
+          </Routes></Suspense>: null}
 
 
           {(config.connectionError != null) ? <div>

@@ -55,6 +55,8 @@
 
 # compile foolder
 */target
+# 루트 target 은 run.sh 가 PostgreSQL 드라이버를 복사해 두는 곳이다(dependency:copy@copy-external-dependency)
+/target/
 
 .vagrant/**/.vagrant
 .vagrant/vtn20b_postgres/provisioning/playbook.retry

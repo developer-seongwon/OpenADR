@@ -16,26 +16,15 @@
 			<artifactId>OpenADRSecurity</artifactId>
 		</dependency>
 
-		<dependency>
-			<groupId>javax.activation</groupId>
-			<artifactId>activation</artifactId>
-		</dependency>
+		<!-- javax.activation 1.1.1 은 뺐다. JAXB 4 는 jakarta.activation 을 쓰고
+		     jakarta.xml.bind-api 가 그걸 끌고 온다. Model20a 도 원래 없이 돌았다 -->
 		<dependency>
 			<groupId>jakarta.xml.bind</groupId>
 			<artifactId>jakarta.xml.bind-api</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>com.sun.xml.bind</groupId>
-			<artifactId>jaxb-impl</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.sun.xml.bind</groupId>
-			<artifactId>jaxb-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.sun.xml.bind</groupId>
-			<artifactId>jaxb-xjc</artifactId>
-		</dependency>
+		<!-- 런타임 구현은 jaxb-runtime 하나만 둔다. 예전에는 com.sun.xml.bind 의 jaxb-impl, jaxb-core, jaxb-xjc 도
+		     compile 로 걸려 있었는데, jaxb-impl 은 jaxb-runtime 과 같은 클래스(com.sun.xml.bind.v2)를 한 벌 더 들고 오고
+		     jaxb-xjc 는 코드 생성 도구라 런타임에 필요 없다. 코드에서 쓰는 곳도 없다(Model20a 는 원래 이렇게 돌았다) -->
 		<dependency>
 			<groupId>org.glassfish.jaxb</groupId>
 			<artifactId>jaxb-runtime</artifactId>
@@ -59,10 +48,16 @@
 		</resources>
 
 		<plugins>
+			<!-- XJC 는 org.jvnet.jaxb:jaxb-maven-plugin 4.x 로 돌린다(Model20a 주석 참고).
+			     -Xnamespace-prefix 는 jaxb-plugins, -Xannotate 는 jaxb-plugin-annotate 에 들어 있다.
+			     바인딩 파일의 네임스페이스는 새 이름(urn:jaxb.jvnet.org:plugin:namespace-prefix,
+			     urn:jaxb.jvnet.org:annox)으로 바꿨다.
+			     -Xfixed-value 는 jaxb-tools 에 대응 플러그인이 없어서 com.github.fbdo:jaxb2-fixed-value 1.2(최신)를 계속 쓴다.
+			     XJC 플러그인 API(com.sun.tools.xjc.Plugin)는 JAXB 4 에서도 같아서 그대로 돈다 -->
 			<plugin>
-				<groupId>org.jvnet.jaxb2.maven2</groupId>
-				<artifactId>maven-jaxb2-plugin</artifactId>
-				<version>0.14.0</version>
+				<groupId>org.jvnet.jaxb</groupId>
+				<artifactId>jaxb-maven-plugin</artifactId>
+				<version>${jaxb-tools.version}</version>
 				<executions>
 					<execution>
 						<id>generate</id>
@@ -88,56 +83,31 @@
 						<arg>-Xfixed-value</arg>
 						<arg>-Xannotate</arg>
 					</args>
-					<plugins>
-						<plugin>
-							<groupId>com.github.fbdo</groupId>
-							<artifactId>jaxb2-fixed-value</artifactId>
-							<version>1.2</version>
-						</plugin>
-						<dependency>
-							<groupId>org.jvnet.jaxb2_commons</groupId>
-							<artifactId>jaxb2-basics-annotate</artifactId>
-							<version>1.1.0</version>
-						</dependency>
-					</plugins>
 				</configuration>
-				<!-- 플러그인 자체의 클래스패스에 JAXB 4.x 를 올려야
-				     XJC 가 javax 가 아니라 jakarta 애노테이션으로 생성한다.
-				     maven-jaxb2-plugin 0.14.0 은 원래 javax 용이라 이 우회가 필요하다 -->
 				<dependencies>
+					<dependency>
+						<groupId>org.jvnet.jaxb</groupId>
+						<artifactId>jaxb-plugins</artifactId>
+						<version>${jaxb-tools.version}</version>
+					</dependency>
+					<dependency>
+						<groupId>org.jvnet.jaxb</groupId>
+						<artifactId>jaxb-plugin-annotate</artifactId>
+						<version>${jaxb-tools.version}</version>
+					</dependency>
+					<dependency>
+						<groupId>com.github.fbdo</groupId>
+						<artifactId>jaxb2-fixed-value</artifactId>
+						<version>1.2</version>
+					</dependency>
+					<dependency>
+						<groupId>org.glassfish.jaxb</groupId>
+						<artifactId>jaxb-xjc</artifactId>
+						<version>${glassfish-jaxb.version}</version>
+					</dependency>
 					<dependency>
 						<groupId>org.glassfish.jaxb</groupId>
 						<artifactId>jaxb-runtime</artifactId>
-						<version>${glassfish-jaxb.version}</version>
-					</dependency>
-					<dependency>
-						<groupId>org.jvnet.jaxb2_commons</groupId>
-						<artifactId>jaxb2-namespace-prefix</artifactId>
-						<version>2.0</version>
-					</dependency>
-					<dependency>
-						<groupId>javax.activation</groupId>
-						<artifactId>activation</artifactId>
-						<version>${activation.version}</version>
-					</dependency>
-					<dependency>
-						<groupId>jakarta.xml.bind</groupId>
-						<artifactId>jakarta.xml.bind-api</artifactId>
-						<version>${jakarta-xml-bind.version}</version>
-					</dependency>
-					<dependency>
-						<groupId>com.sun.xml.bind</groupId>
-						<artifactId>jaxb-impl</artifactId>
-						<version>${glassfish-jaxb.version}</version>
-					</dependency>
-					<dependency>
-						<groupId>com.sun.xml.bind</groupId>
-						<artifactId>jaxb-core</artifactId>
-						<version>${glassfish-jaxb.version}</version>
-					</dependency>
-					<dependency>
-						<groupId>com.sun.xml.bind</groupId>
-						<artifactId>jaxb-xjc</artifactId>
 						<version>${glassfish-jaxb.version}</version>
 					</dependency>
 				</dependencies>

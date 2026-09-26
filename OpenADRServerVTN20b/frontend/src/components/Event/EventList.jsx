@@ -17,7 +17,8 @@ import EventHeader from './EventHeader'
 
 
 
-import moment from 'moment'
+// dayjs 는 불변이라 add() 결과를 다시 받아야 한다(utils/dayjs.js 참고)
+import dayjs from '../../utils/dayjs'
 
 
 
@@ -42,32 +43,40 @@ export class EventList extends React.Component {
   getTitle = () => {
     switch(this.props.view) {
       case "month":
-        return moment(this.props.currentDate).format( "YYYY MMMM");
+        return dayjs(this.props.currentDate).format( "YYYY MMMM");
 
       case "week":
-        let start = moment(this.props.currentDate).startOf(this.props.view);
-        let end = moment(this.props.currentDate).endOf(this.props.view);
+        let start = dayjs(this.props.currentDate).startOf(this.props.view);
+        let end = dayjs(this.props.currentDate).endOf(this.props.view);
         return start.format( "MMM Do") + " - " + end.format( "MMM Do");
 
       case "day":
-        return moment(this.props.currentDate).format( "dddd MMM DD")
+        return dayjs(this.props.currentDate).format( "dddd MMM DD")
 
       default:
-        return moment(this.props.currentDate).format( "YYYY MMMM");
+        return dayjs(this.props.currentDate).format( "YYYY MMMM");
     }
   }
 
 
+  // view 는 캘린더 탭과 같이 쓰는 값이라 "agenda" 가 들어올 수 있다.
+  // moment 는 모르는 단위("agenda")를 받으면 날짜를 그대로 뒀지만 dayjs 는 1ms 를 더한다.
+  // 예전 동작(그대로 둠)을 지키려고 month, week, day 일 때만 옮긴다
+  moveBy = (amount) => {
+    var view = this.props.view;
+    var d = dayjs(this.props.currentDate);
+    if (view === "month" || view === "week" || view === "day") {
+      d = d.add(amount, view);
+    }
+    this.props.onCurrentDateChange(d.toDate());
+  }
+
   getNext = () => {
-    var d = moment(this.props.currentDate).add(1, this.props.view);
-    var date = d.toDate();
-    this.props.onCurrentDateChange(date);
+    this.moveBy(1);
   }
 
   getBack = () => {
-    var d = moment(this.props.currentDate).add(-1, this.props.view);
-    var date = d.toDate();
-    this.props.onCurrentDateChange(date);
+    this.moveBy(-1);
   }
 
   getToday = () => {

@@ -46,15 +46,19 @@ router.subscribe( ( state ) => {
 } );
 
 // React 18 부터 ReactDOM.render 대신 createRoot 를 쓴다.
-// StrictMode 는 아직 켜지 않았다. 개발 모드에서 생성자와 렌더를 두 번씩 불러 부작용을 드러내는데,
-// 클래스 화면 64개 중 생성자에서 props 로 state 를 직접 고치는 곳들이 있어 따로 정리한 뒤에 켠다.
+// StrictMode 는 개발 모드(vite)에서만 동작한다. 생성자와 렌더를 두 번씩 부르고 마운트를 한 번 풀었다 다시 해서
+// 부작용과 옛 API 사용을 콘솔 경고로 드러낸다. 운영 번들(vite build)에서는 아무 일도 하지 않는다.
+// 켜기 전에 생성자에서 액션을 부르거나 props 를 고치는 곳, 풀지 않는 타이머나 리스너가 없는지 봤다.
+// 개발 모드에서는 componentDidMount 의 조회가 두 번 나가는 게 정상이다
 // ThemeProvider 는 MUI 3 기본 모양을 되살리는 테마를 건다(theme.js 참고)
 createRoot( document.getElementById( 'root' ) ).render(
-  <Provider store={ store }>
-    <ThemeProvider theme={ theme }>
-      <RouterProvider router={ router } />
-    </ThemeProvider>
-  </Provider>
+  <React.StrictMode>
+    <Provider store={ store }>
+      <ThemeProvider theme={ theme }>
+        <RouterProvider router={ router } />
+      </ThemeProvider>
+    </Provider>
+  </React.StrictMode>
 );
 
 // CRA 때 깔린 서비스 워커를 걷어낸다. 자세한 건 registerServiceWorker.js 의 unregister 참고

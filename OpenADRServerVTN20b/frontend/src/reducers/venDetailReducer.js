@@ -7,6 +7,24 @@ import initialState from './initialState';
 // create a copy of the state passed and set new values on the copy.
 // Note that I'm using Object.assign to create a copy of current state
 // and update values on the copy.
+// 페이지 조회(page...UsingGET)는 응답 헤더 X-total-count, X-total-page 로 전체 건수를 주고 apiUtils 가 action.total 에 담는다.
+// 같은 액션 타입을 쓰는 전체 조회(loadVenRequestedReport, loadVenAvailableReport)는 헤더가 없어서
+// total 이 undefined 로 들어가 TablePagination 의 count 가 비었다(MUI 경고, 페이지 표시 깨짐).
+// 헤더가 없으면 받은 목록 전체가 한 페이지라고 본다
+function totalOf( action ) {
+  if ( action.total !== undefined ) {
+    return action.total;
+  }
+  return Array.isArray( action.payload ) ? action.payload.length : 0;
+}
+
+function totalPageOf( action ) {
+  if ( action.totalPage !== undefined ) {
+    return action.totalPage;
+  }
+  return 1;
+}
+
 export default function venDetailReducer( state = initialState.ven_detail, action ) {
   let newState;
 
@@ -167,8 +185,8 @@ export default function venDetailReducer( state = initialState.ven_detail, actio
     	console.log(action)
       newState = objectAssign( {}, state, {
         availableReport: action.payload,
-        totalReport: action.total,
-        totalPageReport: action.totalPage
+        totalReport: totalOf( action ),
+        totalPageReport: totalPageOf( action )
       } );
       return newState;
 
@@ -181,8 +199,8 @@ export default function venDetailReducer( state = initialState.ven_detail, actio
     case types.LOAD_VEN_REQUESTED_REPORT_SUCCESS:
       newState = objectAssign( {}, state, {
         requestedReport: action.payload,
-        totalRequest: action.total,
-        totalPageRequest: action.totalPage
+        totalRequest: totalOf( action ),
+        totalPageRequest: totalPageOf( action )
       } );
       return newState;
 

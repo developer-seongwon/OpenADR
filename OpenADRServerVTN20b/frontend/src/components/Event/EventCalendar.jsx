@@ -1,11 +1,12 @@
 import React from 'react';
 
 
-// react-big-calendar 1.x 는 BigCalendar default export 를 없애고 Calendar, momentLocalizer 를 이름으로 내보낸다.
+// react-big-calendar 1.x 는 BigCalendar default export 를 없애고 Calendar, dayjsLocalizer 같은 것을 이름으로 내보낸다.
 // 커스텀 뷰들이 lib/TimeGrid 같은 내부 파일(CommonJS)을 직접 쓰기 때문에, 본체도 같은 lib 에서 가져와야
 // ESM 번들(dist)과 CommonJS(lib) 두 벌이 섞여 내부 모듈이 갈라지지 않는다
-import { Calendar, momentLocalizer } from 'react-big-calendar/lib'
-import moment from 'moment'
+import { Calendar, dayjsLocalizer } from 'react-big-calendar/lib'
+// moment 대신 dayjs. 커스텀 뷰(EventCalendarView/*)의 날짜 계산도 같은 dayjs 를 쓴다(utils/dayjs.js 참고)
+import dayjs from '../../utils/dayjs'
 import Divider from '@mui/material/Divider';
 // required for react-big-calendar
 // 웹팩은 CSS 를 default import 로 받아도 넘어갔지만 Vite 는 CSS 에 default export 가 없다고 막는다.
@@ -29,7 +30,7 @@ import EventCalendarAgendaView from './EventCalendarView/EventCalendarAgendaView
 import { amber, red, green } from '@mui/material/colors';
 
 
-const localizer = momentLocalizer(moment)
+const localizer = dayjsLocalizer(dayjs)
 
 
 var marketContextColorCache = {};

@@ -106,10 +106,6 @@ public class VtnConfig {
 		return xmppKey;
 	}
 
-	public SSLContext getXmppSslContext() {
-		return xmppSslContext;
-	}
-
 	@Value("${" + SUPPORT_PUSH_CONF + ":#{null}}")
 	private Boolean supportPush;
 
@@ -190,7 +186,6 @@ public class VtnConfig {
 	}
 
 	private TrustManagerFactory xmppTrustManagerFactory;
-	private SSLContext xmppSslContext;
 	private String xmppOadr20bFingerprint;
 	private String xmppOadr20aFingerprint;
 	private String brokerUrl;
@@ -252,16 +247,9 @@ public class VtnConfig {
 				xmppTrustManagerFactory = OadrPKISecurity.createTrustManagerFactory(trustCertificates);
 				xmppKeyManagerFactory = OadrPKISecurity.createKeyManagerFactory(this.getXmppKey(), this.getXmppCert(),
 						keystorePassword);
-
-				// SSL Context Factory
-				xmppSslContext = SSLContext.getInstance("TLS");
-
-				// init ssl context
-				String seed = UUID.randomUUID().toString();
-				getXmppSslContext().init(xmppKeyManagerFactory.getKeyManagers(), xmppTrustManagerFactory.getTrustManagers(),
-						new SecureRandom(seed.getBytes()));
-				// init ssl context
-			} catch (OadrSecurityException | NoSuchAlgorithmException | KeyManagementException e) {
+				// XMPP 는 SSLContext 를 따로 만들지 않는다. smack 4.5 가 SSLContext 를 다시 init 해 버려서
+				// XmppConnector 가 위 두 팩토리를 직접 넘긴다
+			} catch (OadrSecurityException e) {
 				throw new OadrVTNInitializationException(e);
 			}
 		} else {

@@ -19,7 +19,8 @@ import EventCalendar from '../Event/EventCalendar'
 
 import { history } from '../../store/configureStore';
 
-import moment from 'moment'
+// dayjs 는 불변이라 add() 결과를 다시 받아야 한다(utils/dayjs.js 참고)
+import dayjs from '../../utils/dayjs'
 
 
 
@@ -185,15 +186,16 @@ export class EventPage extends React.Component {
       case "month":
       case "week":
       case "day":
-         d = moment(date);
+         d = dayjs(date);
         return {
           start: d.startOf(view).toDate().getTime()
           , end: d.endOf(view).toDate().getTime()
         };
       case "agenda":
-         d = moment(date).startOf("day");
+         d = dayjs(date).startOf("day");
         return {
           start: d.toDate().getTime()
+          // moment 때는 add 가 d 자체를 바꿨지만 dayjs 는 새 값을 돌려준다. 여기서는 돌려받은 값을 바로 쓰니 결과는 같다
           , end: d.add(2, "week").toDate().getTime()
         };
       default:

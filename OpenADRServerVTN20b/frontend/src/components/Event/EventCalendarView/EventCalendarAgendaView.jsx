@@ -2,7 +2,8 @@ import React from 'react';
 // 1.x 는 BigCalendar.Navigate 대신 Navigate 를 이름으로 내보낸다. 본체와 같은 lib 에서 가져온다(EventCalendar.jsx 참고)
 import { Navigate } from 'react-big-calendar/lib'
 
-import moment from 'moment'
+// dayjs 는 불변이라 add() 결과를 다시 받아야 한다(utils/dayjs.js 참고)
+import dayjs from '../../../utils/dayjs'
 
 import AgendaView from 'react-big-calendar/lib/Agenda'
 
@@ -28,31 +29,28 @@ function EventCalendarAgendaView( props ) {
 EventCalendarAgendaView.range = date => {
 
 
-  let start = moment(date).startOf('week');;
-  let end = moment(start.toDate())
-  end.add(7, 'day');
+  let start = dayjs(date).startOf('week');
+  let end = start.add(7, 'day');
 
-  let current = moment(start.toDate());
+  let current = start;
   let range = []
 
-  while (current.toDate().getTime() < end.toDate().getTime()) {
+  while (current.isBefore(end)) {
     range.push(current.toDate())
-    current.add(1, 'day')
+    current = current.add(1, 'day')
   }
 
   return range;
 }
 
 EventCalendarAgendaView.navigate = (date, action) => {
-  let d = moment(new Date(date));
+  let d = dayjs(date);
   switch (action) {
     case Navigate.PREVIOUS:
-      d.add(-7, 'day')
-      return d.toDate();
+      return d.add(-7, 'day').toDate();
 
     case Navigate.NEXT:
-      d.add(7, 'day');
-      return d.toDate();
+      return d.add(7, 'day').toDate();
 
     case Navigate.TODAY:
       date = new Date();
@@ -67,9 +65,8 @@ EventCalendarAgendaView.navigate = (date, action) => {
 
 
 EventCalendarAgendaView.title = date => {
-  let start = moment(date).startOf('week');;
-  let end = moment(start.toDate())
-  end.add(7, 'day');
+  let start = dayjs(date).startOf('week');
+  let end = start.add(7, 'day');
   return (
     <span>
       <span style={{paddingTop:10}}>{start.format( "M/D/YYYY")} - {end.format( "M/D/YYYY")}</span>

@@ -4,7 +4,8 @@ import { Navigate } from 'react-big-calendar/lib'
 
 import TimeGrid from 'react-big-calendar/lib/TimeGrid'
 import { timeGridDefaults } from './timeGridDefaults'
-import moment from 'moment'
+// dayjs 는 불변이라 add() 결과를 다시 받아야 한다(utils/dayjs.js 참고)
+import dayjs from '../../../utils/dayjs'
 
 
 class EventCalendarDayView extends React.Component {
@@ -26,19 +27,17 @@ class EventCalendarDayView extends React.Component {
 // }
 
 EventCalendarDayView.range = date => {
-  return [moment(date).startOf('day').toDate()];
+  return [dayjs(date).startOf('day').toDate()];
 }
 
 EventCalendarDayView.navigate = (date, action) => {
-  let d = moment(new Date(date));
+  let d = dayjs(date);
   switch (action) {
     case Navigate.PREVIOUS:
-      d.add(-1, 'day')
-      return d.toDate();
+      return d.add(-1, 'day').toDate();
 
     case Navigate.NEXT:
-      d.add(1, 'day');
-      return d.toDate();
+      return d.add(1, 'day').toDate();
 
     case Navigate.TODAY:
       date = new Date();     
@@ -54,7 +53,7 @@ EventCalendarDayView.navigate = (date, action) => {
 EventCalendarDayView.title = date => {
   return (
     <span>
-      <span style={{paddingTop:10}}>{moment(date).format( "dddd MMM DD")}</span>
+      <span style={{paddingTop:10}}>{dayjs(date).format( "dddd MMM DD")}</span>
       <span className="rbc-btn-group" style={{float:"right"}} >
         <button type="button" className={(EventCalendarDayView.color === "status") ? "rbc-active" : ""} onClick={(e) => {EventCalendarDayView.onColorChange("status")}}>Color Status</button>
         <button type="button" className={(EventCalendarDayView.color  === "market") ? "rbc-active" : ""} onClick={(e) => {EventCalendarDayView.onColorChange("market")}}>Color Market</button>

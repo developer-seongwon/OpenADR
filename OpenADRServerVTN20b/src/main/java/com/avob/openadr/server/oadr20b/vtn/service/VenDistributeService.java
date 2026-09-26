@@ -17,6 +17,7 @@ import com.avob.openadr.model.oadr20b.oadr.OadrRegisterReportType;
 import com.avob.openadr.model.oadr20b.oadr.OadrRequestReregistrationType;
 import com.avob.openadr.model.oadr20b.oadr.OadrUpdateReportType;
 import com.avob.openadr.server.common.vtn.models.ven.Ven;
+import com.avob.openadr.server.common.vtn.service.push.AfterCommit;
 import com.avob.openadr.server.common.vtn.service.push.VenCommandDto;
 
 import tools.jackson.core.JacksonException;
@@ -37,10 +38,12 @@ public class VenDistributeService {
 
 	// Jackson 3 의 JacksonException 은 unchecked 라 throws 선언이 필요 없다.
 	// 예전에는 throws JsonProcessingException 이었다
+	// 명령은 지금 직렬화하고 보내는 건 트랜잭션 커밋 뒤로 미룬다(AfterCommit 참고).
+	// 받는 리스너가 VEN 응답을 처리하면서 방금 저장한 리포트 요청 등을 조회하기 때문이다
 	private <T> void publish(Ven ven, String payload, Class<T> klass) {
 		VenCommandDto<T> command = new VenCommandDto<T>(ven, payload, klass);
-		this.send(mapper.writeValueAsString(command));
-
+		String json = mapper.writeValueAsString(command);
+		AfterCommit.run("distribute command to " + ven.getUsername(), () -> this.send(json));
 	}
 
 	protected void send(String payload) {

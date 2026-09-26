@@ -1,9 +1,10 @@
 package com.avob.openadr.dummy;
 
-import java.lang.reflect.Type;
+import java.net.http.HttpClient;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.time.Duration;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.util.ArrayList;
@@ -15,7 +16,6 @@ import jakarta.jms.ConnectionFactory;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManagerFactory;
 
 import org.apache.activemq.ActiveMQSslConnectionFactory;
@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.jms.annotation.EnableJms;
 import org.springframework.jms.config.JmsListenerContainerFactory;
 import org.springframework.jms.config.SimpleJmsListenerContainerFactory;
 
@@ -36,10 +37,17 @@ import com.avob.server.oadrvtn20b.api.ReportControllerApi;
 import com.avob.server.oadrvtn20b.api.VenControllerApi;
 import com.avob.server.oadrvtn20b.handler.ApiClient;
 import com.avob.server.oadrvtn20b.model.OtherReportDataFloatDto;
-import com.google.common.reflect.TypeToken;
+import tools.jackson.core.type.TypeReference;
 import com.rabbitmq.jms.admin.RMQConnectionFactory;
-import com.squareup.okhttp.OkHttpClient;
 
+/*
+ * @EnableJms: Boot 3 까지는 spring-jms 만 있으면 JMS 자동설정이 @JmsListener 를 켜 줬다.
+ * Boot 4 는 JMS 자동설정이 spring-boot-jms 모듈로 빠져서, 이게 없으면 DummyVENManager 의
+ * @JmsListener 가 등록되지 않는다. 그러면 JVM 을 붙잡는 스레드가 없어서 기동 직후 정상 종료(0)하고
+ * 도커가 계속 재시작한다. 예전에는 DummyEventManager 의 무한 페이지 조회가 main 스레드를 붙잡고 있어서
+ * 드러나지 않았다. 리스너 팩토리는 아래 jmsListenerContainerFactory 빈을 쓴다
+ */
+@EnableJms
 @Configuration
 public class DummyVTN20bControllerConfig {
 	
@@ -63,9 +71,9 @@ public class DummyVTN20bControllerConfig {
 	
 
 	public static final DateTimeFormatter DATE_FORMATTER =  DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM);
-	public static final Type floatListType = new TypeToken<ArrayList<OtherReportDataFloatDto>>() {
-		private static final long serialVersionUID = 1L;
-	}.getType();
+	// 예전에는 guava TypeToken 으로 Gson 에 넘겼다. 이제 JMS 메시지도 Jackson 으로 읽는다
+	public static final TypeReference<List<OtherReportDataFloatDto>> floatListType = new TypeReference<>() {
+	};
 
 	
 
@@ -107,14 +115,14 @@ public class DummyVTN20bControllerConfig {
 		String password = UUID.randomUUID().toString();
 
 		SSLContext createSSLContext = OadrPKISecurity.createSSLContext(key, cert, getTrustedCertificates(), password);
-		SSLSocketFactory socketFactory = createSSLContext.getSocketFactory();
 
-		OkHttpClient okHttpClient = new OkHttpClient();
-		okHttpClient.setSslSocketFactory(socketFactory);
+		// openapi-generator native 클라이언트는 자바 표준 HttpClient 를 쓴다(예전 okhttp 2.7.5).
+		// VTN(톰캣)은 HTTP/2 를 안 켜 두어서 HTTP/1.1 로 고정한다. OpenADRHTTPClient 와 같은 설정이다
+		client.setHttpClientBuilder(HttpClient.newBuilder().sslContext(createSSLContext)
+				.version(HttpClient.Version.HTTP_1_1).connectTimeout(Duration.ofSeconds(10)));
 
-		client.setHttpClient(okHttpClient);
-
-		client.setBasePath(oadrVtnUrl);
+		// 예전 setBasePath 는 전체 URL 을 받았다. native 는 setBasePath 가 경로만 받아서 updateBaseUri 를 쓴다
+		client.updateBaseUri(oadrVtnUrl);
 
 		return client;
 	}

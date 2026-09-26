@@ -1,6 +1,7 @@
 package com.avob.openadr.client.xmpp.oadr20b;
 
-import javax.net.ssl.SSLContext;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.TrustManagerFactory;
 
 import org.jivesoftware.smack.StanzaListener;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
@@ -12,7 +13,8 @@ public class OadrXmppClient20bBuilder {
 	private String host;
 	private Integer port;
 	private String domain;
-	private SSLContext sslContext;
+	private KeyManagerFactory keyManagerFactory;
+	private TrustManagerFactory trustManagerFactory;
 	private String password;
 	private String resource;
 	private StanzaListener listener;
@@ -28,8 +30,17 @@ public class OadrXmppClient20bBuilder {
 		return this;
 	}
 
-	public OadrXmppClient20bBuilder withSSLContext(SSLContext context) {
-		this.sslContext = context;
+	/*
+	 * 예전 withSSLContext(SSLContext) 는 뺐다. smack 4.4 이상은 넘겨받은 SSLContext 를 다시 init 해서
+	 * 안에 넣은 키와 신뢰 인증서가 사라진다. OadrXmppClient20b.anonymousConnection 주석 참고
+	 */
+	public OadrXmppClient20bBuilder withKeyManagerFactory(KeyManagerFactory keyManagerFactory) {
+		this.keyManagerFactory = keyManagerFactory;
+		return this;
+	}
+
+	public OadrXmppClient20bBuilder withTrustManagerFactory(TrustManagerFactory trustManagerFactory) {
+		this.trustManagerFactory = trustManagerFactory;
 		return this;
 	}
 
@@ -61,11 +72,11 @@ public class OadrXmppClient20bBuilder {
 		XMPPTCPConnection xmpptcpConnection = null;
 		if (this.password != null) {
 			XMPPTCPConnectionConfiguration anonymousConnection = OadrXmppClient20b.passwordConnection(domain, port,
-					domain, domain, sslContext, venId, this.password);
+					domain, domain, keyManagerFactory, trustManagerFactory, venId, this.password);
 			xmpptcpConnection = new XMPPTCPConnection(anonymousConnection);
 		} else {
 			XMPPTCPConnectionConfiguration anonymousConnection = OadrXmppClient20b.anonymousConnection(host, port,
-					domain, resource, sslContext);
+					domain, resource, keyManagerFactory, trustManagerFactory);
 			xmpptcpConnection = new XMPPTCPConnection(anonymousConnection);
 		}
 
