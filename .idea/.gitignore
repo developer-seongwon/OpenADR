@@ -8,3 +8,5 @@
 # Datasource local storage ignored files
 /dataSources/
 /dataSources.local.xml
+# 이 PC 에만 해당하는 JS 라이브러리 제외 설정(빌드 산출물 node_modules 경로)
+/jsLibraryMappings.xml

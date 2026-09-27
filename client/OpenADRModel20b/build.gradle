@@ -1,0 +1,74 @@
+description = 'Oadr2.0b model framework'
+
+// XSD 에서 JAXB 모델 클래스를 만든다(XJC). 메이븐 때 org.jvnet.jaxb:jaxb-maven-plugin 이 하던 일을
+// XJC 본체(com.sun.tools.xjc.XJCFacade)를 직접 돌려서 한다. 인자도 그때와 같다.
+//   -Xnamespace-prefix   jaxb-plugins. 바인딩 파일 네임스페이스 urn:jaxb.jvnet.org:plugin:namespace-prefix
+//   -Xannotate           jaxb-plugin-annotate. 바인딩 파일 네임스페이스 urn:jaxb.jvnet.org:annox
+//   -Xfixed-value        com.github.fbdo:jaxb2-fixed-value(jaxb-tools 에 대응 플러그인이 없다)
+// XJC 플러그인 API(com.sun.tools.xjc.Plugin)는 JAXB 4 에서도 같아서 그대로 돈다.
+// 에피소드 파일(META-INF/sun-jaxb.episode)은 메이븐 때처럼 jar 에 넣는다
+
+dependencies {
+    api project(':OpenADRSecurity')
+    // javax.activation 은 필요 없다. JAXB 4 는 jakarta.activation 을 쓰고 jakarta.xml.bind-api 가 끌고 온다
+    api libs.jakarta.xml.bind.api
+    // 런타임 구현은 jaxb-runtime 하나만 둔다(com.sun.xml.bind 의 jaxb-impl 은 같은 클래스를 한 벌 더 들고 온다)
+    api libs.jaxb.runtime
+}
+
+// XJC 를 돌릴 클래스패스. xjc 에 선언하고 xjcClasspath 로 푼다
+configurations.dependencyScope('xjc')
+def xjcClasspath = configurations.resolvable('xjcClasspath') {
+    extendsFrom configurations.bom, configurations.xjc
+}
+dependencies {
+    xjc libs.jaxb.xjc
+    xjc libs.jaxb.runtime
+    xjc libs.jaxb.plugins
+    xjc libs.jaxb.plugin.annotate
+    xjc libs.jaxb2.fixed.value
+}
+
+def xjcJavaDir = layout.buildDirectory.dir('generated/sources/xjc/main')
+def xjcResourceDir = layout.buildDirectory.dir('generated/resources/xjc/main')
+def xjcSchemas = fileTree('xsd/oadr20b_schema') { include '**/*.xsd' }
+def xjcBindings = fileTree('xsd/oadr20b_binding') { include '**/*.xjb' }
+
+def xjcTask = tasks.register('xjc', JavaExec) {
+    description = 'XSD 에서 OpenADR 2.0b JAXB 모델 소스를 만든다'
+    group = 'build'
+    classpath = xjcClasspath.get()
+    mainClass = 'com.sun.tools.xjc.XJCFacade'
+    inputs.files(xjcSchemas).withPropertyName('schemas').withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.files(xjcBindings).withPropertyName('bindings').withPathSensitivity(PathSensitivity.RELATIVE)
+    outputs.dir(xjcJavaDir).withPropertyName('javaDir')
+    outputs.dir(xjcResourceDir).withPropertyName('resourceDir')
+    doFirst {
+        [xjcJavaDir, xjcResourceDir].each {
+            def dir = it.get().asFile
+            dir.deleteDir()
+            dir.mkdirs()
+        }
+        new File(xjcResourceDir.get().asFile, 'META-INF').mkdirs()
+    }
+    argumentProviders.add({
+        def args = ['-extension', '-Xnamespace-prefix', '-Xfixed-value', '-Xannotate',
+                    '-encoding', 'UTF-8',
+                    '-d', xjcJavaDir.get().asFile.path,
+                    '-episode', new File(xjcResourceDir.get().asFile, 'META-INF/sun-jaxb.episode').path]
+        xjcBindings.files.sort().each { args += ['-b', it.path] }
+        args += xjcSchemas.files.sort()*.path
+        args
+    } as CommandLineArgumentProvider)
+}
+
+sourceSets.main.java.srcDir(files(xjcJavaDir).builtBy(xjcTask))
+sourceSets.main.resources.srcDir(files(xjcResourceDir).builtBy(xjcTask))
+
+// 생성된 모델 패키지는 커버리지 계측에서 뺀다
+tasks.named('test', Test) {
+    jacoco {
+        excludes = ['ei', 'emix', 'oadr', 'pyld', 'strm', 'xcal', 'atom', 'gml', 'greenbutton', 'iso', 'power',
+                    'siscale', 'xmldsig', 'xmldsig11', 'xmldsig.properties'].collect { "com.avob.openadr.model.*.${it}.*".toString() }
+    }
+}

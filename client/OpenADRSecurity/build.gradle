@@ -1,0 +1,6 @@
+description = 'Oadr security framework'
+
+dependencies {
+    // jdk15on 아티팩트는 1.70 에서 끝났고 이후는 jdk18on 으로 나온다
+    api libs.bcpkix
+}

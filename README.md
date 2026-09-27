@@ -152,26 +152,23 @@ The VTN controller is notified by VTN using AMQP when VTN receive payload from V
 ## Test / build project
 
 ### Requirements
-- Backend build dependencies: Java 11 / Maven 3
-- Frontend build dependencies: NodeJS 8.15.0 / NPM 6.4.1
+- Java 25, Docker (tests start PostgreSQL with Testcontainers)
+- Gradle and Node.js are downloaded by the Gradle wrapper and build
+- Maven only for server/OpenfireOadrPlugin
 
-### Test
+### Test and build
 
-```shell
-	mvn clean verify
-```
-
-### Compile for external use (AMQP broker and DB middleware must be provided)
+The client libraries (client/) and the servers (server/) are separate Gradle builds.
+The server build includes the sibling client build automatically.
 
 ```shell
-	mvn clean package -P external,frontend 
+	cd client && ./gradlew build
+	cd server && ./gradlew build
 ```
 
-### Compile for standalone use (in-memory AMQP broker and DB)
-
-```shell
-	mvn clean package
-```
+The VTN 2.0b jar contains both the embedded ActiveMQ broker and the RabbitMQ JMS client;
+the Spring profile (`standalone` or `external`) selects which one is used.
+See README.ko.md for the docker stack (docker/run.sh).
 
 ## Links
 

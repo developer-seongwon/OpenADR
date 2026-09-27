@@ -1,0 +1,4 @@
+# 그래들 wrapper 스크립트 줄바꿈. gradle init 이 만드는 것과 같다
+/gradlew text eol=lf
+*.bat text eol=crlf
+*.jar binary

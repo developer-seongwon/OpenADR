@@ -48,24 +48,11 @@ oadr.xmpp.host xmpp.vtn.oadr.com
 oadr.xmpp.domain xmpp.vtn.oadr.com
 oadr.xmpp.port 5222
 ```
-## Maven profiles
-### In-memory profile
-Package jar with JMS broker dependencies. Do not require AMPQ broker middleware. Default true
+## Build (Gradle, from the server directory)
+The jar always contains both broker libraries (embedded ActiveMQ and RabbitMQ JMS) and the PostgreSQL driver.
+The broker is chosen at runtime with the Spring profile: `standalone` (embedded ActiveMQ) or `external` (RabbitMQ).
+The ReactJS frontend is built and packaged by default.
 ```sh
-mvn clean package -P standalone
-```
-### External profile
-Package jar with RabbitMQ broker dependencies. Require AMPQ broker middleware.
-```sh
-mvn clean package -P external
-```
-### Swagger profile
-Package jar with swagger dependencies used to deliver HTTP Control API description. Default true
-```sh
-mvn clean package -P swagger
-```
-### Frontend profile
-Compile ReactJS frontend and package jar with compiled files. Default true
-```sh
-mvn clean package -P frontend
+./gradlew :OpenADRServerVTN20b:bootJar
+./gradlew :OpenADRServerVTN20b:bootJar -Pfrontend=false   # without the frontend
 ```

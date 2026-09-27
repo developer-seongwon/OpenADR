@@ -1,0 +1,49 @@
+# 클라이언트 라이브러리 버전 목록.
+#
+# 버전이 없는 항목은 Spring Boot BOM(spring-boot-dependencies) 값을 쓴다.
+# BOM 은 Spring 팀이 서로 맞춰 검증한 조합이라 덮지 않는다. 최신이 필요하면 spring-boot 를 올린다.
+# 새 자바로 갈 때 BOM 의 byte-buddy(Mockito 가 쓴다)가 새 클래스 파일 버전을 모르면 그때만 잠깐 덮는다.
+#
+# server/gradle/libs.versions.toml 과 겹치는 값(spring-boot, smack, bouncycastle, woodstox, jacoco)은 같게 유지한다.
+
+[versions]
+spring-boot = "4.1.1"
+# BouncyCastle 은 Boot 가 관리하지 않는다. bcpkix 가 같은 버전의 bcprov, bcutil 을 끌고 온다
+bouncycastle = "1.86"
+# smack 4.5 부터 smack-java8 이 smack-java11 로 바뀌었고, Message, Presence 는 연결의 StanzaFactory 로 만든다
+smack = "4.5.0"
+# StAX 구현체. XMPPClient 가 JDK 내장 StAX 대신 쓴다(OpenADRXMPPClient/build.gradle 주석 참고)
+woodstox = "7.2.2"
+# XJC 플러그인들(org.jvnet.jaxb). xjc 본체와 런타임은 BOM 의 glassfish-jaxb 값을 쓴다
+jaxb-tools = "4.0.16"
+# -Xfixed-value 는 jaxb-tools 에 대응 플러그인이 없어서 이걸 계속 쓴다(1.2 가 최신)
+jaxb2-fixed-value = "1.2"
+# jacoco 는 JDK 메이저마다 새 버전이 필요하다. 새 JDK 로 가면 제일 먼저 올린다
+jacoco = "0.8.15"
+
+[libraries]
+spring-boot-bom = { module = "org.springframework.boot:spring-boot-dependencies", version.ref = "spring-boot" }
+
+bcpkix = { module = "org.bouncycastle:bcpkix-jdk18on", version.ref = "bouncycastle" }
+woodstox = { module = "com.fasterxml.woodstox:woodstox-core", version.ref = "woodstox" }
+
+jakarta-xml-bind-api = { module = "jakarta.xml.bind:jakarta.xml.bind-api" }
+jaxb-runtime = { module = "org.glassfish.jaxb:jaxb-runtime" }
+jaxb-xjc = { module = "org.glassfish.jaxb:jaxb-xjc" }
+jaxb-plugins = { module = "org.jvnet.jaxb:jaxb-plugins", version.ref = "jaxb-tools" }
+jaxb-plugin-annotate = { module = "org.jvnet.jaxb:jaxb-plugin-annotate", version.ref = "jaxb-tools" }
+jaxb2-fixed-value = { module = "com.github.fbdo:jaxb2-fixed-value", version.ref = "jaxb2-fixed-value" }
+
+smack-tcp = { module = "org.igniterealtime.smack:smack-tcp", version.ref = "smack" }
+smack-im = { module = "org.igniterealtime.smack:smack-im", version.ref = "smack" }
+smack-extensions = { module = "org.igniterealtime.smack:smack-extensions", version.ref = "smack" }
+smack-resolver-dnsjava = { module = "org.igniterealtime.smack:smack-resolver-dnsjava", version.ref = "smack" }
+smack-java11 = { module = "org.igniterealtime.smack:smack-java11", version.ref = "smack" }
+smack-xmlparser-stax = { module = "org.igniterealtime.smack:smack-xmlparser-stax", version.ref = "smack" }
+
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+mockito-core = { module = "org.mockito:mockito-core" }
+
+[bundles]
+smack = ["smack-tcp", "smack-im", "smack-extensions", "smack-resolver-dnsjava", "smack-java11"]

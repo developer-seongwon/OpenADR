@@ -1,0 +1,30 @@
+description = 'Oadr2.0b XMPP client framework'
+
+dependencies {
+    api project(':OpenADRSecurity')
+    api project(':OpenADRModel20b')
+
+    // smack 4.5.0 의 pom 들은 junit-jupiter-api, mockito-core 를 compile 스코프로 적어 두었다(배포 실수).
+    // 메이븐 때는 부모 pom 의 test 스코프 선언이 가까운 쪽이라 가려졌지만 그래들은 그대로 끌고 와서
+    // 이 jar 를 쓰는 VTN, VEN 앱 jar 에 테스트 라이브러리가 들어간다. 그래서 여기서 뺀다
+    api(libs.bundles.smack) {
+        exclude group: 'org.junit.jupiter'
+        exclude group: 'org.junit.platform'
+        exclude group: 'org.mockito'
+    }
+
+    // smack-java11 은 XML 파서로 StAX(smack-xmlparser-stax)를 쓴다. smack 은 XMLInputFactory.newInstance() 로
+    // 구현체를 고르는데, 클래스패스에 Woodstox 가 있으면 ServiceLoader 로 Woodstox 가 잡힌다.
+    // JDK 내장 StAX 를 쓰면 안 되는 이유: 자바 24 부터 JDK 기본 XML 제한(conf/jaxp.properties)이 걸리고,
+    // JDK StAX 는 &lt; 같은 기본 엔티티 참조를 문서 크기로 누적해서 센다. XMPP 스트림은 연결 내내
+    // 하나의 XML 문서라 연결 하나로 이스케이프된 본문 약 1MB 를 주고받으면 그 뒤 스탠자가 전부
+    // "JAXP00010003 ... [xml] ... 100,000" 으로 버려진다. Woodstox 는 이 누적 제한이 없다
+    // (SmackXmlParserTest 가 JDK 실패 재현과 Woodstox 통과를 같이 확인한다).
+    // XPP3(smack-xmlparser-xpp3)는 오래전에 멈춘 라이브러리라 쓰지 않는다.
+    // 이 모듈을 쓰는 VTN, VEN 은 JVM 전체의 StAX 구현체가 Woodstox 로 바뀐다
+    api libs.woodstox
+
+    // smack-java11 이 runtime 스코프로 끌고 오는 StAX 파서 모듈. 메이븐은 runtime 의존성도 테스트 컴파일에
+    // 올려 줬지만 그래들은 안 올린다. SmackXmlParserTest 가 이 클래스를 직접 쓴다
+    testImplementation libs.smack.xmlparser.stax
+}

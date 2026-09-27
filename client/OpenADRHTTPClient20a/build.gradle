@@ -1,0 +1,6 @@
+description = 'Oadr2.0a HTTP client framework'
+
+dependencies {
+    api project(':OpenADRModel20a')
+    api project(':OpenADRHTTPClient')
+}

@@ -8,7 +8,7 @@ IntelliJ 의 HTTP Client 로 열어서 요청 옆의 실행 버튼을 누르면 
 
 ## 준비
 
-스택을 띄운다.
+스택을 띄운다(저장소 루트에서).
 
 ```
 ./docker/run.sh start all

@@ -1,0 +1,70 @@
+// client, server 를 한 번에 돌리는 묶음 태스크. 각 빌드 루트의 같은 이름 태스크(그 빌드의 모듈 전체를 묶는다)를 부른다.
+//
+//   ./gradlew build                 client, server 빌드와 테스트
+//   ./gradlew assemble              테스트 없이 jar 만(루트의 -x test 는 포함된 빌드의 테스트까지는 못 뺀다)
+//   ./gradlew test                  client, server 전체 테스트. 끝나면 합친 리포트를 만들고 모듈별 건수를 찍는다
+//   ./gradlew test --continue       한 모듈이 실패해도 나머지 모듈 테스트를 끝까지 돌린다
+//   ./gradlew clean
+//   ./gradlew publishToMavenLocal   client 라이브러리를 ~/.m2 에 올린다(kpx-service, client 없이 server 빌드할 때)
+//
+// -Pfrontend=false 같은 -P 값은 포함된 빌드에도 그대로 간다.
+// 한 모듈만 돌릴 때는 경로로 부른다. 예: ./gradlew :server:OpenADRServerVTN20b:bootRun
+
+def client = gradle.includedBuild('client')
+def server = gradle.includedBuild('server')
+
+[clean: 'build', assemble: 'build', build: 'build', check: 'verification', test: 'verification'].each { name, taskGroup ->
+    tasks.register(name) {
+        group = taskGroup
+        description = "client, server 의 ${name}"
+        dependsOn client.task(":${name}"), server.task(":${name}")
+    }
+}
+
+tasks.register('publishToMavenLocal') {
+    group = 'publishing'
+    description = 'client 라이브러리를 ~/.m2 에 올린다'
+    dependsOn client.task(':publishToMavenLocal')
+}
+
+// 전체 테스트 리포트. client, server 모든 모듈의 테스트 결과를 HTML 하나로 합친다(build/reports/tests/index.html).
+// 포함된 빌드의 태스크 출력은 루트에서 직접 이어 받을 수 없어서, 각 모듈의 결과 디렉토리(build/test-results/test/binary)를 읽는다.
+// 테스트가 없는 모듈(NO-SOURCE)은 그 디렉토리가 없어서 빠진다. 테스트가 up-to-date 로 건너뛰면 지난번 결과가 들어간다
+def testModuleDirs = ['client', 'server'].collectMany { buildDir ->
+    (file(buildDir).listFiles() ?: []).findAll { new File(it, 'build.gradle').isFile() }.sort()
+}
+
+def testReport = tasks.register('testReport', TestReport) {
+    group = 'verification'
+    description = 'client, server 전체 테스트 결과를 HTML 하나로 합친다'
+    destinationDirectory = layout.buildDirectory.dir('reports/tests')
+    testResults.from(provider {
+        testModuleDirs.collect { new File(it, 'build/test-results/test/binary') }.findAll { it.isDirectory() }
+    })
+    // 모듈별 건수를 찍는다. JUnit XML(build/test-results/test/*.xml)을 센다
+    doLast {
+        long total = 0, failed = 0, skipped = 0
+        testModuleDirs.each { dir ->
+            def xmls = (new File(dir, 'build/test-results/test').listFiles() ?: []).findAll { it.name.endsWith('.xml') }
+            if (xmls.isEmpty()) {
+                return
+            }
+            long t = 0, f = 0, sk = 0
+            xmls.each {
+                def suite = new groovy.xml.XmlSlurper().parse(it)
+                t += suite.@tests.toLong()
+                f += suite.@failures.toLong() + suite.@errors.toLong()
+                sk += suite.@skipped.toLong()
+            }
+            total += t; failed += f; skipped += sk
+            logger.lifecycle(String.format('  %-40s %4d 개, 실패 %d, 건너뜀 %d', "${dir.parentFile.name}/${dir.name}", t, f, sk))
+        }
+        logger.lifecycle(String.format('  %-40s %4d 개, 실패 %d, 건너뜀 %d', '전체', total, failed, skipped))
+        logger.lifecycle("  리포트: ${destinationDirectory.get().file('index.html').asFile}")
+    }
+}
+
+// 테스트가 실패해도 리포트는 만든다(finalizedBy 는 실패해도 돈다)
+tasks.named('test') {
+    finalizedBy testReport
+}

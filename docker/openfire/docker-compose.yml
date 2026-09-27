@@ -1,0 +1,36 @@
+# Openfire(XMPP). XMPP 로 붙는 VEN 과 VTN 이 쓴다. OpenADR 플러그인이 VEN 인증을 VTN 에 묻는다.
+# 파일 안의 경로는 저장소 루트 기준이다(postgres/docker-compose.yml 주석 참고)
+services:
+  openfire:
+    build:
+      # 빌드 컨텍스트는 저장소 루트다(server/cert 인증서, server/OpenfireOadrPlugin 의 jar 를 COPY 한다)
+      context: .
+      dockerfile: docker/openfire/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "5222:5222"
+      - "9090:9090"
+    # 5222 가 열리면 플러그인(OpenADR)까지 올라온 뒤다. 이미지에 nc 가 없어서 bash 의 /dev/tcp 로 본다
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/5222"]
+      interval: 3s
+      timeout: 3s
+      retries: 60
+    # 플러그인이 VEN 인증을 https://vtn.oadr.com:8181 에 묻는다(init-openfire.sh 의 xmpp.oadr.vtnAuthEndpoint).
+    # 호스트로 보내면 VTN 이 어디서 떠 있든 닿는다. 컨테이너(vtn20b)면 호스트의 8181 포트 매핑을 거치고,
+    # 인프라만 띄우고 VTN 을 IntelliJ 에서 돌릴 때는 호스트의 VTN 으로 간다.
+    # 예전에는 인프라 전용 compose 에만 이 설정(192.168.65.2 고정)이 있었다
+    extra_hosts:
+      - "vtn.oadr.com:host-gateway"
+    networks:
+      default:
+      http:
+      xmpp:
+        aliases:
+          - xmpp.vtn.oadr.com
+
+networks:
+  http:
+  xmpp:

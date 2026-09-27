@@ -8,8 +8,8 @@
 	  원래 별도 저장소(github.com/avob/openfire-oadr-plugin, MIT, 같은 저자)에서 Openfire 4.4 용 jar 로만
 	  받아 쓰던 것을 Openfire 5 로 올리면서 이 저장소로 옮겼다.
 
-	  server/pom.xml 의 <modules> 에는 넣지 않는다. 부모가 Openfire 의 plugins pom 이고 의존성이
-	  igniterealtime 저장소에 있어서, 앱 빌드와 섞으면 매번 Openfire 서버 전체를 받아야 한다.
+	  서버 빌드(server/settings.gradle, 그래들)에 넣지 않고 메이븐으로 남긴다. 부모가 Openfire 의 plugins pom 이고
+	  의존성이 igniterealtime 저장소에 있어서, 앱 빌드와 섞으면 매번 Openfire 서버 전체를 받아야 한다.
 	  docker/run.sh 가 호스트에서 빌드하고(build_openfire_plugin) docker/openfire/Dockerfile 은 jar 만 넣는다.
 	  직접 빌드: cd OpenfireOadrPlugin && mvn package
 	  결과물: target/OpenfireOadrPlugin-openfire-plugin-assembly.jar

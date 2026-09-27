@@ -1,0 +1,64 @@
+description = 'Oadr2.0a model framework'
+
+// XSD 에서 JAXB 모델 클래스를 만든다(XJC). 설명은 OpenADRModel20b/build.gradle 참고.
+// 2.0a 는 -Xnamespace-prefix 만 쓴다
+
+dependencies {
+    api libs.jakarta.xml.bind.api
+    api libs.jaxb.runtime
+}
+
+// XJC 를 돌릴 클래스패스. xjc 에 선언하고 xjcClasspath 로 푼다
+configurations.dependencyScope('xjc')
+def xjcClasspath = configurations.resolvable('xjcClasspath') {
+    extendsFrom configurations.bom, configurations.xjc
+}
+dependencies {
+    xjc libs.jaxb.xjc
+    xjc libs.jaxb.runtime
+    xjc libs.jaxb.plugins
+}
+
+def xjcJavaDir = layout.buildDirectory.dir('generated/sources/xjc/main')
+def xjcResourceDir = layout.buildDirectory.dir('generated/resources/xjc/main')
+def xjcSchemas = fileTree('xsd/oadr20a_schema') { include '**/*.xsd' }
+def xjcBindings = fileTree('xsd/oadr20a_binding') { include '**/*.xjb' }
+
+def xjcTask = tasks.register('xjc', JavaExec) {
+    description = 'XSD 에서 OpenADR 2.0a JAXB 모델 소스를 만든다'
+    group = 'build'
+    classpath = xjcClasspath.get()
+    mainClass = 'com.sun.tools.xjc.XJCFacade'
+    inputs.files(xjcSchemas).withPropertyName('schemas').withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.files(xjcBindings).withPropertyName('bindings').withPathSensitivity(PathSensitivity.RELATIVE)
+    outputs.dir(xjcJavaDir).withPropertyName('javaDir')
+    outputs.dir(xjcResourceDir).withPropertyName('resourceDir')
+    doFirst {
+        [xjcJavaDir, xjcResourceDir].each {
+            def dir = it.get().asFile
+            dir.deleteDir()
+            dir.mkdirs()
+        }
+        new File(xjcResourceDir.get().asFile, 'META-INF').mkdirs()
+    }
+    argumentProviders.add({
+        def args = ['-extension', '-Xnamespace-prefix',
+                    '-encoding', 'UTF-8',
+                    '-d', xjcJavaDir.get().asFile.path,
+                    '-episode', new File(xjcResourceDir.get().asFile, 'META-INF/sun-jaxb.episode').path]
+        xjcBindings.files.sort().each { args += ['-b', it.path] }
+        args += xjcSchemas.files.sort()*.path
+        args
+    } as CommandLineArgumentProvider)
+}
+
+sourceSets.main.java.srcDir(files(xjcJavaDir).builtBy(xjcTask))
+sourceSets.main.resources.srcDir(files(xjcResourceDir).builtBy(xjcTask))
+
+// 생성된 모델 패키지는 커버리지 계측에서 뺀다
+tasks.named('test', Test) {
+    jacoco {
+        excludes = ['ei', 'emix', 'oadr', 'pyld', 'strm', 'xcal', 'atom', 'gml', 'greenbutton', 'iso', 'power',
+                    'siscale', 'xmldsig', 'xmldsig11', 'xmldsig.properties'].collect { "com.avob.openadr.model.*.${it}.*".toString() }
+    }
+}

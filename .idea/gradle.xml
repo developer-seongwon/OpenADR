@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="GradleSettings">
+    <option name="linkedExternalProjectsSettings">
+      <GradleProjectSettings>
+        <compositeConfiguration>
+          <compositeBuild compositeDefinitionSource="SCRIPT">
+            <builds>
+              <build path="$PROJECT_DIR$/client" name="OpenADRClient">
+                <projects>
+                  <project path="$PROJECT_DIR$/client" />
+                  <project path="$PROJECT_DIR$/client/OpenADRHTTPClient" />
+                  <project path="$PROJECT_DIR$/client/OpenADRHTTPClient20a" />
+                  <project path="$PROJECT_DIR$/client/OpenADRHTTPClient20b" />
+                  <project path="$PROJECT_DIR$/client/OpenADRModel20a" />
+                  <project path="$PROJECT_DIR$/client/OpenADRModel20b" />
+                  <project path="$PROJECT_DIR$/client/OpenADRSecurity" />
+                  <project path="$PROJECT_DIR$/client/OpenADRXMPPClient" />
+                </projects>
+              </build>
+              <build path="$PROJECT_DIR$/server" name="OpenADRServer">
+                <projects>
+                  <project path="$PROJECT_DIR$/server" />
+                  <project path="$PROJECT_DIR$/server/DummyDRProgram" />
+                  <project path="$PROJECT_DIR$/server/DummyVEN20b" />
+                  <project path="$PROJECT_DIR$/server/OpenADRServerVEN20b" />
+                  <project path="$PROJECT_DIR$/server/OpenADRServerVTN20a" />
+                  <project path="$PROJECT_DIR$/server/OpenADRServerVTN20b" />
+                  <project path="$PROJECT_DIR$/server/OpenADRServerVTNCommon" />
+                  <project path="$PROJECT_DIR$/server/OpenADRServerVTNTestSupport" />
+                </projects>
+              </build>
+            </builds>
+          </compositeBuild>
+        </compositeConfiguration>
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/client" />
+            <option value="$PROJECT_DIR$/client/OpenADRHTTPClient" />
+            <option value="$PROJECT_DIR$/client/OpenADRHTTPClient20a" />
+            <option value="$PROJECT_DIR$/client/OpenADRHTTPClient20b" />
+            <option value="$PROJECT_DIR$/client/OpenADRModel20a" />
+            <option value="$PROJECT_DIR$/client/OpenADRModel20b" />
+            <option value="$PROJECT_DIR$/client/OpenADRSecurity" />
+            <option value="$PROJECT_DIR$/client/OpenADRXMPPClient" />
+            <option value="$PROJECT_DIR$/server" />
+            <option value="$PROJECT_DIR$/server/DummyDRProgram" />
+            <option value="$PROJECT_DIR$/server/DummyVEN20b" />
+            <option value="$PROJECT_DIR$/server/OpenADRServerVEN20b" />
+            <option value="$PROJECT_DIR$/server/OpenADRServerVTN20a" />
+            <option value="$PROJECT_DIR$/server/OpenADRServerVTN20b" />
+            <option value="$PROJECT_DIR$/server/OpenADRServerVTNCommon" />
+            <option value="$PROJECT_DIR$/server/OpenADRServerVTNTestSupport" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+    </option>
+  </component>
+</project>
