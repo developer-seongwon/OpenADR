@@ -1,0 +1,288 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.avob.openadr</groupId>
+	<artifactId>OpenADRServer</artifactId>
+	<version>0.1.0-SNAPSHOT</version>
+	<name>OpenADRServer</name>
+	<description>OpenADR VTN/VEN 서버와 테스트용 DR 프로그램, VEN</description>
+	<packaging>pom</packaging>
+
+	<!--
+	  서버 그룹의 부모 pom. 이 디렉토리만으로 빌드된다. 나중에 저장소를 나누면 이 디렉토리가 저장소 루트가 된다.
+
+	  클라이언트 라이브러리(client/)는 모듈이 아니라 좌표(openadr-client.version)로 받는다.
+	  그래서 이 디렉토리만 빌드할 때는 클라이언트가 먼저 로컬 저장소(~/.m2)에 install 돼 있어야 한다.
+
+	    cd client && mvn clean install
+	    cd server && mvn clean install
+
+	  저장소 루트의 pom.xml 로 빌드하면 한 리액터 안에서 client 를 먼저 빌드해서 바로 쓴다.
+	  docker/run.sh 는 옆에 ../client 가 있으면 먼저 install 한다.
+
+	  공통 설정(자바 버전, 테스트, BOM 정책)은 client/pom.xml 과 같게 유지한다. 한쪽을 고치면 다른 쪽도 본다.
+	-->
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>4.1.1</version>
+		<relativePath></relativePath>
+	</parent>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<java.version>25</java.version>
+		<!-- surefire argLine 의 @{argLine} 기본값. jacoco 를 쓰는 모듈에서는 prepare-agent 가 덮어쓴다 -->
+		<argLine></argLine>
+
+		<!-- 쓰는 클라이언트 라이브러리(client/) 버전 -->
+		<openadr-client.version>0.1.0-SNAPSHOT</openadr-client.version>
+
+		<!-- Boot 가 관리하는 라이브러리는 버전을 덮지 않고 Boot BOM 값을 그대로 쓴다.
+		     BOM 은 Spring 팀이 서로 맞춰 검증한 조합이고, 덮어 두면 Boot 를 올려도 그 값에 묶여서
+		     나중에는 오히려 Boot 보다 낮은 버전을 쓰게 된다. 최신이 필요하면 Boot 를 올린다.
+		     예전에 덮던 것: activemq, junit-jupiter, byte-buddy, mockito, jackson-bom, jackson-2-bom, commons-logging.
+		     activemq 는 6.x 부터 jakarta.jms 를 쓴다(5.x 는 javax.jms 라 Boot 3 이상에서 못 쓴다).
+		     새 자바로 갈 때 Boot 의 byte-buddy(Mockito, Hibernate 가 쓴다)가 새 클래스 파일 버전을 아직 모르면,
+		     그때만 byte-buddy.version 을 잠깐 덮는다. Boot 가 따라오면 바로 지운다 -->
+		<!-- jacoco 는 JDK 메이저마다 새 버전이 필요하다. 0.8.12 는 Java 22 까지라서
+		     Java 25 클래스(major 69)를 만나면 "Unsupported class file major version 69" 를
+		     테스트마다 찍어 댄다. 테스트는 통과하지만 커버리지가 비므로 올린다.
+		     새 JDK 가 나오면 제일 먼저 올려야 하는 플러그인이라 최신(0.8.15)을 유지한다 -->
+		<jacoco-plugin.version>0.8.15</jacoco-plugin.version>
+		<!-- PostgreSQL 드라이버와 testcontainers 는 고정하지 않고 Boot BOM 값(postgresql.version,
+		     testcontainers.version)을 쓴다. 예전 고정값 42.6.0, 2.0.2 가 Boot 의 최신값(42.7.13, 2.0.5)을
+		     끌어내리고 있었다. 테스트는 H2 대신 도커의 PostgreSQL 을 쓴다(운영과 같은 DB 라야 DDL 이 안 어긋난다).
+		     testcontainers 는 2.x 라야 도커 엔진 29(API 1.44 이상)에 붙는다 -->
+		<!-- rabbitmq-jms 3.x 가 jakarta.jms 대응 버전이다. Boot 가 관리하지 않아서 직접 고정한다 -->
+		<rabbitmq-jms.version>3.9.0</rabbitmq-jms.version>
+		<!-- springfox 는 Boot 3 에서 동작하지 않아 springdoc 으로 교체한다.
+		     springdoc 버전은 스프링 버전을 따라간다. 2.2 는 Spring 6.0, 2.8 은 6.2,
+		     3.x 가 Boot 4(Spring 7) 대응이다. 어긋나면 빌드는 통과하고
+		     런타임에 /v3/api-docs 가 500 으로 터진다 -->
+		<springdoc.version>3.1.1</springdoc.version>
+		<!-- commons-compress, guava 는 Boot 가 관리하지 않아서 직접 고정한다 -->
+		<commons-compress.version>1.28.0</commons-compress.version>
+		<!-- commons-lang3 는 고정하지 않는다.
+		     Boot 3.1.5 때는 BOM 이 3.12.0 이라 commons-compress 가 요구하는
+		     SystemProperties 가 없어서 3.14.0 으로 올려 두었다.
+		     Boot 4 의 BOM 은 3.20.0 이라 그 고정이 오히려 버전을 끌어내렸고,
+		     springdoc 3 이 쓰는 org.apache.commons.lang3.Strings(3.18 에서 추가)가
+		     없어서 /v3/api-docs 가 NoClassDefFoundError 로 500 이 났다 -->
+		<guava.version>33.7.1-jre</guava.version>
+	</properties>
+
+	<dependencies>
+		<!-- 테스트는 전부 JUnit Jupiter 다. 스프링을 안 쓰는 모듈도 있을 수 있어서
+		     starter-test 에 기대지 않고 여기서 모든 모듈에 한 번에 넣는다 -->
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<!-- Java 21 부터 JVM 이 런타임에 에이전트를 붙이는 걸 경고하고 (JEP 451),
+		     나중에는 막을 예정이다. Mockito 의 inline mock maker 가 그렇게 자기 자신을
+		     붙이므로 surefire 가 -javaagent 로 미리 올려 준다.
+		     모든 모듈에 넣는 이유는 아래 dependency:properties 가 만드는
+		     org.mockito:mockito-core:jar 프로퍼티가 의존성 없는 모듈에서는
+		     비어 있어 argLine 이 깨지기 때문이다. 테스트 스코프라 배포 jar 에는 안 들어간다 -->
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<dependencyManagement>
+		<dependencies>
+			<!-- 클라이언트 라이브러리 -->
+			<dependency>
+				<groupId>com.avob.openadr</groupId>
+				<artifactId>OpenADRSecurity</artifactId>
+				<version>${openadr-client.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.avob.openadr</groupId>
+				<artifactId>OpenADRModel20a</artifactId>
+				<version>${openadr-client.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.avob.openadr</groupId>
+				<artifactId>OpenADRModel20b</artifactId>
+				<version>${openadr-client.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.avob.openadr</groupId>
+				<artifactId>OpenADRHTTPClient</artifactId>
+				<version>${openadr-client.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.avob.openadr</groupId>
+				<artifactId>OpenADRHTTPClient20a</artifactId>
+				<version>${openadr-client.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.avob.openadr</groupId>
+				<artifactId>OpenADRHTTPClient20b</artifactId>
+				<version>${openadr-client.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.avob.openadr</groupId>
+				<artifactId>OpenADRXMPPClient</artifactId>
+				<version>${openadr-client.version}</version>
+			</dependency>
+
+			<!-- 서버 모듈 -->
+			<dependency>
+				<groupId>com.avob.openadr</groupId>
+				<artifactId>OpenADRServerVTNCommon</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.avob.openadr</groupId>
+				<artifactId>OpenADRServerVTNTestSupport</artifactId>
+				<version>${project.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>com.avob.openadr</groupId>
+				<artifactId>OpenADRServerVTN20a</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.avob.openadr</groupId>
+				<artifactId>OpenADRServerVEN20b</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.testcontainers</groupId>
+				<artifactId>testcontainers-bom</artifactId>
+				<version>${testcontainers.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.postgresql</groupId>
+				<artifactId>postgresql</artifactId>
+				<version>${postgresql.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.rabbitmq.jms</groupId>
+				<artifactId>rabbitmq-jms</artifactId>
+				<version>${rabbitmq-jms.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.activemq</groupId>
+				<artifactId>activemq-broker</artifactId>
+				<version>${activemq.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.activemq</groupId>
+				<artifactId>activemq-client</artifactId>
+				<version>${activemq.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springdoc</groupId>
+				<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+				<version>${springdoc.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.commons</groupId>
+				<artifactId>commons-compress</artifactId>
+				<version>${commons-compress.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.google.guava</groupId>
+				<artifactId>guava</artifactId>
+				<version>${guava.version}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<release>${java.version}</release>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<executions>
+					<!-- docker/run.sh 가 -N 으로 부른다. VTN 의 loader.path 로 들어갈 PostgreSQL 드라이버를
+					     이 디렉토리의 target 에 복사한다 -->
+					<execution>
+						<id>copy-external-dependency</id>
+						<phase>none</phase>
+						<goals>
+							<goal>copy</goal>
+						</goals>
+					</execution>
+					<!-- 의존성마다 groupId:artifactId:type 이름의 프로퍼티에 jar 경로를 넣어 준다.
+					     아래 surefire 의 -javaagent 가 mockito-core 경로를 이걸로 받는다 -->
+					<execution>
+						<id>mockito-agent-path</id>
+						<goals>
+							<goal>properties</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<artifactItems>
+						<artifactItem>
+							<groupId>org.postgresql</groupId>
+							<artifactId>postgresql</artifactId>
+							<version>${postgresql.version}</version>
+							<type>jar</type>
+							<outputDirectory>${project.build.directory}/</outputDirectory>
+						</artifactItem>
+					</artifactItems>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<!-- @{argLine} 은 jacoco prepare-agent 가 채우는 값이다.
+					     jacoco 를 안 쓰는 모듈은 properties 의 빈 argLine 이 들어간다 -->
+					<argLine>@{argLine} -javaagent:${org.mockito:mockito-core:jar}</argLine>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+	<!-- 빌드 순서는 메이븐이 의존 관계를 보고 알아서 잡는다.
+	     OpenfireOadrPlugin 은 부모가 Openfire 의 plugins pom 이라 여기 넣지 않는다(docker/run.sh 가 따로 빌드).
+	     docker/run.sh 가 이 목록을 읽어서 앱 이미지에 필요한 모듈이 들어 있는지 본다 -->
+	<modules>
+		<module>./OpenADRServerVTNCommon</module>
+		<module>./OpenADRServerVTNTestSupport</module>
+		<module>./OpenADRServerVTN20a</module>
+
+		<module>./OpenADRServerVEN20b</module>
+		<module>./OpenADRServerVTN20b</module>
+		<module>./DummyVEN20b</module>
+		<module>./DummyDRProgram</module>
+	</modules>
+
+	<scm>
+		<url>https://github.com/avob/OpenADR</url>
+		<connection>scm:git:git://github.com/avob/OpenADR</connection>
+		<developerConnection>scm:git:git@github.com/avob/OpenADR</developerConnection>
+	</scm>
+	<developers>
+		<developer>
+			<email>zanni.bertrand@gmail.com</email>
+			<name>Bertrand Zanni</name>
+			<url>https://github.com/zanni</url>
+			<id>zanni</id>
+		</developer>
+	</developers>
+
+</project>

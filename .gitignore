@@ -54,9 +54,9 @@
 */.apt_generated/
 
 # compile foolder
-*/target
-# 루트 target 은 run.sh 가 PostgreSQL 드라이버를 복사해 두는 곳이다(dependency:copy@copy-external-dependency)
-/target/
+# 모듈이 client/, server/ 아래로 한 단계 내려가서 */target 으로는 안 잡힌다. 깊이와 상관없이 뺀다.
+# server/target 은 run.sh 가 PostgreSQL 드라이버를 복사해 두는 곳이다(dependency:copy@copy-external-dependency)
+target/
 
 .vagrant/**/.vagrant
 .vagrant/vtn20b_postgres/provisioning/playbook.retry
@@ -69,7 +69,7 @@
 .vagrant/nodered/provisioning/roles/*
 
 cert*
-OpenADRServerVTN20b/src/main/resources/public/
-OpenADRServerVTN20b/frontend/build/
-OpenADRServerVTN20b/frontend/node_modules/
-OpenADRServerVTN20b/frontend/package-lock.json
+server/OpenADRServerVTN20b/src/main/resources/public/
+server/OpenADRServerVTN20b/frontend/build/
+server/OpenADRServerVTN20b/frontend/node_modules/
+server/OpenADRServerVTN20b/frontend/package-lock.json

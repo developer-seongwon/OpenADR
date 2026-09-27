@@ -3,6 +3,24 @@
 Spring Boot 4 / Java 25 로 이관한 뒤의 빌드와 실행 방법이다.
 프로토콜 자체와 모듈 설명은 영문 `README.md` 를 보면 된다.
 
+## 디렉토리 구조
+
+클라이언트 라이브러리와 서버를 디렉토리로 나눴다. 나중에 저장소를 나누면 각 디렉토리가 저장소 루트가 된다.
+
+```
+pom.xml        client, server 를 한 번에 빌드하는 집계 pom (설정은 물려주지 않는다)
+client/        라이브러리. server 를 참조하지 않는다
+  OpenADRSecurity, OpenADRModel20a, OpenADRModel20b,
+  OpenADRHTTPClient, OpenADRHTTPClient20a, OpenADRHTTPClient20b, OpenADRXMPPClient
+server/        서버와 테스트용 앱. client 를 좌표(openadr-client.version)로 받는다
+  OpenADRServerVTNCommon, OpenADRServerVTNTestSupport, OpenADRServerVTN20a, OpenADRServerVTN20b,
+  OpenADRServerVEN20b, DummyVEN20b, DummyDRProgram, OpenfireOadrPlugin
+  docker/, test/http/, generate_test_cert.sh, cert/(생성물)
+```
+
+`client/pom.xml`, `server/pom.xml` 이 각자 부모 pom 이다(둘 다 spring-boot-starter-parent 를 부모로 둔다).
+자바 버전, 테스트, BOM 정책 같은 공통 설정은 두 파일에 같게 들어 있으니 한쪽을 고치면 다른 쪽도 본다.
+
 ## 준비물
 
 Docker Desktop, Java 25, Maven 이 필요하다.
@@ -20,15 +38,24 @@ export JAVA_HOME=$(/usr/libexec/java_home -v 25)
 "/Applications/IntelliJ IDEA.app/Contents/plugins/maven/lib/maven3/bin/mvn" -B clean install
 ```
 
+루트에서 빌드하면 client 와 server 를 한 리액터로 빌드한다. 따로 빌드할 때는 client 를 먼저 install 한다.
+server 만 빌드하면 client 는 로컬 저장소(~/.m2)에 있는 것을 쓴다.
+
+```
+mvn -B -f client/pom.xml clean install
+mvn -B -f server/pom.xml clean install
+```
+
 `docker/run.sh` 는 `JAVA_HOME` 과 `mvn` 을 알아서 찾는다. 못 찾으면 에러를 내고 멈춘다.
 직접 지정하고 싶으면 `JAVA_HOME`, `MVN` 환경변수를 넘기면 된다.
 
 ## 최초 1회: 테스트 인증서 생성
 
 OpenADR 은 VTN 과 VEN 이 서로 인증서로 신원을 확인한다.
-`cert/` 가 비어 있으면 처음 한 번은 직접 만들어야 한다.
+`server/cert/` 가 비어 있으면 처음 한 번은 직접 만들어야 한다.
 
 ```
+cd server
 ./generate_test_cert.sh
 ```
 
@@ -48,17 +75,22 @@ echo "127.0.0.1 vtn.oadr.com" | sudo tee -a /etc/hosts
 ## 전체 스택 띄우기
 
 ```
+cd server
 ./docker/run.sh start all
 ```
 
+이 문서의 `./docker/run.sh` 명령은 모두 `server` 디렉토리 기준이다. 스크립트는 어디서 불러도 server 로 이동해서 돈다.
+
 jar 를 먼저 로컬에서 빌드한 다음(`-P external,frontend`) 이미지를 만들고 컨테이너를 띄운다.
+옆에 `client` 디렉토리가 있으면 그걸 먼저 install 한다. 저장소가 나뉘면 `CLIENT_DIR` 로 client 경로를 주거나
+client 를 미리 install 해 두면 된다.
 처음에는 이미지 빌드까지 포함해서 몇 분 걸린다.
 
 뜨고 나면 이렇게 접속한다.
 
 VTN 웹 UI 는 https://localhost:8181/testvtn/ 이고 `admin` / `admin` 으로 로그인한다.
 자체 서명 인증서라 브라우저가 경고를 낸다. 그냥 진행하면 된다.
-클라이언트 인증서는 필요 없다. `cert/admin.oadr.com.p12` (비밀번호 changeme) 를 브라우저에
+클라이언트 인증서는 필요 없다. `server/cert/admin.oadr.com.p12` (비밀번호 changeme) 를 브라우저에
 넣으면 x509 로도 들어갈 수 있는데, 로그인만 할 거면 안 해도 된다.
 
 API 문서는 https://localhost:8181/testvtn/swagger-ui/index.html 이고,
@@ -98,7 +130,7 @@ target 은 세 가지로 준다.
 ## docker 디렉토리 구조
 
 ```
-docker/
+server/docker/
   run.sh                     기동 스크립트. 여기만 쓰면 된다
   docker-compose.yml         인프라 + 앱 전체
   docker-compose.infra.yml   인프라만 (postgres, rabbitmq, openfire)
@@ -113,9 +145,9 @@ docker/
 
 각 디렉토리에 그 서비스의 `Dockerfile` 과 설정 파일이 같이 있다.
 
-빌드 컨텍스트가 두 종류다. `build`, `postgres`, `rabbitmq`, `openfire` 는 리포지토리
-루트를 컨텍스트로 쓴다. 소스와 `cert/` 가 필요해서다. 그래서 compose 의 context 가 `..` 이고
-루트의 `.dockerignore` 가 적용된다. 나머지 앱 이미지는 자기 디렉토리만 컨텍스트로 쓴다.
+빌드 컨텍스트가 두 종류다. `build`, `postgres`, `rabbitmq`, `openfire` 는 `server`
+디렉토리를 컨텍스트로 쓴다. 빌드한 jar 와 `cert/` 가 필요해서다. 그래서 compose 의 context 가 `..` 이고
+`server/.dockerignore` 가 적용된다. 나머지 앱 이미지는 자기 디렉토리만 컨텍스트로 쓴다.
 
 ## 동작 방식
 
@@ -127,7 +159,7 @@ jar 는 컨테이너 안이 아니라 로컬에서 만든다. 프로파일이 �
 rabbitmq 드라이버가 빠져서 VTN 이 `RMQConnectionFactory` 를 못 찾고 죽는다.
 `frontend` 는 React UI 를 jar 안에 넣는 프로파일이다.
 
-프론트엔드는 `OpenADRServerVTN20b/frontend` 에 있고 Vite 로 빌드한다(예전엔 react-scripts).
+프론트엔드는 `server/OpenADRServerVTN20b/frontend` 에 있고 Vite 로 빌드한다(예전엔 react-scripts).
 `npm run build` 결과가 `frontend/build` 에 생기고, 메이븐이 그걸
 `src/main/resources/public` 으로 옮긴다. 옮기기 전에 public 을 비우므로 옛 번들이 섞이지 않는다.
 번들은 `static/` 아래에 둔다. `HttpSecurityConfig` 가 인증 없이 여는 경로가 `/static/**` 라서다.
@@ -197,7 +229,7 @@ DB 만 따로 비우려면 이렇게 한다.
 `JAVA_HOME` 을 확인해라.
 
 VEN20b 테스트는 실제로 서버 소켓을 연다. 포트는 18081, 18082 를 쓴다.
-`OpenADRServerVEN20b/src/test/resources/application.properties` 에 있고,
+`server/OpenADRServerVEN20b/src/test/resources/application.properties` 에 있고,
 `OadrMockMvc` 가 요청 URL 에 포트를 박아 쓰므로 바꾸려면 양쪽을 같이 고쳐야 한다.
 
 테스트는 도커로 PostgreSQL 을 띄운다. 도커가 꺼져 있으면 컨텍스트가 못 뜬다.

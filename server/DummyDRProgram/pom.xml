@@ -1,0 +1,160 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>DummyDRProgram</artifactId>
+	<description>Oadr 2.0b dummy demand response program implementation</description>
+	<parent>
+		<groupId>com.avob.openadr</groupId>
+		<artifactId>OpenADRServer</artifactId>
+		<version>0.1.0-SNAPSHOT</version>
+	</parent>
+
+	<properties>
+		<openapi-generator.version>7.25.0</openapi-generator.version>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>com.avob.openadr</groupId>
+			<artifactId>OpenADRSecurity</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter</artifactId>
+					<exclusions>
+				<!-- 부트 기본 로깅(logback)을 뺀다. 이 프로젝트는 log4j2 를 쓴다.
+				     둘이 같이 있으면 log4j-slf4j2-impl 과 log4j-to-slf4j 가 충돌해서
+				     "cannot be present with" 로 컨텍스트가 아예 안 뜬다 -->
+				<exclusion>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-logging</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-log4j2</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-jms</artifactId>
+		</dependency>
+		<!-- amq 6.x 와 rabbitmq-jms 3.x 가 jakarta.jms 를 쓴다. API 도 같이 옮긴다 -->
+		<dependency>
+			<groupId>jakarta.jms</groupId>
+			<artifactId>jakarta.jms-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.rabbitmq.jms</groupId>
+			<artifactId>rabbitmq-jms</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.activemq</groupId>
+			<artifactId>activemq-client</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<!-- VTN REST 클라이언트는 openapi-generator 의 native 라이브러리로 만든다.
+		     HTTP 는 자바 표준 java.net.http.HttpClient, JSON 은 나머지 모듈과 같은 Jackson 3 를 쓴다(useJackson3).
+		     예전 swagger-codegen 2.2.3 클라이언트가 끌고 오던 okhttp 2.7.5, gson, gson-fire,
+		     joda-time, threetenbp, swagger-annotations 1.5, guava 는 전부 뺐다.
+		     Jackson 3 는 java.time 지원이 databind 에 들어 있어서 jsr310 모듈이 따로 필요 없다.
+		     버전은 Boot BOM 이 관리한다 -->
+		<dependency>
+			<groupId>tools.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>jakarta.annotation</groupId>
+			<artifactId>jakarta.annotation-api</artifactId>
+		</dependency>
+
+	</dependencies>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+			<!-- swagger-codegen 2.2.3 -> openapi-generator. 입력 스펙(swagger 2.0)은 springfox 시절 VTN 에서 뽑아 둔 것이다.
+			     생성 경고를 없애려고 스펙에서 두 가지를 손으로 고쳤다.
+			     - POST /Ven/, /Account/app, /Account/user 의 응답이 스프링 InputStreamResource 를 JSON 객체로 적어서
+			       File(자바 예약어라 ModelFile 로 바뀜), InputStream, URI, URL 같은 쓸모없는 모델이 생겼다.
+			       실제 응답은 인증서 tar 파일이라 swagger 2.0 의 "type": "file" 로 바꿨다(생성 코드는 java.io.File 로 받는다)
+			     - /auth/* 는 RabbitMQ HTTP 인증 백엔드가 부르는 VTN 내부 API 라 DummyDRProgram 은 안 쓴다.
+			       메서드를 정하지 않은 @RequestMapping 이라 경로마다 HTTP 메서드 7개씩 28개 오퍼레이션이 생겨서 뺐다
+			     패키지 이름을 예전과 같게 두어서 DummyDRProgram 코드의 import 가 바뀌지 않는다.
+			     생성 소스 경로는 플러그인이 컴파일 경로에 직접 올리므로 build-helper 는 뺐다 -->
+			<plugin>
+				<groupId>org.openapitools</groupId>
+				<artifactId>openapi-generator-maven-plugin</artifactId>
+				<version>${openapi-generator.version}</version>
+				<executions>
+					<execution>
+						<id>add-oadr-api</id>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<configuration>
+							<inputSpec>${project.basedir}/src/main/resources/oadr-vtn20b-0.1.0-SNAPSHOT.json</inputSpec>
+							<output>${project.build.directory}/generated-sources/oadr-vtn20b</output>
+							<generatorName>java</generatorName>
+							<!-- native: java.net.http.HttpClient + Jackson -->
+							<library>native</library>
+							<apiPackage>com.avob.server.oadrvtn20b.api</apiPackage>
+							<modelPackage>com.avob.server.oadrvtn20b.model</modelPackage>
+							<invokerPackage>com.avob.server.oadrvtn20b.handler</invokerPackage>
+							<generateModelTests>false</generateModelTests>
+							<generateApiTests>false</generateApiTests>
+							<generateModelDocumentation>false</generateModelDocumentation>
+							<generateApiDocumentation>false</generateApiDocumentation>
+							<configOptions>
+								<sourceFolder>src/main/java</sourceFolder>
+								<useJakartaEe>true</useJakartaEe>
+								<dateLibrary>java8</dateLibrary>
+								<!-- JsonNullable(jackson-databind-nullable) 의존성을 안 쓴다 -->
+								<openApiNullable>false</openApiNullable>
+								<!-- 기본은 Jackson 2 다. 프로젝트 전체가 Jackson 3(tools.jackson)라 맞춘다 -->
+								<useJackson3>true</useJackson3>
+								<!-- 모델마다 toUrlQueryString 을 만드는 기능. 모델을 쿼리 문자열로 쓸 일이 없으니 끈다.
+								     예전에는 스펙의 URI 모델이 java.net.URI 와 섞여 컴파일이 깨지는 것도 막았다(지금은 그 모델을 뺐다) -->
+								<supportUrlQuery>false</supportUrlQuery>
+								<annotationLibrary>none</annotationLibrary>
+								<serializableModel>true</serializableModel>
+								<hideGenerationTimestamp>true</hideGenerationTimestamp>
+							</configOptions>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+		</plugins>
+	</build>
+
+
+	<profiles>
+		<profile>
+			<id>standalone</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<dependencies>
+				<dependency>
+					<groupId>org.apache.activemq</groupId>
+					<artifactId>activemq-client</artifactId>
+				</dependency>
+			</dependencies>
+		</profile>
+		<profile>
+			<id>external</id>
+			<dependencies>
+
+				<dependency>
+					<groupId>com.rabbitmq.jms</groupId>
+					<artifactId>rabbitmq-jms</artifactId>
+				</dependency>
+			</dependencies>
+		</profile>
+	</profiles>
+</project>

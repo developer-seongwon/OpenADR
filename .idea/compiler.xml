@@ -27,13 +27,15 @@
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="DummyDRProgram" options="-parameters" />
       <module name="DummyVEN20b" options="-parameters" />
-      <module name="OpenADR" options="-parameters" />
+      <module name="OpenADR" options="" />
+      <module name="OpenADRClient" options="-parameters" />
       <module name="OpenADRHTTPClient" options="-parameters" />
       <module name="OpenADRHTTPClient20a" options="-parameters" />
       <module name="OpenADRHTTPClient20b" options="-parameters" />
       <module name="OpenADRModel20a" options="-parameters" />
       <module name="OpenADRModel20b" options="-parameters" />
       <module name="OpenADRSecurity" options="-parameters" />
+      <module name="OpenADRServer" options="-parameters" />
       <module name="OpenADRServerVEN20b" options="-parameters" />
       <module name="OpenADRServerVTN20a" options="-parameters" />
       <module name="OpenADRServerVTN20b" options="-parameters" />

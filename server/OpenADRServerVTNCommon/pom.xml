@@ -1,0 +1,206 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>OpenADRServerVTNCommon</artifactId>
+	<name>OpenADRServerVTNCommon</name>
+	<description>VTN framework</description>
+	<parent>
+		<groupId>com.avob.openadr</groupId>
+		<artifactId>OpenADRServer</artifactId>
+		<version>0.1.0-SNAPSHOT</version>
+	</parent>
+	<dependencies>
+		<dependency>
+			<groupId>com.avob.openadr</groupId>
+			<artifactId>OpenADRHTTPClient</artifactId>
+		</dependency>
+		<!-- Jetty 를 걷어내고 부트 기본 컨테이너인 톰캣을 쓴다.
+		     Boot 3.1 이 관리하는 Jetty 11 은 서블릿 5 구현인데 BOM 의 jakarta.servlet-api 는
+		     톰캣 10.1 기준 6.0 이라 실제로 서버를 띄우면 HttpSessionContext 가 없어서 죽는다.
+		     servlet-api 를 5 로 내리면 이번엔 Spring 6 테스트 목이 ServletConnection 을 못 찾는다.
+		     톰캣은 서블릿 6 이라 양쪽이 다 맞고, Boot 4 의 기본도 톰캣 11 이라 이쪽이 앞길이 편하다.
+		     TLS 는 VtnSslBundleRegistrar 가 등록하는 SSL 번들로 컨테이너 중립으로 처리한다 -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-logging</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-log4j2</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+					<exclusions>
+				<!-- 부트 기본 로깅(logback)을 뺀다. 이 프로젝트는 log4j2 를 쓴다.
+				     둘이 같이 있으면 log4j-slf4j2-impl 과 log4j-to-slf4j 가 충돌해서
+				     "cannot be present with" 로 컨텍스트가 아예 안 뜬다 -->
+				<exclusion>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-logging</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-logging</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-jms</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>jakarta.jms</groupId>
+			<artifactId>jakarta.jms-api</artifactId>
+		</dependency>
+		
+		<!-- Boot 4 는 Jackson 3(tools.jackson.*)을 쓴다. 여기 있던 Jackson 2 databind 는 쓰는 곳이 없다.
+		     VenCommandDto 의 @JsonCreator 는 Jackson 3 도 그대로 쓰는 com.fasterxml.jackson.annotation 패키지라
+		     annotations 만 남긴다. 버전은 Boot BOM 이 관리한다 -->
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-annotations</artifactId>
+		</dependency>
+		
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-compress</artifactId>
+		</dependency>
+		<dependency> 
+		    <groupId>org.springframework.boot</groupId> 
+		    <artifactId>spring-boot-starter-validation</artifactId> 
+					<exclusions>
+				<!-- 부트 기본 로깅(logback)을 뺀다. 이 프로젝트는 log4j2 를 쓴다.
+				     둘이 같이 있으면 log4j-slf4j2-impl 과 log4j-to-slf4j 가 충돌해서
+				     "cannot be present with" 로 컨텍스트가 아예 안 뜬다 -->
+				<exclusion>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-logging</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		
+		<!-- provided dependencies -->
+		<dependency>
+			<groupId>org.apache.activemq</groupId>
+			<artifactId>activemq-broker</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.rabbitmq.jms</groupId>
+			<artifactId>rabbitmq-jms</artifactId>
+			<scope>provided</scope>
+		</dependency>
+
+		<!-- 테스트 DB. H2 대신 도커로 운영과 같은 PostgreSQL 을 띄운다 -->
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>testcontainers-postgresql</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<!-- 테스트용 DB 컨테이너 홀더. VTN20a, VTN20b 와 같은 것을 써야
+		     컨텍스트마다 컨테이너를 새로 띄우지 않는다 -->
+		<dependency>
+			<groupId>com.avob.openadr</groupId>
+			<artifactId>OpenADRServerVTNTestSupport</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-test</artifactId>
+			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-logging</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-logging</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+	</dependencies>
+	
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>${jacoco-plugin.version}</version>
+				<configuration>
+					<destFile>${basedir}/target/coverage-reports/jacoco-unit.exec</destFile>
+					<dataFile>${basedir}/target/coverage-reports/jacoco-unit.exec</dataFile>
+				</configuration>
+				<executions>
+					<execution>
+						<id>jacoco-initialize</id>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>jacoco-site</id>
+						<phase>site</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+	
+	<profiles>
+		<profile>
+			<id>standalone</id>
+			<activation>
+				
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<dependencies>
+				<dependency>
+					<groupId>org.apache.activemq</groupId>
+					<artifactId>activemq-broker</artifactId>
+				</dependency>
+			</dependencies>
+		</profile>
+		<profile>
+			<id>external</id>
+			<dependencies>
+				<dependency>
+					<groupId>com.rabbitmq.jms</groupId>
+					<artifactId>rabbitmq-jms</artifactId>
+				</dependency>
+			</dependencies>
+		</profile>
+	</profiles>
+</project>

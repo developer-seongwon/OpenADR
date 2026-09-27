@@ -1,0 +1,119 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>OpenADRServerVEN20b</artifactId>
+	<name>OpenADRServerVEN20b</name>
+	<description>VEN2.0b application</description>
+	<parent>
+		<groupId>com.avob.openadr</groupId>
+		<artifactId>OpenADRServer</artifactId>
+		<version>0.1.0-SNAPSHOT</version>
+	</parent>
+	<dependencies>
+		<dependency>
+			<groupId>com.avob.openadr</groupId>
+			<artifactId>OpenADRHTTPClient20b</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.avob.openadr</groupId>
+			<artifactId>OpenADRXMPPClient</artifactId>
+		</dependency>
+		<!-- Jetty 를 걷어내고 부트 기본 컨테이너인 톰캣을 쓴다.
+		     Boot 3.1 이 관리하는 Jetty 11 은 서블릿 5 구현인데 BOM 의 jakarta.servlet-api 는
+		     톰캣 10.1 기준 6.0 이라 서버를 실제로 띄우면 맞지 않는다.
+		     VTN 쪽과 같은 이유이고, Boot 4 의 기본도 톰캣이라 이쪽이 앞길이 편하다 -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-logging</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+					<exclusions>
+				<!-- 부트 기본 로깅(logback)을 뺀다. 이 프로젝트는 log4j2 를 쓴다.
+				     둘이 같이 있으면 log4j-slf4j2-impl 과 log4j-to-slf4j 가 충돌해서
+				     "cannot be present with" 로 컨텍스트가 아예 안 뜬다 -->
+				<exclusion>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-logging</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-log4j2</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-test</artifactId>
+			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-logging</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-test</artifactId>
+			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-logging</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+					<exclusions>
+				<!-- 부트 기본 로깅(logback)을 뺀다. 이 프로젝트는 log4j2 를 쓴다.
+				     둘이 같이 있으면 log4j-slf4j2-impl 과 log4j-to-slf4j 가 충돌해서
+				     "cannot be present with" 로 컨텍스트가 아예 안 뜬다 -->
+				<exclusion>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-logging</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+	</dependencies>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>${jacoco-plugin.version}</version>
+				<configuration>
+					<destFile>${basedir}/target/coverage-reports/jacoco-unit.exec</destFile>
+					<dataFile>${basedir}/target/coverage-reports/jacoco-unit.exec</dataFile>
+				</configuration>
+				<executions>
+					<execution>
+						<id>jacoco-initialize</id>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>jacoco-site</id>
+						<phase>site</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+</project>
