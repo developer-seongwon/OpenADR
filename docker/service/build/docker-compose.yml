@@ -1,0 +1,11 @@
+# jar 를 담는 중간 이미지(openadr_build). 실행하지 않는다. 앱 이미지들이 COPY --from 으로 파일을 꺼내 간다.
+# run.sh 가 앱을 올리기 전에 이 이미지를 먼저 만든다(docker compose build build).
+# 파일 안의 경로는 저장소 루트 기준이다(docker/postgres/docker-compose.yml 주석 참고)
+services:
+  build:
+    # 앱 Dockerfile 들이 이 이름으로 찾는다(COPY --from=openadr_build:latest)
+    image: openadr_build:latest
+    build:
+      # 빌드 컨텍스트는 저장소 루트다(oadr-server 의 jar, cert 의 인증서를 COPY 한다)
+      context: .
+      dockerfile: docker/service/build/Dockerfile

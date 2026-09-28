@@ -2,24 +2,46 @@
 set -eu
 
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+# 저장소 루트. 이 스크립트(docker/)의 한 단계 위다. compose 의 빌드 컨텍스트도 여기다
 ROOT_DIR=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
 
-# compose 파일은 이 스크립트 옆에 있다.
-# infra 쪽은 postgres, rabbitmq, openfire 만, 기본 쪽은 인프라와 앱을 모두 정의한다.
-# 두 파일 모두 빌드 컨텍스트가 리포지토리 루트라서 context 가 ".." 다.
-INFRA_COMPOSE="docker/docker-compose.infra.yml"
-APP_COMPOSE="docker/docker-compose.yml"
+# 서버 빌드(그래들)와 Openfire 플러그인이 있는 곳
+SERVER_DIR="${SERVER_DIR:-$ROOT_DIR/oadr-server}"
 
-# 서비스 이름은 compose 의 서비스 이름, .docker/<name> 디렉토리와 전부 같다.
+# 테스트 인증서. cert/generate_test_cert.sh 가 만든다. 도커 이미지는 저장소 루트 cert 를 COPY 한다
+CERT_DIR="$ROOT_DIR/cert"
+
+# 서버 모듈은 클라이언트 라이브러리(oadr-client/)를 좌표로 받는다(oadr-server/gradle/libs.versions.toml 의 openadr-client).
+# 그래들이 oadr-client 디렉토리를 includeBuild 로 물고 들어가서 소스에서 바로 만든다(oadr-server/settings.gradle).
+# 저장소가 나뉘면 CLIENT_DIR 로 client 체크아웃 경로를 주거나, client 에서 publishToMavenLocal 을 해 두면 된다.
+CLIENT_DIR="${CLIENT_DIR:-$ROOT_DIR/oadr-client}"
+
+# compose 파일은 서비스 디렉토리마다 하나씩 있다(docker-compose.yml). 인프라는 docker/ 바로 아래,
+# 이 저장소에서 빌드하는 앱은 docker/service 아래에 OpenADR 역할로 나눠 둔다(server 는 VTN 쪽, client 는 VEN 쪽).
+# 전부 -f 로 모아 한 프로젝트로 올리고, 어느 서비스를 올릴지는 명령에서 고른다.
+# 각 파일 안의 경로(build, context)는 저장소 루트 기준이다. compose 는 -f 로 여러 파일을 주면
+# 상대 경로를 전부 한 기준(프로젝트 디렉토리, 기본은 첫 파일의 디렉토리)으로 풀어서 --project-directory 로 루트를 준다
+COMPOSE_FILES="
+docker/postgres/docker-compose.yml
+docker/rabbitmq/docker-compose.yml
+docker/openfire/docker-compose.yml
+docker/service/build/docker-compose.yml
+docker/service/server/vtn20b/docker-compose.yml
+docker/service/server/dummy-drprogram/docker-compose.yml
+docker/service/client/dummy-ven20b/docker-compose.yml
+"
+
+INFRA_SERVICES="postgres rabbitmq openfire"
+
+# 앱 서비스 이름은 compose 의 서비스 이름, docker/service/*/<name> 디렉토리와 같다.
 # all 로 올릴 때의 기동 순서다. 서비스를 직접 나열하면 적은 순서대로 뜬다. 내릴 때는 반대.
 ALL_SERVICES="vtn20b dummy-drprogram dummy-ven20b"
 
-# compose 프로젝트명. 기본값은 디렉토리 이름(OpenADR)이라 두 스택이 서로를 고아로 본다.
-# 스택마다 따로 준다.
-INFRA_PROJECT="oadr-infra"
-APP_PROJECT="oadr-app"
+# compose 프로젝트명. 안 주면 첫 compose 파일의 디렉토리 이름(postgres)이 된다.
+# 예전에는 인프라 전용(oadr-infra)과 앱(oadr-app) 두 스택이었고 포트가 겹쳐서 서로 내려야 했다. 지금은 하나다
+PROJECT="oadr"
 
-# postgres 데이터 볼륨. 두 compose 파일에서 name 으로 고정해 둔 이름과 같아야 한다
+# postgres 데이터 볼륨. postgres/docker-compose.yml 에서 name 으로 고정해 둔 이름과 같아야 한다
 PGDATA_VOLUME="oadr_pgdata"
 
 # 사용법: docker/run.sh <command> [target]
@@ -39,6 +61,13 @@ TARGET=$(echo "${*:-all}" | tr ',' ' ' | tr -s ' ' | sed 's/^ //; s/ $//')
 [ -z "$TARGET" ] && TARGET="all"
 
 cd "$ROOT_DIR"
+
+# 모든 compose 파일을 붙여서 부른다
+compose() {
+  # shellcheck disable=SC2046
+  set -- $(for f in $COMPOSE_FILES; do printf -- '-f %s ' "$f"; done) "$@"
+  docker compose -p "$PROJECT" --project-directory "$ROOT_DIR" "$@"
+}
 
 usage() {
   echo "Usage: $0 {start|stop|restart|logs|status|build|reset-db} [infra|<service>[,<service>...]|all]"
@@ -68,32 +97,12 @@ case "$TARGET" in
     ;;
 esac
 
-# 루트 pom 에서 실제로 활성인 모듈 목록을 뽑는다.
-# 이관 안 된 모듈은 <modules> 안에 XML 주석으로 묶여 있다.
-# 단순 grep 은 주석 안의 줄도 잡고, sed 의 범위 삭제는 한 줄짜리 주석에서
-# 범위가 안 닫혀 멀쩡한 줄까지 지운다. 그래서 주석을 문자 단위로 걷어낸다.
+# oadr-server/settings.gradle 에서 빌드에 들어 있는 모듈 목록을 뽑는다(include '모듈' 줄, // 주석 줄은 뺀다)
 active_modules() {
-  awk '
-    {
-      line = $0; out = ""
-      while (1) {
-        if (inc) {
-          p = index(line, "-->")
-          if (p == 0) { line = ""; break }
-          line = substr(line, p + 3); inc = 0
-        } else {
-          p = index(line, "<!--")
-          if (p == 0) { out = out line; break }
-          out = out substr(line, 1, p - 1)
-          line = substr(line, p + 4); inc = 1
-        }
-      }
-      print out
-    }
-  ' pom.xml | sed -n 's|.*<module>\./\([^<]*\)</module>.*|\1|p'
+  sed -n "s|^[[:space:]]*include[[:space:]]*['\"]\([^'\"]*\)['\"].*|\1|p" "$SERVER_DIR/settings.gradle"
 }
 
-# 앱 이미지는 네 모듈의 jar 를 필요로 한다. 하나라도 리액터 밖이면 만들 수 없다.
+# 앱 이미지는 네 모듈의 jar 를 필요로 한다. 하나라도 빌드 밖이면 만들 수 없다.
 missing_modules() {
   active=$(active_modules)
   missing=""
@@ -103,13 +112,15 @@ missing_modules() {
   echo "$missing"
 }
 
-# 자바 17 과 메이븐을 찾는다. mvn 이 PATH 에 없으면 IntelliJ 번들을 쓴다
+# 메이븐을 찾는다. Openfire 플러그인만 메이븐으로 빌드한다(부모가 Openfire 의 plugins pom 이다).
+# 자바 25 도 같이 찾는다. mvn 이 PATH 에 없으면 IntelliJ 번들을 쓴다.
+# 앱 jar 는 그래들 wrapper(./gradlew)로 만들고, 그래들은 툴체인으로 자바 25 를 알아서 고른다
 resolve_build_tools() {
   if [ -z "${JAVA_HOME:-}" ] && [ -x /usr/libexec/java_home ]; then
-    JAVA_HOME=$(/usr/libexec/java_home -v 17 2>/dev/null || true)
+    JAVA_HOME=$(/usr/libexec/java_home -v 25 2>/dev/null || true)
     export JAVA_HOME
   fi
-  [ -n "${JAVA_HOME:-}" ] || { echo "JAVA_HOME 을 못 찾았다. 자바 17 을 지정해라"; exit 1; }
+  [ -n "${JAVA_HOME:-}" ] || { echo "JAVA_HOME 을 못 찾았다. 자바 25 를 지정해라"; exit 1; }
 
   if [ -z "${MVN:-}" ]; then
     if command -v mvn >/dev/null 2>&1; then
@@ -127,75 +138,61 @@ resolve_build_tools() {
 
 # 인증서가 없으면 TLS 로 뜨지 못한다. 최초 1회만 만들면 된다
 assert_cert() {
-  if [ ! -f "cert/vtn.oadr.com-rsa.crt" ]; then
-    echo "cert 디렉토리에 인증서가 없다. 먼저 ./generate_test_cert.sh 를 돌려라"
+  if [ ! -f "$CERT_DIR/vtn.oadr.com-rsa.crt" ]; then
+    echo "cert 디렉토리에 인증서가 없다. 먼저 ./cert/generate_test_cert.sh 를 돌려라"
     exit 1
   fi
 }
 
-# 인프라만 띄울 때와 앱까지 띄울 때는 쓰는 compose 파일이 다르다.
-#
-# docker-compose.yml 에는 인프라와 앱이 모두 들어 있다. 앱을 띄우면 compose 가
-# 의존하는 인프라도 같은 프로젝트 안에 만든다. 그래서 앱을 띄울 때 인프라를
-# 별도 프로젝트로 또 띄워 두면 5672 같은 포트를 서로 뺏는다.
-#
-# 앱까지 띄우는 경우에는 docker-compose.yml 하나만 쓰고,
-# 앱은 IntelliJ 에서 돌리고 인프라만 필요한 경우에만 middleware 파일을 쓴다.
+# Openfire 이미지에 넣을 OpenADR 플러그인을 호스트에서 빌드한다(docker/openfire/Dockerfile 참고).
+# 그래들 빌드에 없는 별도 메이븐 프로젝트라 -f 로 따로 부른다. Openfire 의존성은 처음 한 번만 ~/.m2 로 받는다
+build_openfire_plugin() {
+  resolve_build_tools
+  echo "Building Openfire OpenADR plugin"
+  "$MVN" -B -ntp -f "$SERVER_DIR/OpenfireOadrPlugin/pom.xml" clean package -DskipTests
+}
+
 start_infra() {
   assert_cert
-  if [ -n "$SERVICES" ]; then
-    echo "Starting infra (postgres, rabbitmq, openfire)"
-    docker compose -p "$APP_PROJECT" -f "$APP_COMPOSE" up -d --build postgres rabbitmq openfire
-  else
-    stop_app_stack_if_running
-    echo "Starting infra (postgres, rabbitmq, openfire)"
-    # 서비스를 직접 나열한다. compose 파일에 자바 빌드용 build 서비스도 들어 있는데
-    # 그건 인프라만 띄울 때는 필요 없다
-    docker compose -p "$INFRA_PROJECT" -f "$INFRA_COMPOSE" up -d --build postgres rabbitmq openfire
-  fi
+  build_openfire_plugin
+  # --renew-anon-volumes: rabbitmq, openfire 이미지는 데이터 디렉토리를 익명 볼륨으로 잡는다.
+  # compose 는 컨테이너를 다시 만들어도 익명 볼륨을 이어 붙여서, 예전 실행의 큐 메시지가 남고
+  # 이미지 메이저 버전을 올리면(rabbitmq 3 -> 4) 옛 데이터 때문에 뜨지 못한다. 매번 새로 만든다.
+  # postgres 는 이름 있는 볼륨(oadr_pgdata)이라 영향이 없다(비우는 건 drop_db 가 한다)
+  echo "Starting infra ($INFRA_SERVICES)"
+  # shellcheck disable=SC2086
+  compose up -d --build --renew-anon-volumes $INFRA_SERVICES
 }
 
-# 두 스택이 같은 포트를 쓰므로 한쪽을 띄울 때 다른 쪽은 내린다
-stop_infra_stack_if_running() {
-  if [ -n "$(docker compose -p "$INFRA_PROJECT" -f "$INFRA_COMPOSE" ps -q 2>/dev/null)" ]; then
-    echo "인프라 전용 스택이 떠 있어 먼저 내린다 (포트가 겹친다)"
-    docker compose -p "$INFRA_PROJECT" -f "$INFRA_COMPOSE" down
-  fi
-}
-
-stop_app_stack_if_running() {
-  if [ -n "$(docker compose -p "$APP_PROJECT" -f "$APP_COMPOSE" ps -q 2>/dev/null)" ]; then
-    echo "앱 스택이 떠 있어 먼저 내린다 (포트가 겹친다)"
-    docker compose -p "$APP_PROJECT" -f "$APP_COMPOSE" down
-  fi
-}
-
-stop_infra() {
-  echo "Stopping infra"
-  docker compose -p "$INFRA_PROJECT" -f "$INFRA_COMPOSE" down 2>/dev/null || true
-  docker compose -p "$APP_PROJECT" -f "$APP_COMPOSE" down 2>/dev/null || true
+stop_all() {
+  echo "Stopping all"
+  compose down
 }
 
 # 모든 앱 이미지가 openadr_build 이미지에서 jar 를 꺼내 온다.
 # 그래서 앱을 올리기 전에 이 이미지를 한 번 만들어야 한다.
 build_images() {
   assert_cert
-  resolve_build_tools
 
-  # 이미지에 들어갈 jar 를 먼저 로컬에서 만든다.
+  # 이미지에 들어갈 jar 를 먼저 로컬에서 만든다(각 모듈 build/libs).
   #
-  # Dockerfile-build 는 jar 가 이미 있으면 컨테이너 안에서 다시 빌드하지 않는다.
-  # 그래서 여기서 만든 jar 가 그대로 이미지로 들어간다.
-  # 프로파일이 중요하다. 스택의 브로커가 rabbitmq 컨테이너라 external 이어야 하고,
-  # 기본값인 standalone 으로 만들면 rabbitmq 드라이버가 빠져서
-  # VTN 이 RMQConnectionFactory 를 못 찾고 죽는다.
-  # frontend 는 React UI 를 jar 안에 넣는 프로파일이다.
-  echo "Building jars (profile: external, frontend)"
-  "$MVN" -B package -P external,frontend -DskipTests
+  # 메이븐 때는 프로파일(external, frontend)을 꼭 줘야 했고 clean 도 빠지면 안 됐다.
+  # 지금은 VTN jar 에 두 브로커 라이브러리와 PostgreSQL 드라이버가 늘 같이 들어가고
+  # (어느 브로커를 쓸지는 스프링 프로파일로 고른다), React UI 도 기본으로 들어간다.
+  # 그래들은 입력이 바뀐 태스크만 다시 돌리므로 clean 도 필요 없다.
+  # client 는 옆에 있으면 includeBuild 로 같이 빌드된다. 없으면 ~/.m2 에 올려 둔 걸 쓴다
+  if [ -f "$CLIENT_DIR/settings.gradle" ]; then
+    echo "Using client build ($CLIENT_DIR)"
+  else
+    echo "oadr-client 디렉토리가 없다($CLIENT_DIR). ~/.m2 에 publishToMavenLocal 해 둔 클라이언트 라이브러리를 쓴다"
+  fi
+
+  echo "Building jars (gradle assemble)"
+  "$SERVER_DIR/gradlew" -p "$SERVER_DIR" --console=plain -PopenadrClientDir="$CLIENT_DIR" assemble
 
   echo "Building openadr_build image"
-  docker compose -p "$APP_PROJECT" -f "$APP_COMPOSE" build build
-  docker image tag "${APP_PROJECT}-build" openadr_build:latest
+  # service/build/docker-compose.yml 의 image 이름(openadr_build:latest)으로 태그가 붙는다
+  compose build build
 }
 
 start_services() {
@@ -204,9 +201,9 @@ start_services() {
   missing=$(missing_modules)
   if [ -n "$missing" ]; then
     echo
-    echo "앱은 건너뛴다. 아직 리액터에 들어오지 않은 모듈이 있다:$missing"
-    echo "루트 pom.xml 의 <modules> 에서 해당 항목의 주석을 풀어야 앱 이미지를 만들 수 있다."
-    echo "지금은 인프라만 뜬 상태다. VTN 은 IntelliJ 에서 VTN20aApplication 으로 띄우면 된다."
+    echo "앱은 건너뛴다. 아직 빌드에 들어오지 않은 모듈이 있다:$missing"
+    echo "oadr-server/settings.gradle 에 해당 모듈의 include 가 있어야 앱 이미지를 만들 수 있다."
+    echo "지금은 인프라만 뜬 상태다. VTN 은 IntelliJ 에서 VTN20bApplication 으로 띄우면 된다."
     SERVICES=""
     return 0
   fi
@@ -214,7 +211,7 @@ start_services() {
   build_images
   for name in $SERVICES; do
     echo "Starting $name"
-    docker compose -p "$APP_PROJECT" -f "$APP_COMPOSE" up -d --build "$name"
+    compose up -d --build "$name"
   done
 }
 
@@ -225,19 +222,16 @@ stop_services() {
   for name in $SERVICES; do reversed="$name $reversed"; done
   for name in $reversed; do
     echo "Stopping $name"
-    docker compose -p "$APP_PROJECT" -f "$APP_COMPOSE" rm -sf "$name"
+    compose rm -sf "$name"
   done
 }
 
 status() {
-  echo "Local stack"
-  docker compose -p "$INFRA_PROJECT" -f "$INFRA_COMPOSE" ps
-  docker compose -p "$APP_PROJECT" -f "$APP_COMPOSE" ps
+  compose ps
 }
 
 # 순서는 항상 infra -> 앱. 앱이 DB 와 브로커를 보고 뜬다
 start() {
-  [ -n "$SERVICES" ] && stop_infra_stack_if_running
   # 인프라까지 올리는 기동은 빈 DB 에서 시작한다.
   # 서비스 하나만 올릴 때(WITH_INFRA=0)는 건드리지 않는다
   if [ "$WITH_INFRA" = 1 ] && [ -z "${KEEP_DB:-}" ]; then
@@ -263,7 +257,7 @@ start() {
 # 내릴 때는 반대로. 앱이 DB 를 보고 있으니 앱부터
 stop() {
   stop_services
-  [ "$WITH_INFRA" = 1 ] && stop_infra
+  [ "$WITH_INFRA" = 1 ] && stop_all
   return 0
 }
 
@@ -278,11 +272,8 @@ stop() {
 drop_db() {
   echo "Dropping database (postgres volume)"
   # 앱과 postgres 가 볼륨을 붙들고 있으니 먼저 다 내린다
-  for name in $ALL_SERVICES; do
-    docker compose -p "$APP_PROJECT" -f "$APP_COMPOSE" rm -sf "$name" >/dev/null 2>&1 || true
-  done
-  docker compose -p "$INFRA_PROJECT" -f "$INFRA_COMPOSE" rm -sf postgres >/dev/null 2>&1 || true
-  docker compose -p "$APP_PROJECT" -f "$APP_COMPOSE" rm -sf postgres >/dev/null 2>&1 || true
+  # shellcheck disable=SC2086
+  compose rm -sf $ALL_SERVICES postgres >/dev/null 2>&1 || true
   docker volume rm -f "$PGDATA_VOLUME" >/dev/null 2>&1 || true
 }
 
@@ -294,9 +285,9 @@ reset_db() {
 logs() {
   if [ -n "$SERVICES" ]; then
     # shellcheck disable=SC2086
-    docker compose -p "$APP_PROJECT" -f "$APP_COMPOSE" logs -f $SERVICES
+    compose logs -f $SERVICES
   else
-    docker compose -p "$INFRA_PROJECT" -f "$INFRA_COMPOSE" logs -f
+    compose logs -f
   fi
 }
 
@@ -306,7 +297,7 @@ case "$COMMAND" in
   restart) stop; start ;;
   logs)    logs ;;
   status)  status ;;
-  build)   resolve_build_tools; "$MVN" -B clean install -DskipTests ;;
+  build)   "$SERVER_DIR/gradlew" -p "$SERVER_DIR" --console=plain -PopenadrClientDir="$CLIENT_DIR" assemble ;;
   reset-db) reset_db ;;
   *)       usage ;;
 esac

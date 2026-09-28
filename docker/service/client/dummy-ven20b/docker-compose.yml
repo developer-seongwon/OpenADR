@@ -1,0 +1,28 @@
+# VEN 흉내. http, simpleHttp, xmpp 로 VTN 에 붙는다(application.properties 에서 켠 것만).
+# 파일 안의 경로는 저장소 루트 기준이다(docker/postgres/docker-compose.yml 주석 참고)
+services:
+  dummy-ven20b:
+    # 빌드 컨텍스트는 이 디렉토리다(Dockerfile 과 설정 파일)
+    build: docker/service/client/dummy-ven20b
+    restart: always
+    ports:
+      - "8083:8083"
+    depends_on:
+      openfire:
+        condition: service_healthy
+      vtn20b:
+        condition: service_started
+      dummy-drprogram:
+        condition: service_started
+    networks:
+      xmpp:
+      http:
+        aliases:
+          - ven1.oadr.com
+          - ven2.oadr.com
+          - ven3.oadr.com
+          - ven4.oadr.com
+
+networks:
+  http:
+  xmpp:

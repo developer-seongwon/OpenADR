@@ -1,0 +1,118 @@
+// client, server 를 한 번에 돌리는 묶음 태스크. 각 빌드 루트의 같은 이름 태스크(그 빌드의 모듈 전체를 묶는다)를 부른다.
+//
+//   ./gradlew build                 client, server 빌드와 테스트. jar 는 target/client, target/server 에도 모인다
+//   ./gradlew assemble              테스트 없이 jar 만(루트의 -x test 는 포함된 빌드의 테스트까지는 못 뺀다). target 에도 모인다
+//   ./gradlew test                  client, server 전체 테스트. 끝나면 합친 리포트를 만들고 모듈별 건수를 찍는다
+//   ./gradlew test --continue       한 모듈이 실패해도 나머지 모듈 테스트를 끝까지 돌린다
+//   ./gradlew clean                 target 도 지운다
+//   ./gradlew publishToMavenLocal   client 라이브러리를 ~/.m2 에 올린다(kpx-service, client 없이 server 빌드할 때)
+//
+// -Pfrontend=false 같은 -P 값은 포함된 빌드에도 그대로 간다.
+// 한 모듈만 돌릴 때는 경로(:빌드이름:모듈:태스크)로 부른다. 예: ./gradlew :oadr-server:OpenADRServerVTN20b:bootRun
+
+import groovy.xml.XmlSlurper
+
+def client = gradle.includedBuild('oadr-client')
+def server = gradle.includedBuild('oadr-server')
+
+[clean: 'build', assemble: 'build', build: 'build', check: 'verification', test: 'verification'].each { name, taskGroup ->
+    tasks.register(name) {
+        group = taskGroup
+        description = "client, server 의 ${name}"
+        dependsOn client.task(":${name}"), server.task(":${name}")
+    }
+}
+
+// 빌드한 jar 를 루트 target 에 모은다. oadr-client 는 target/client, oadr-server 는 target/server.
+// 모듈마다 build/libs 의 버전 붙은 jar(이름-버전.jar)만 가져간다. 버전은 각 빌드의 gradle.properties 값이다.
+// sources jar, 도커용 버전 없는 사본(OpenADRServerVTN20b.jar), 테스트 전용 모듈(OpenADRServerVTNTestSupport)은 뺀다.
+// Sync 라서 모듈이나 버전이 바뀌어 없어진 jar 는 target 에서도 지워진다
+def buildVersion = { String buildDir ->
+    def props = new Properties()
+    file("${buildDir}/gradle.properties").withInputStream { props.load(it) }
+    props.getProperty('version')
+}
+
+def collectJars = tasks.register('collectJars', Sync) {
+    group = 'build'
+    description = '빌드한 jar 를 target/client, target/server 로 모은다'
+    dependsOn client.task(':assemble'), server.task(':assemble')
+    into layout.projectDirectory.dir('target')
+    [client: 'oadr-client', server: 'oadr-server'].each { targetDir, buildDir ->
+        def version = buildVersion(buildDir)
+        (file(buildDir).listFiles() ?: [])
+                .findAll { new File(it, 'build.gradle').isFile() && it.name != 'OpenADRServerVTNTestSupport' }
+                .sort()
+                .each { moduleDir ->
+                    from(new File(moduleDir, 'build/libs')) {
+                        include "*-${version}.jar"
+                        into targetDir
+                    }
+                }
+    }
+}
+
+['assemble', 'build'].each { name ->
+    tasks.named(name) {
+        dependsOn collectJars
+    }
+}
+
+// clean 이 target 도 지운다. 태스크 실행 중에 project 를 부르면 그래들 10 에서 막혀서 Delete 태스크로 둔다
+def cleanTarget = tasks.register('cleanTarget', Delete) {
+    group = 'build'
+    description = '루트 target 을 지운다'
+    delete layout.projectDirectory.dir('target')
+}
+
+tasks.named('clean') {
+    dependsOn cleanTarget
+}
+
+tasks.register('publishToMavenLocal') {
+    group = 'publishing'
+    description = 'client 라이브러리를 ~/.m2 에 올린다'
+    dependsOn client.task(':publishToMavenLocal')
+}
+
+// 전체 테스트 리포트. client, server 모든 모듈의 테스트 결과를 HTML 하나로 합친다(build/reports/tests/index.html).
+// 포함된 빌드의 태스크 출력은 루트에서 직접 이어 받을 수 없어서, 각 모듈의 결과 디렉토리(build/test-results/test/binary)를 읽는다.
+// 테스트가 없는 모듈(NO-SOURCE)은 그 디렉토리가 없어서 빠진다. 테스트가 up-to-date 로 건너뛰면 지난번 결과가 들어간다
+def testModuleDirs = ['oadr-client', 'oadr-server'].collectMany { buildDir ->
+    (file(buildDir).listFiles() ?: []).findAll { new File(it, 'build.gradle').isFile() }.sort()
+}
+
+def testReport = tasks.register('testReport', TestReport) {
+    group = 'verification'
+    description = 'client, server 전체 테스트 결과를 HTML 하나로 합친다'
+    destinationDirectory = layout.buildDirectory.dir('reports/tests')
+    testResults.from(provider {
+        testModuleDirs.collect { new File(it, 'build/test-results/test/binary') }.findAll { it.isDirectory() }
+    })
+    // 모듈별 건수를 찍는다. JUnit XML(build/test-results/test/*.xml)을 센다
+    doLast {
+        long total = 0, failed = 0, skipped = 0
+        testModuleDirs.each { dir ->
+            def xmls = (new File(dir, 'build/test-results/test').listFiles() ?: []).findAll { it.name.endsWith('.xml') }
+            if (xmls.isEmpty()) {
+                return
+            }
+            long t = 0, f = 0, sk = 0
+            xmls.each {
+                def suite = new XmlSlurper().parse(it)
+                t += suite.@tests.toLong()
+                f += suite.@failures.toLong() + suite.@errors.toLong()
+                sk += suite.@skipped.toLong()
+            }
+            total += t; failed += f; skipped += sk
+            logger.lifecycle(String.format('  %-40s %4d 개, 실패 %d, 건너뜀 %d', "${dir.parentFile.name}/${dir.name}", t, f, sk))
+        }
+        logger.lifecycle(String.format('  %-40s %4d 개, 실패 %d, 건너뜀 %d', '전체', total, failed, skipped))
+        logger.lifecycle("  리포트: ${destinationDirectory.get().file('index.html').asFile}")
+    }
+}
+
+// 테스트가 실패해도 리포트는 만든다(finalizedBy 는 실패해도 돈다)
+tasks.named('test') {
+    finalizedBy testReport
+}

@@ -8,3 +8,12 @@
 # Datasource local storage ignored files
 /dataSources/
 /dataSources.local.xml
+# 이 PC 에만 해당하는 JS 라이브러리 제외 설정(빌드 산출물 node_modules 경로)
+/jsLibraryMappings.xml
+# 그래들로 불러오면 IntelliJ 가 다시 만드는 파일. PC 마다 달라져서 저장소에 두지 않는다
+/modules.xml
+/compiler.xml
+/misc.xml
+/jarRepositories.xml
+# IntelliJ 가 설정을 덮어쓸 때 남기는 백업
+/*.local-backup

@@ -1,0 +1,19 @@
+# RabbitMQ. VTN 과 DummyDRProgram 사이의 JMS 브로커(스프링 프로파일 external).
+# 파일 안의 경로는 저장소 루트 기준이다(postgres/docker-compose.yml 주석 참고)
+services:
+  rabbitmq:
+    build:
+      # 빌드 컨텍스트는 저장소 루트다(cert 의 인증서를 COPY 한다)
+      context: .
+      dockerfile: docker/rabbitmq/Dockerfile
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=admin
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_port_connectivity"]
+      interval: 5s
+      timeout: 10s
+      retries: 30

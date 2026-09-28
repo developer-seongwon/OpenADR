@@ -1,9 +1,10 @@
 #!/bin/bash
 set -e
 
+# DB 소유자를 openfire 사용자로 만든다(init-oadr-vtn.sh 주석 참고, PostgreSQL 15 부터 필요)
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
     CREATE USER "oadr-openfire" WITH ENCRYPTED PASSWORD 'supersecure';
-    CREATE DATABASE "oadr-openfire";
+    CREATE DATABASE "oadr-openfire" OWNER "oadr-openfire";
     GRANT ALL PRIVILEGES ON DATABASE "oadr-openfire" TO "oadr-openfire";
 EOSQL
 

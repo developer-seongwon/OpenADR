@@ -1,0 +1,18 @@
+# DR 프로그램 흉내(VTN 뒤에 붙는 운영 시스템 자리). VTN REST API 로 이벤트를 만들고
+# RabbitMQ 로 VEN 리포트를 받는다. 파일 안의 경로는 저장소 루트 기준이다(docker/postgres/docker-compose.yml 주석 참고)
+services:
+  dummy-drprogram:
+    # 빌드 컨텍스트는 이 디렉토리다(Dockerfile 과 설정 파일)
+    build: docker/service/server/dummy-drprogram
+    restart: always
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      vtn20b:
+        condition: service_started
+    networks:
+      default:
+      http:
+
+networks:
+  http:

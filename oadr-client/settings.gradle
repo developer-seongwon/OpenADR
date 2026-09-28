@@ -1,0 +1,30 @@
+// OpenADR 클라이언트 라이브러리 빌드. 이 디렉토리만으로 빌드된다(server 를 참조하지 않는다).
+// 나중에 저장소를 나누면 이 디렉토리가 그대로 저장소 루트가 된다.
+//
+//   ./gradlew build                  컴파일, 테스트, jar
+//   ./gradlew publishToMavenLocal    ~/.m2 에 설치(server 를 client 없이 따로 빌드할 때, kpx-service 용 jar)
+//
+// server 빌드는 옆에 client 디렉토리가 있으면 이 빌드를 includeBuild 로 직접 물고 들어가서
+// publishToMavenLocal 없이도 최신 소스로 빌드된다(oadr-server/settings.gradle 참고).
+
+plugins {
+    // 자바 25 가 없는 PC 에서도 툴체인을 받아 오게 한다. 있으면 설치된 JDK 를 그대로 쓴다
+    id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
+}
+
+rootProject.name = 'OpenADRClient'
+
+dependencyResolutionManagement {
+    repositoriesMode = RepositoriesMode.FAIL_ON_PROJECT_REPOS
+    repositories {
+        mavenCentral()
+    }
+}
+
+include 'OpenADRSecurity'
+include 'OpenADRModel20a'
+include 'OpenADRModel20b'
+include 'OpenADRHTTPClient'
+include 'OpenADRHTTPClient20a'
+include 'OpenADRHTTPClient20b'
+include 'OpenADRXMPPClient'

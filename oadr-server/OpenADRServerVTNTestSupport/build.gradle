@@ -1,0 +1,10 @@
+description = 'VTN 테스트 공용(PostgreSQL 테스트 컨테이너 홀더)'
+
+// VTN20a 와 VTN20b 가 같은 DB 컨테이너를 재사용해야 하는데, 그 홀더 클래스가 VTNCommon 의 src/test 에 있었다.
+// 메이븐 test-jar 로 넘기다가 VTNCommon 의 테스트 클래스(HttpSecurityConfig)까지 딸려 가서 부딪혔다.
+// 그래서 공유할 것만 별도 모듈의 src/main 에 둔다. 쓰는 쪽은 이 모듈을 testImplementation 으로만 받으므로
+// testcontainers 는 운영 산출물에 들어가지 않는다
+
+dependencies {
+    api libs.testcontainers.postgresql
+}

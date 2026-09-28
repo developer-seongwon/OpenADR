@@ -1,0 +1,69 @@
+package com.avob.openadr.server.oadr20b.ven;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
+import jakarta.annotation.Resource;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.context.web.WebAppConfiguration;
+
+import com.avob.openadr.client.http.oadr20b.ven.OadrHttpVenClient20b;
+
+@ExtendWith(SpringExtension.class)
+@ContextConfiguration(classes = { VEN20bApplicationTest.class })
+@WebAppConfiguration
+@ActiveProfiles("test")
+public class MultiVtnConfigTest {
+
+	@Resource
+	private MultiVtnConfig multiVtnConfig;
+
+	@Value("${oadr.vtn.myvtn.vtnid}")
+	private String vtnHttpId;
+
+	@Value("${oadr.vtn.myvtn.vtnUrl}")
+	private String vtnUrl;
+
+	@Value("${oadr.vtn.myvtn.venUrl}")
+	private String venUrl;
+
+	@Value("${oadr.vtn.myxmppvtn.vtnid}")
+	private String vtnXmppId;
+
+	@Value("${oadr.vtn.myxmppvtn.xmpp.host}")
+	private String vtnXmppHost;
+
+	@Value("${oadr.vtn.myxmppvtn.xmpp.port}")
+	private Integer vtnXmppPort;
+
+	@Test
+	public void test() {
+		// http client successfull init
+		VtnSessionConfiguration multiConfig = multiVtnConfig.getMultiConfig(vtnHttpId, venUrl);
+		assertNotNull(multiConfig);
+		assertEquals(multiConfig.getVtnId(), vtnHttpId);
+		assertEquals(multiConfig.getVtnUrl(), vtnUrl);
+		assertNull(multiConfig.getVtnXmppHost());
+		assertNull(multiConfig.getVtnXmppPass());
+		OadrHttpVenClient20b multiHttpClientConfig = multiVtnConfig.getMultiHttpClientConfig(multiConfig);
+		assertNotNull(multiHttpClientConfig);
+
+		// xmpp client failed init
+		multiConfig = multiVtnConfig.getMultiConfig(vtnXmppId, venUrl);
+		assertNull(multiConfig);
+//		assertNotNull(multiConfig.getVtnId(), vtnXmppId);
+//		assertNull(multiConfig.getVtnUrl());
+//		assertEquals(multiConfig.getVtnXmppHost(), vtnXmppHost);
+//		assertEquals(multiConfig.getVtnXmppPort(), vtnXmppPort);
+//		OadrXmppVenClient20b multiXmppClientConfig = multiVtnConfig.getMultiXmppClientConfig(multiConfig);
+//		assertNull(multiXmppClientConfig);
+
+	}
+}

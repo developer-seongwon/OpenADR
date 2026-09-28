@@ -1,0 +1,13 @@
+// 저장소 루트. oadr-client 와 oadr-server 를 한 번에 IntelliJ 로 열거나 빌드할 때만 쓰는 묶음(composite build)이다.
+// 각 디렉토리는 혼자서도 빌드된다(나중에 저장소를 나누면 각자 저장소 루트가 된다).
+//
+//   ./gradlew build                           oadr-client, oadr-server 둘 다(묶음 태스크는 루트 build.gradle)
+//   cd oadr-client && ./gradlew build         클라이언트 라이브러리만
+//   cd oadr-server && ./gradlew build         서버만(옆의 oadr-client 를 소스로 물고 들어간다)
+//
+// IntelliJ 는 이 파일을 열면 두 빌드를 모두 불러온다. 저장소를 나누면 이 파일과 루트 build.gradle, gradlew 는 없어진다
+
+rootProject.name = 'OpenADR'
+
+includeBuild 'oadr-client'
+includeBuild 'oadr-server'
