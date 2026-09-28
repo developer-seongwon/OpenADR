@@ -29,14 +29,14 @@ Java implementation of the OpenADR protocol (https://www.openadr.org/). Spring B
 
 ## Modules
 
-client/ holds the libraries. It does not depend on server.
+oadr-client/ holds the libraries. It does not depend on oadr-server.
 
 - OpenADRSecurity: OpenADR security (PKI RSA/ECC, XML signature)
 - OpenADRModel20a, OpenADRModel20b: OpenADR 2.0a and 2.0b model classes generated from the XSD
 - OpenADRHTTPClient, OpenADRHTTPClient20a, OpenADRHTTPClient20b: OpenADR HTTP clients (java.net.http)
 - OpenADRXMPPClient: OpenADR 2.0b XMPP client (smack)
 
-server/ holds the servers and test applications. It takes client by coordinates (com.avob.openadr:OpenADR*).
+oadr-server/ holds the servers and test applications. It takes oadr-client by coordinates (com.avob.openadr:OpenADR*).
 
 - OpenADRServerVTNCommon: VTN common code (entities, services, control API, broker setup)
 - OpenADRServerVTN20a: OpenADR 2.0a VTN
@@ -47,20 +47,21 @@ server/ holds the servers and test applications. It takes client by coordinates 
 - DummyDRProgram: test DR program. Manages devices and events through the VTN control API
 - OpenfireOadrPlugin: Openfire plugin that authenticates XMPP VENs against the VTN (Maven)
 
-kpx-service uses the OpenADRModel20b and OpenADRSecurity jars from client.
+kpx-service uses the OpenADRModel20b and OpenADRSecurity jars from oadr-client.
 
 ## Directory layout
 
 ```
-settings.gradle  composite build that opens and builds client and server together. It passes no settings down
+settings.gradle  composite build that opens and builds oadr-client and oadr-server together. It passes no settings down
 build.gradle     aggregate tasks (build, assemble, test, check, clean, publishToMavenLocal, testReport)
-client/          libraries (modules above)
-server/          servers and test applications (modules above), test/http/ (IntelliJ HTTP request scenarios)
-docker/          local Docker stack (run.sh, compose, a Dockerfile per service). Uses the server jars and the certificates in cert
+oadr-client/     libraries (modules above)
+oadr-server/     servers and test applications (modules above), test/http/ (IntelliJ HTTP request scenarios)
+docker/          local Docker stack (run.sh, compose, a Dockerfile per service). Uses the oadr-server jars and the certificates in cert
 cert/            test certificates. Only generate_test_cert.sh is in git, the rest is generated (used by server tests and Docker)
+target/          jars collected by a root build (generated, not in git)
 ```
 
-client and server are independent Gradle builds, each with its own `settings.gradle`, `build.gradle`,
+oadr-client and oadr-server are independent Gradle builds, each with its own `settings.gradle`, `build.gradle`,
 `gradle/libs.versions.toml` (version catalog) and `gradlew`. If the repository is split later, each directory becomes a repository root.
 Shared settings (Java version, tests, BOM policy) are the same in both `build.gradle` files. When you change one, check the other.
 Library versions live in `gradle/libs.versions.toml`. Entries without a version use the Spring Boot BOM value.
@@ -81,40 +82,47 @@ On a fresh machine, do the two "First time" sections below first.
 
 ## Build
 
-Run client and server together from the repository root.
+Run oadr-client and oadr-server together from the repository root.
 
 ```
-./gradlew build                  # build and test client and server
-./gradlew assemble               # jars only, no tests (at the root, -x test cannot skip tests of the included builds)
+./gradlew build                  # build and test oadr-client and oadr-server. Jars are also collected in target
+./gradlew assemble               # jars only, no tests (at the root, -x test cannot skip tests of the included builds). Also collected in target
 ./gradlew test                   # all tests. Prints counts per module and writes a combined report to build/reports/tests/index.html
 ./gradlew test --continue        # keep running the other modules' tests when one module fails
-./gradlew clean
-./gradlew publishToMavenLocal    # publish the client libraries to ~/.m2
-./gradlew :server:OpenADRServerVTN20b:bootRun   # call a single module by path
+./gradlew clean                  # also deletes target
+./gradlew publishToMavenLocal    # publish the oadr-client libraries to ~/.m2
+./gradlew :oadr-server:OpenADRServerVTN20b:bootRun   # call a single module by path (:build:module:task)
 ```
 
-You can also run each of client and server from its own directory (this is how you use it after a repository split).
+You can also run each of oadr-client and oadr-server from its own directory (this is how you use it after a repository split).
 Each build root has the same aggregate tasks, so they run over all modules.
 
 ```
-cd client && ./gradlew build                  # build and test the libraries
-cd client && ./gradlew publishToMavenLocal    # publish to ~/.m2 (to build server without client, jars for kpx-service)
-cd server && ./gradlew build                  # build and test the servers (builds the sibling client from source)
-cd server && ./gradlew build -x test          # jars only, no tests
-cd server && ./gradlew build -Pfrontend=false # leave the React UI out of VTN20b (skips the node build, faster)
+cd oadr-client && ./gradlew build                  # build and test the libraries
+cd oadr-client && ./gradlew publishToMavenLocal    # publish to ~/.m2 (to build oadr-server without oadr-client, jars for kpx-service)
+cd oadr-server && ./gradlew build                  # build and test the servers (builds the sibling oadr-client from source)
+cd oadr-server && ./gradlew build -x test          # jars only, no tests
+cd oadr-server && ./gradlew build -Pfrontend=false # leave the React UI out of VTN20b (skips the node build, faster)
 ```
 
-When a client directory sits next to server, server pulls it in with includeBuild and builds it from source,
-so you do not need to install client after changing it. After a repository split, pass `-PopenadrClientDir=<client path>`,
-or run `publishToMavenLocal` in client and server picks the jars from ~/.m2.
+When an oadr-client directory sits next to oadr-server, oadr-server pulls it in with includeBuild and builds it from source,
+so you do not need to install oadr-client after changing it. After a repository split, pass `-PopenadrClientDir=<oadr-client path>`,
+or run `publishToMavenLocal` in oadr-client and oadr-server picks the jars from ~/.m2.
 
 Jars go to `build/libs` of each module. VTN20a, VTN20b, DummyVEN20b and DummyDRProgram build two Spring Boot executable jars:
-one with the version (`OpenADRServerVTN20b-0.1.0-SNAPSHOT.jar`) and one without (`OpenADRServerVTN20b.jar`). They are identical.
+one with the version (`OpenADRServerVTN20b-2.0.jar`) and one without (`OpenADRServerVTN20b.jar`). They are identical.
 The Docker build uses the one without the version, so old jars left after a version bump do not get mixed in.
-The jars for kpx-service are in `client/OpenADRModel20b/build/libs` and `client/OpenADRSecurity/build/libs`.
+The jars for kpx-service are in `oadr-client/OpenADRModel20b/build/libs` and `oadr-client/OpenADRSecurity/build/libs`.
 
-In IntelliJ, open the repository root. The root `settings.gradle` loads client and server together.
+Running `build` or `assemble` from the repository root also collects the versioned jars into `target/client` and `target/server` (`collectJars` task).
+target/client gets the 7 libraries, target/server gets the 4 executable jars (VTN20a, VTN20b, DummyVEN20b, DummyDRProgram) and 2 libraries (VTNCommon, VEN20b).
+Sources jars, the unversioned copies for Docker and the test-only VTNTestSupport are left out.
+Jars that disappear because a module or version changed are removed from target too. Building in the oadr-client or oadr-server directory alone does not collect them.
+
+In IntelliJ, open the repository root. The root `settings.gradle` loads oadr-client and oadr-server together.
 The aggregate tasks are under Tasks of the root (OpenADR) in the Gradle tool window, and per-module tasks are under OpenADRClient and OpenADRServer.
+
+The build script syntax and the conventions of this repository are summarized in [GRADLE.kor.md](GRADLE.kor.md) (Korean).
 
 ## First time: test certificates
 
@@ -127,7 +135,7 @@ If `cert/` at the repository root has only the script, generate them once.
 
 It writes into `cert/` wherever you call it from, and stops if the certificates already exist.
 It creates VTN, VEN, admin, user and app certificates under a self-signed CA.
-Server tests (`../../cert/...` in `server/*/src/test/resources`) and the Docker stack use these certificates.
+Server tests (`../../cert/...` in `oadr-server/*/src/test/resources`) and the Docker stack use these certificates.
 Without them the VTN tests fail, and `docker/run.sh` stops and asks you to generate them first.
 
 To remove the https warning when using the VTN control API or web UI in a browser, add the CA certificate `cert/oadr.com.crt`
@@ -251,11 +259,11 @@ The AUTH(HTTP) arrow from rabbitmq to vtn in the diagram is from the old setup. 
 ```
 
 All `./docker/run.sh` commands in this document are run from the repository root. The script moves to the repository root wherever you call it from.
-It builds the server with `server/gradlew` and uses the certificates in `cert` (`SERVER_DIR` changes the server location).
+It builds the server with `oadr-server/gradlew` and uses the certificates in `cert` (`SERVER_DIR` changes the oadr-server location).
 
 It builds the jars locally first (`./gradlew assemble`), then builds the images and starts the containers.
-A client directory next to server is built together. After a repository split, pass the client path with `CLIENT_DIR`,
-or run `publishToMavenLocal` in client beforehand.
+An oadr-client directory next to oadr-server is built together. After a repository split, pass the oadr-client path with `CLIENT_DIR`,
+or run `publishToMavenLocal` in oadr-client beforehand.
 `docker/run.sh` finds `mvn` for the Openfire plugin by itself. If it cannot, it stops with an error.
 Pass the `MVN` environment variable to set it yourself.
 The first run takes a few minutes including the image builds.
@@ -321,7 +329,7 @@ To add a service, create its directory and add one line to `COMPOSE_FILES` in `r
 Paths inside the compose files are relative to the repository root. With several `-f` files, compose resolves relative paths
 against one base directory, so `run.sh` passes the repository root with `--project-directory`.
 `service/build`, `postgres`, `rabbitmq` and `openfire` use the repository root as build context,
-because they need the built jars (`server/*/build/libs`) and `cert/`. The root `.dockerignore` (an allow list of what the images COPY) applies.
+because they need the built jars (`oadr-server/*/build/libs`) and `cert/`. The root `.dockerignore` (an allow list of what the images COPY) applies.
 The other application images use their own directory as context.
 
 ### How it works
@@ -336,7 +344,7 @@ With Maven, a Maven profile put in only one of them, and a Docker build without 
 because it could not find `RMQConnectionFactory`. That trap is gone.
 DummyDRProgram also contains both the ActiveMQ and RabbitMQ clients and chooses by Spring profile.
 
-The frontend is in `server/OpenADRServerVTN20b/frontend` and is built with Vite (react-scripts before).
+The frontend is in `oadr-server/OpenADRServerVTN20b/frontend` and is built with Vite (react-scripts before).
 `npm run build` writes to `frontend/build`, and Gradle puts it directly into `public/` of the jar
 (`frontendBuild` task, which does not run again unless its inputs change).
 `src/main/resources/public`, where Maven used to copy it, is no longer used, and anything left there is kept out of the jar.
@@ -347,6 +355,13 @@ Files containing JSX must have the `.jsx` extension. Vite does not read JSX in `
 The UI uses React 19, MUI 9 and react-router 8. The screens were originally drawn with MUI 3,
 so `src/theme.js` restores the MUI 3 defaults (colors, input style, Grid width, tab width, table font).
 If a screen looks odd, start there. Component styles are applied with `withStyles` from `tss-react`.
+
+Screen text comes in Korean and English. Switch it with the translate icon in the top bar; the choice is kept in
+the browser (`vtn.language` in localStorage). The first visit follows the browser language (English unless Korean).
+The strings live in `src/i18n/ko.js` and `src/i18n/en.js` under the same keys and screens call `t( 'key' )`.
+Most screens are class components, so instead of hooks the whole screen is re-rendered on a switch (unsaved input is lost).
+Date formats, the event calendar, OpenADR terms (VEN, VTN, MarketContext, signal names, etc.) and values from the server stay in English.
+When adding a string, put the same key in both files. A key missing in one falls back to English, missing in both shows the key itself.
 
 The VTN runs with the `fake-data,rabbitmq-broker,external` profiles.
 `fake-data` seeds the market contexts and the initial accounts.
@@ -415,7 +430,7 @@ One container is reused per JVM, and its holder is in the `OpenADRServerVTNTestS
 module. It is a test-only module and is not part of any deliverable.
 
 The VTNCommon, VTN20a and VTN20b tests all start a VTN on port 8182, so Gradle runs the tests of these modules
-one at a time (serialTests in server/build.gradle). Compilation stays parallel.
+one at a time (serialTests in oadr-server/build.gradle). Compilation stays parallel.
 
 Opening an SPA route directly or refreshing it must not return 404.
 Paths such as `/ven` and `/event/detail/...` are served index.html by `SpaIndexController`.

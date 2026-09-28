@@ -6,15 +6,15 @@ SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 ROOT_DIR=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
 
 # 서버 빌드(그래들)와 Openfire 플러그인이 있는 곳
-SERVER_DIR="${SERVER_DIR:-$ROOT_DIR/server}"
+SERVER_DIR="${SERVER_DIR:-$ROOT_DIR/oadr-server}"
 
 # 테스트 인증서. cert/generate_test_cert.sh 가 만든다. 도커 이미지는 저장소 루트 cert 를 COPY 한다
 CERT_DIR="$ROOT_DIR/cert"
 
-# 서버 모듈은 클라이언트 라이브러리(client/)를 좌표로 받는다(server/gradle/libs.versions.toml 의 openadr-client).
-# 그래들이 client 디렉토리를 includeBuild 로 물고 들어가서 소스에서 바로 만든다(server/settings.gradle).
+# 서버 모듈은 클라이언트 라이브러리(oadr-client/)를 좌표로 받는다(oadr-server/gradle/libs.versions.toml 의 openadr-client).
+# 그래들이 oadr-client 디렉토리를 includeBuild 로 물고 들어가서 소스에서 바로 만든다(oadr-server/settings.gradle).
 # 저장소가 나뉘면 CLIENT_DIR 로 client 체크아웃 경로를 주거나, client 에서 publishToMavenLocal 을 해 두면 된다.
-CLIENT_DIR="${CLIENT_DIR:-$ROOT_DIR/client}"
+CLIENT_DIR="${CLIENT_DIR:-$ROOT_DIR/oadr-client}"
 
 # compose 파일은 서비스 디렉토리마다 하나씩 있다(docker-compose.yml). 인프라는 docker/ 바로 아래,
 # 이 저장소에서 빌드하는 앱은 docker/service 아래에 OpenADR 역할로 나눠 둔다(server 는 VTN 쪽, client 는 VEN 쪽).
@@ -97,7 +97,7 @@ case "$TARGET" in
     ;;
 esac
 
-# server/settings.gradle 에서 빌드에 들어 있는 모듈 목록을 뽑는다(include '모듈' 줄, // 주석 줄은 뺀다)
+# oadr-server/settings.gradle 에서 빌드에 들어 있는 모듈 목록을 뽑는다(include '모듈' 줄, // 주석 줄은 뺀다)
 active_modules() {
   sed -n "s|^[[:space:]]*include[[:space:]]*['\"]\([^'\"]*\)['\"].*|\1|p" "$SERVER_DIR/settings.gradle"
 }
@@ -184,7 +184,7 @@ build_images() {
   if [ -f "$CLIENT_DIR/settings.gradle" ]; then
     echo "Using client build ($CLIENT_DIR)"
   else
-    echo "client 디렉토리가 없다($CLIENT_DIR). ~/.m2 에 publishToMavenLocal 해 둔 클라이언트 라이브러리를 쓴다"
+    echo "oadr-client 디렉토리가 없다($CLIENT_DIR). ~/.m2 에 publishToMavenLocal 해 둔 클라이언트 라이브러리를 쓴다"
   fi
 
   echo "Building jars (gradle assemble)"
@@ -202,7 +202,7 @@ start_services() {
   if [ -n "$missing" ]; then
     echo
     echo "앱은 건너뛴다. 아직 빌드에 들어오지 않은 모듈이 있다:$missing"
-    echo "server/settings.gradle 에 해당 모듈의 include 가 있어야 앱 이미지를 만들 수 있다."
+    echo "oadr-server/settings.gradle 에 해당 모듈의 include 가 있어야 앱 이미지를 만들 수 있다."
     echo "지금은 인프라만 뜬 상태다. VTN 은 IntelliJ 에서 VTN20bApplication 으로 띄우면 된다."
     SERVICES=""
     return 0

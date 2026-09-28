@@ -1,0 +1,6 @@
+description = 'OpenADR 2.0b HTTP 클라이언트'
+
+dependencies {
+    api project(':OpenADRModel20b')
+    api project(':OpenADRHTTPClient')
+}

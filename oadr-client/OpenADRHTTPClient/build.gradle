@@ -1,0 +1,5 @@
+description = 'OpenADR HTTP 클라이언트 공통(java.net.http, Digest 인증)'
+
+dependencies {
+    api project(':OpenADRSecurity')
+}

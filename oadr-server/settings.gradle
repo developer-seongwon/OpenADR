@@ -1,0 +1,63 @@
+// OpenADR 서버 빌드(VTN, VEN, 테스트용 DR 프로그램과 VEN). 이 디렉토리만으로 빌드된다.
+// 나중에 저장소를 나누면 이 디렉토리가 그대로 저장소 루트가 된다.
+//
+//   ./gradlew build                      컴파일, 테스트, 실행 jar(각 모듈 build/libs)
+//   ./gradlew build -x test              테스트 없이 jar 만
+//   ./gradlew build -Pfrontend=false     VTN20b 에 React UI 를 넣지 않는다(node 빌드를 건너뛰어 빠르다)
+//   ./gradlew :OpenADRServerVTN20b:bootRun
+//
+// 클라이언트 라이브러리(oadr-client/)는 좌표(com.avob.openadr:OpenADR*)로 받는다.
+// 옆에 client 디렉토리가 있으면 그 빌드를 includeBuild 로 물고 들어가서 소스에서 바로 만들어 쓴다.
+// 그래서 client 를 고친 뒤 publishToMavenLocal 을 따로 할 필요가 없다.
+// 저장소를 나눈 뒤에는 -PopenadrClientDir=<client 체크아웃 경로> 로 위치를 주거나,
+// client 에서 ./gradlew publishToMavenLocal 로 ~/.m2 에 올려 두면 거기서 받는다.
+//
+// OpenfireOadrPlugin 은 부모가 Openfire 의 plugins pom 이라 메이븐으로 남긴다(docker/run.sh 가 따로 빌드).
+
+plugins {
+    // 자바 25 가 없는 PC 에서도 툴체인을 받아 오게 한다. 있으면 설치된 JDK 를 그대로 쓴다
+    id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
+}
+
+rootProject.name = 'OpenADRServer'
+
+def clientDir = file(providers.gradleProperty('openadrClientDir').getOrElse('../oadr-client'))
+if (new File(clientDir, 'settings.gradle').isFile()) {
+    includeBuild clientDir
+}
+
+dependencyResolutionManagement {
+    repositoriesMode = RepositoriesMode.FAIL_ON_PROJECT_REPOS
+    repositories {
+        mavenCentral()
+        // client 를 소스로 물지 않을 때 publishToMavenLocal 한 jar 를 받는 곳. 우리 그룹만 본다
+        mavenLocal {
+            content {
+                includeGroup 'com.avob.openadr'
+            }
+        }
+        // VTN20b 프론트엔드 빌드용 node 배포본. node-gradle 플러그인이 원래 프로젝트에 이 저장소를 넣는데
+        // 위의 FAIL_ON_PROJECT_REPOS 때문에 여기 적고 플러그인 쪽은 끈다(VTN20b 의 node.distBaseUrl)
+        ivy {
+            name = 'Node.js'
+            url = 'https://nodejs.org/dist/'
+            patternLayout {
+                artifact 'v[revision]/[artifact](-v[revision]-[classifier]).[ext]'
+            }
+            metadataSources {
+                artifact()
+            }
+            content {
+                includeModule 'org.nodejs', 'node'
+            }
+        }
+    }
+}
+
+include 'OpenADRServerVTNCommon'
+include 'OpenADRServerVTNTestSupport'
+include 'OpenADRServerVTN20a'
+include 'OpenADRServerVEN20b'
+include 'OpenADRServerVTN20b'
+include 'DummyVEN20b'
+include 'DummyDRProgram'

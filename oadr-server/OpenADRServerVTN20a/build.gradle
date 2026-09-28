@@ -1,0 +1,20 @@
+plugins {
+    // 버전은 oadr-server/build.gradle 의 plugins 블록(libs.versions.toml)에서 정한다
+    id 'org.springframework.boot'
+}
+
+description = 'OpenADR 2.0a VTN'
+
+dependencies {
+    implementation libs.openadr.model20a
+    implementation libs.openadr.httpclient20a
+    implementation project(':OpenADRServerVTNCommon')
+
+    // 테스트는 항상 내장 ActiveMQ 와 도커 PostgreSQL 로 돈다
+    testImplementation project(':OpenADRServerVTNTestSupport')
+    testImplementation libs.postgresql
+    testImplementation libs.testcontainers.postgresql
+    testImplementation libs.bundles.vtn.brokers
+    testImplementation libs.spring.security.test
+    testImplementation libs.spring.boot.starter.test
+}

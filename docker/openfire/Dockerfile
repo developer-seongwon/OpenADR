@@ -30,7 +30,7 @@ COPY cert/xmpp.vtn.oadr.com-rsa.p12 /opt/oadr-vtn20b/cert/xmpp.vtn.oadr.com-rsa.
 # DB 의 ofProperty 에 있다(docker/postgres/init-openfire.sh)
 COPY docker/openfire/openfire.xml "$OPENFIRE_HOME/conf/openfire.xml"
 
-COPY server/OpenfireOadrPlugin/target/OpenfireOadrPlugin-openfire-plugin-assembly.jar \
+COPY oadr-server/OpenfireOadrPlugin/target/OpenfireOadrPlugin-openfire-plugin-assembly.jar \
 	"$OPENFIRE_HOME/plugins/OpenfireOadrPlugin-openfire-plugin-assembly.jar"
 
 # 인증서 저장소. 비밀번호를 changeit 에서 changeme 로 바꾼다(init-openfire.sh 의 ofProperty 와 맞춘다).

@@ -54,7 +54,7 @@
 */.apt_generated/
 
 # compile foolder
-# 그래들 산출물(build/, .gradle/)은 client/.gitignore, server/.gitignore 가 뺀다.
+# 그래들 산출물(build/, .gradle/)은 oadr-client/.gitignore, oadr-server/.gitignore 가 뺀다.
 # target 은 메이븐으로 남은 OpenfireOadrPlugin 의 산출물이다
 target/
 .gradle/
@@ -76,7 +76,7 @@ target/
 /cert/*
 !/cert/generate_test_cert.sh
 # 메이븐 때 frontend 빌드 결과를 복사해 두던 곳. 그래들은 jar 에 바로 넣는다(남아 있어도 jar 에서 빠진다)
-server/OpenADRServerVTN20b/src/main/resources/public/
-server/OpenADRServerVTN20b/frontend/build/
-server/OpenADRServerVTN20b/frontend/node_modules/
-server/OpenADRServerVTN20b/frontend/package-lock.json
+oadr-server/OpenADRServerVTN20b/src/main/resources/public/
+oadr-server/OpenADRServerVTN20b/frontend/build/
+oadr-server/OpenADRServerVTN20b/frontend/node_modules/
+oadr-server/OpenADRServerVTN20b/frontend/package-lock.json

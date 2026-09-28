@@ -1,0 +1,10 @@
+plugins {
+    // 버전은 oadr-server/build.gradle 의 plugins 블록(libs.versions.toml)에서 정한다
+    id 'org.springframework.boot'
+}
+
+description = '테스트용 VEN(도커 스택의 dummy-ven20b)'
+
+dependencies {
+    implementation project(':OpenADRServerVEN20b')
+}

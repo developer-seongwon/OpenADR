@@ -13,7 +13,7 @@
 #
 # 저장소 루트의 cert 디렉토리(이 스크립트가 있는 곳)에 만든다. 어디서 불러도 같다.
 #   ./cert/generate_test_cert.sh
-# 서버 테스트(server/*/src/test/resources 의 ../../cert)와 도커 이미지(docker/)가 여기 인증서를 쓴다.
+# 서버 테스트(oadr-server/*/src/test/resources 의 ../../cert)와 도커 이미지(docker/)가 여기 인증서를 쓴다.
 # 이미 만들어져 있으면 멈춘다. 다시 만들려면 이 스크립트만 남기고 나머지 파일을 지운 뒤 돌린다
 ###################################################
 COUNTRY="FR"

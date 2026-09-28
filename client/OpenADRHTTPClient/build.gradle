@@ -1,5 +1,0 @@
-description = 'Oadr2 HTTP client framework'
-
-dependencies {
-    api project(':OpenADRSecurity')
-}

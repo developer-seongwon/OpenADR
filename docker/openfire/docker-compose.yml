@@ -3,7 +3,7 @@
 services:
   openfire:
     build:
-      # 빌드 컨텍스트는 저장소 루트다(cert 의 인증서, server/OpenfireOadrPlugin 의 jar 를 COPY 한다)
+      # 빌드 컨텍스트는 저장소 루트다(cert 의 인증서, oadr-server/OpenfireOadrPlugin 의 jar 를 COPY 한다)
       context: .
       dockerfile: docker/openfire/Dockerfile
     depends_on:

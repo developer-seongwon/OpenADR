@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="Encoding">
-    <file url="file://$PROJECT_DIR$/client/OpenADRHTTPClient/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/client/OpenADRHTTPClient20a/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/client/OpenADRHTTPClient20b/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/client/OpenADRModel20a/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/client/OpenADRModel20b/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/client/OpenADRSecurity/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/client/OpenADRXMPPClient/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/client/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/client/src/main/resources" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/server/DummyDRProgram/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/server/DummyVEN20b/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/server/OpenADRServerVEN20b/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/server/OpenADRServerVTN20a/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/server/OpenADRServerVTN20b/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/server/OpenADRServerVTNCommon/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/server/OpenADRServerVTNTestSupport/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/server/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/server/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/oadr-client/OpenADRHTTPClient/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/oadr-client/OpenADRHTTPClient20a/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/oadr-client/OpenADRHTTPClient20b/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/oadr-client/OpenADRModel20a/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/oadr-client/OpenADRModel20b/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/oadr-client/OpenADRSecurity/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/oadr-client/OpenADRXMPPClient/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/oadr-client/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/oadr-client/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/oadr-server/DummyDRProgram/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/oadr-server/DummyVEN20b/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/oadr-server/OpenADRServerVEN20b/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/oadr-server/OpenADRServerVTN20a/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/oadr-server/OpenADRServerVTN20b/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/oadr-server/OpenADRServerVTNCommon/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/oadr-server/OpenADRServerVTNTestSupport/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/oadr-server/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/oadr-server/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/main/resources" charset="UTF-8" />
   </component>
