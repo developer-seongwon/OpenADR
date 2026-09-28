@@ -1,3 +1,5 @@
+#!/bin/bash
+# bash 전용이다(gen_ecc_key_csr 의 <(...) 프로세스 치환). 예전에는 shebang 이 없어서 부르는 셸에 따라 달랐다
 ###################################################
 # This script setup a custom PKI architecture containing:
 # - custom certificate authority
@@ -8,6 +10,11 @@
 # use openssl_client / curl to test ssl handshake between components:
 # openssl s_client -key ven1.oadr.com.key -cert ven1.oadr.com.crt -CAfile oadr.com.crt -connect vtn.oadr.com:8181
 # curl --key admin.oadr.com.key --cert admin.oadr.com.crt --cacert oadr.com.crt -H "Content-Type: application/json" -X GET https://localhost:8181/testvtn/Ven/ 
+#
+# 저장소 루트의 cert 디렉토리(이 스크립트가 있는 곳)에 만든다. 어디서 불러도 같다.
+#   ./cert/generate_test_cert.sh
+# 서버 테스트(server/*/src/test/resources 의 ../../cert)와 도커 이미지(docker/)가 여기 인증서를 쓴다.
+# 이미 만들어져 있으면 멈춘다. 다시 만들려면 이 스크립트만 남기고 나머지 파일을 지운 뒤 돌린다
 ###################################################
 COUNTRY="FR"
 STATE="Paris"
@@ -125,11 +132,14 @@ gen_selfsigned_key_crt()
 }
 
 ###################################
-# Create ./cert folder
-# Fail if already exists
+# 이 스크립트가 있는 디렉토리(cert)로 이동한다
+# 이미 CA 가 있으면 멈춘다(덮어쓰면 기존 인증서와 fingerprint 가 어긋난다)
 ###################################
-mkdir cert
-cd cert
+cd "$(dirname "$0")" || exit 1
+if [ -f "$CA_NAME.crt" ]; then
+	echo "인증서가 이미 있다($(pwd)). 다시 만들려면 generate_test_cert.sh 만 남기고 지운 뒤 돌려라"
+	exit 1
+fi
 
 ###################################
 # CA
@@ -211,9 +221,4 @@ gen_oadr20a_fingerprint $VEN3_NAME
 gen_rsa_key_csr $VEN4_NAME $VEN4_NAME $CA_NAME 10 365
 gen_oadr20b_fingerprint $VEN4_NAME
 gen_oadr20a_fingerprint $VEN4_NAME
-
-###################################
-# go back to home
-###################################
-cd ..
 

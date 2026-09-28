@@ -23,8 +23,8 @@ RUN tar xzf /tmp/openfire.tar.gz -C /usr/share \
 	&& chmod +x "$OPENFIRE_HOME"/bin/*.sh "$OPENFIRE_HOME"/bin/openfirectl \
 	&& useradd --system --home-dir "$OPENFIRE_HOME" openfire
 
-COPY server/cert/oadr.com.crt /opt/oadr-vtn20b/cert/oadr.com.crt
-COPY server/cert/xmpp.vtn.oadr.com-rsa.p12 /opt/oadr-vtn20b/cert/xmpp.vtn.oadr.com-rsa.p12
+COPY cert/oadr.com.crt /opt/oadr-vtn20b/cert/oadr.com.crt
+COPY cert/xmpp.vtn.oadr.com-rsa.p12 /opt/oadr-vtn20b/cert/xmpp.vtn.oadr.com-rsa.p12
 
 # DB 접속 정보와 도메인(xmpp.vtn.oadr.com). 나머지 설정(TLS 저장소, 인증 방식, OpenADR 플러그인 설정)은
 # DB 의 ofProperty 에 있다(docker/postgres/init-openfire.sh)

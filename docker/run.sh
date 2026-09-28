@@ -5,8 +5,11 @@ SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 # 저장소 루트. 이 스크립트(docker/)의 한 단계 위다. compose 의 빌드 컨텍스트도 여기다
 ROOT_DIR=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
 
-# 서버 빌드(그래들)와 인증서(cert), Openfire 플러그인이 있는 곳
+# 서버 빌드(그래들)와 Openfire 플러그인이 있는 곳
 SERVER_DIR="${SERVER_DIR:-$ROOT_DIR/server}"
+
+# 테스트 인증서. cert/generate_test_cert.sh 가 만든다. 도커 이미지는 저장소 루트 cert 를 COPY 한다
+CERT_DIR="$ROOT_DIR/cert"
 
 # 서버 모듈은 클라이언트 라이브러리(client/)를 좌표로 받는다(server/gradle/libs.versions.toml 의 openadr-client).
 # 그래들이 client 디렉토리를 includeBuild 로 물고 들어가서 소스에서 바로 만든다(server/settings.gradle).
@@ -135,8 +138,8 @@ resolve_build_tools() {
 
 # 인증서가 없으면 TLS 로 뜨지 못한다. 최초 1회만 만들면 된다
 assert_cert() {
-  if [ ! -f "$SERVER_DIR/cert/vtn.oadr.com-rsa.crt" ]; then
-    echo "server/cert 디렉토리에 인증서가 없다. 먼저 cd server && ./generate_test_cert.sh 를 돌려라"
+  if [ ! -f "$CERT_DIR/vtn.oadr.com-rsa.crt" ]; then
+    echo "cert 디렉토리에 인증서가 없다. 먼저 ./cert/generate_test_cert.sh 를 돌려라"
     exit 1
   fi
 }
@@ -200,7 +203,7 @@ start_services() {
     echo
     echo "앱은 건너뛴다. 아직 빌드에 들어오지 않은 모듈이 있다:$missing"
     echo "server/settings.gradle 에 해당 모듈의 include 가 있어야 앱 이미지를 만들 수 있다."
-    echo "지금은 인프라만 뜬 상태다. VTN 은 IntelliJ 에서 VTN20aApplication 으로 띄우면 된다."
+    echo "지금은 인프라만 뜬 상태다. VTN 은 IntelliJ 에서 VTN20bApplication 으로 띄우면 된다."
     SERVICES=""
     return 0
   fi

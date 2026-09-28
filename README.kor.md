@@ -1,27 +1,67 @@
-# OpenADR 실행 가이드 (한글)
+# OpenADR
 
-Spring Boot 4 / Java 25 로 이관한 뒤의 빌드와 실행 방법이다.
-프로토콜 자체와 모듈 설명은 영문 `README.md` 를 보면 된다.
+[English](README.eng.md) | 한국어
+
+OpenADR 프로토콜(https://www.openadr.org/)의 자바 구현이다. Spring Boot 4, Java 25.
+
+- 단독으로 돌아가는 VTN 2.0b 구현과, DR 프로그램과 장치 관리를 위한 제어 API, 웹 UI
+- VEN 2.0b 를 만들 때 쓰는 VEN 라이브러리
+- OpenADR 모델(XSD 에서 만든 JAXB 클래스), 보안(PKI RSA/ECC, XML 서명), HTTP/XMPP 클라이언트 라이브러리
+- 로컬에서 VTN, VEN, DR 프로그램을 한 번에 띄워 보는 도커 데모 스택
+
+## 목차
+
+- [모듈](#모듈)
+- [디렉토리 구조](#디렉토리-구조)
+- [준비물](#준비물)
+- [빌드](#빌드)
+- [최초 1회: 테스트 인증서](#최초-1회-테스트-인증서)
+- [최초 1회: hosts 등록](#최초-1회-hosts-등록)
+- [데모 스택(도커)](#데모-스택도커)
+  - [구성](#구성)
+  - [띄우기와 접속](#띄우기와-접속)
+  - [run.sh 사용법](#runsh-사용법)
+  - [docker 디렉토리 구조](#docker-디렉토리-구조)
+  - [동작 방식](#동작-방식)
+  - [DB 가 언제 비워지나](#db-가-언제-비워지나)
+- [자주 걸리는 것들](#자주-걸리는-것들)
+- [참고](#참고)
+
+## 모듈
+
+client/ 는 라이브러리다. server 를 참조하지 않는다.
+
+- OpenADRSecurity: OpenADR 보안(PKI RSA/ECC, XML 서명)
+- OpenADRModel20a, OpenADRModel20b: XSD 에서 만든 OpenADR 2.0a, 2.0b 모델 클래스
+- OpenADRHTTPClient, OpenADRHTTPClient20a, OpenADRHTTPClient20b: OpenADR HTTP 클라이언트(java.net.http)
+- OpenADRXMPPClient: OpenADR 2.0b XMPP 클라이언트(smack)
+
+server/ 는 서버와 테스트용 앱이다. client 를 좌표(com.avob.openadr:OpenADR*)로 받는다.
+
+- OpenADRServerVTNCommon: VTN 공통(엔티티, 서비스, 제어 API, 브로커 설정)
+- OpenADRServerVTN20a: OpenADR 2.0a VTN
+- OpenADRServerVTN20b: OpenADR 2.0b VTN, 제어 API 와 웹 UI 포함
+- OpenADRServerVEN20b: OpenADR 2.0b VEN 라이브러리
+- OpenADRServerVTNTestSupport: VTN 테스트 공용(PostgreSQL 테스트 컨테이너)
+- DummyVEN20b: OpenADRServerVEN20b 로 만든 테스트용 VEN
+- DummyDRProgram: 테스트용 DR 프로그램. VTN 제어 API 로 장치와 이벤트를 관리한다
+- OpenfireOadrPlugin: XMPP 로 붙는 VEN 을 VTN 에 물어 인증하는 Openfire 플러그인(메이븐)
+
+kpx-service 는 client 의 OpenADRModel20b, OpenADRSecurity jar 를 쓴다.
 
 ## 디렉토리 구조
-
-클라이언트 라이브러리와 서버를 디렉토리로 나눴다. 나중에 저장소를 나누면 각 디렉토리가 저장소 루트가 된다.
 
 ```
 settings.gradle  client, server 를 한 번에 열고 빌드하는 묶음(composite build). 설정은 물려주지 않는다
 build.gradle     묶음 태스크(build, assemble, test, check, clean, publishToMavenLocal, testReport)
-client/          라이브러리. server 를 참조하지 않는다
-  OpenADRSecurity, OpenADRModel20a, OpenADRModel20b,
-  OpenADRHTTPClient, OpenADRHTTPClient20a, OpenADRHTTPClient20b, OpenADRXMPPClient
-server/          서버와 테스트용 앱. client 를 좌표(com.avob.openadr:OpenADR*)로 받는다
-  OpenADRServerVTNCommon, OpenADRServerVTNTestSupport, OpenADRServerVTN20a, OpenADRServerVTN20b,
-  OpenADRServerVEN20b, DummyVEN20b, DummyDRProgram, OpenfireOadrPlugin(메이븐)
-  test/http/, generate_test_cert.sh, cert/(생성물)
-docker/          로컬 도커 스택(run.sh, compose, 서비스별 Dockerfile). server 의 jar 와 인증서를 쓴다
+client/          라이브러리(위 모듈)
+server/          서버와 테스트용 앱(위 모듈), test/http/(IntelliJ HTTP 요청 시나리오)
+docker/          로컬 도커 스택(run.sh, compose, 서비스별 Dockerfile). server 의 jar 와 cert 의 인증서를 쓴다
+cert/            테스트 인증서. generate_test_cert.sh 만 git 에 있고 나머지는 생성물(서버 테스트와 도커가 쓴다)
 ```
 
-빌드는 그래들(wrapper 9.7.1)이다. client 와 server 가 각자 독립된 그래들 빌드라서
-`settings.gradle`, `build.gradle`, `gradle/libs.versions.toml`(버전 목록), `gradlew` 를 따로 갖고 있다.
+client 와 server 는 각자 독립된 그래들 빌드라서 `settings.gradle`, `build.gradle`,
+`gradle/libs.versions.toml`(버전 목록), `gradlew` 를 따로 갖고 있다. 나중에 저장소를 나누면 각 디렉토리가 저장소 루트가 된다.
 자바 버전, 테스트, BOM 정책 같은 공통 설정은 두 `build.gradle` 에 같게 들어 있으니 한쪽을 고치면 다른 쪽도 본다.
 라이브러리 버전은 `gradle/libs.versions.toml` 에서 바꾼다. 버전이 안 적힌 것은 Spring Boot BOM 값을 그대로 쓴다.
 
@@ -31,10 +71,15 @@ OpenfireOadrPlugin 만 메이븐으로 남았다. 부모가 Openfire 의 plugins
 ## 준비물
 
 Docker Desktop, Java 25 가 필요하다. Openfire 플러그인을 빌드할 때만 Maven 이 필요하다(`docker/run.sh` 가 씀).
-그래들은 wrapper 가 알아서 받고, Node 도 따로 깔 필요 없다. 프론트엔드 빌드에 쓰는 Node 24 는 그래들이 받아 쓴다.
+그래들은 wrapper(9.7.1)가 알아서 받고, Node 도 따로 깔 필요 없다. 프론트엔드 빌드에 쓰는 Node 24 는 그래들이 받아 쓴다.
 
 자바 버전은 그래들 툴체인(25)으로 고른다. 그래들 자체는 17 이상 아무 JDK 로 돌아도 되고,
 컴파일과 테스트는 설치된 JDK 25 를 찾아서 쓴다. 없으면 받아 온다(foojay).
+
+서버 테스트는 도커로 PostgreSQL 을 띄우고, 저장소 루트 `cert/` 의 인증서와 hosts 의 `vtn.oadr.com` 을 쓴다.
+처음이면 아래 "최초 1회" 두 절을 먼저 한다.
+
+## 빌드
 
 저장소 루트에서 client, server 를 한 번에 돌린다.
 
@@ -63,27 +108,32 @@ server 는 옆에 client 디렉토리가 있으면 includeBuild 로 물고 들�
 그래서 client 를 고친 뒤 따로 install 할 필요가 없다. 저장소를 나눈 뒤에는 `-PopenadrClientDir=<client 경로>` 로
 위치를 주거나, client 에서 `publishToMavenLocal` 을 해 두면 server 가 ~/.m2 에서 받는다.
 
-jar 는 각 모듈의 `build/libs` 에 생긴다. VTN20a, VTN20b, DummyVEN20b, DummyDRProgram 은 스프링 부트 실행 jar 하나만 만든다.
+jar 는 각 모듈의 `build/libs` 에 생긴다. VTN20a, VTN20b, DummyVEN20b, DummyDRProgram 은 스프링 부트 실행 jar 를
+버전이 붙은 것(`OpenADRServerVTN20b-0.1.0-SNAPSHOT.jar`)과 버전 없는 것(`OpenADRServerVTN20b.jar`) 두 개 만든다. 내용은 같다.
+도커 빌드는 버전 없는 쪽을 쓴다(버전을 올려도 옛 jar 와 섞이지 않는다).
 kpx-service 에 넣는 jar 는 `client/OpenADRModel20b/build/libs`, `client/OpenADRSecurity/build/libs` 에 있다.
 
 IntelliJ 에서는 저장소 루트를 열면 루트의 `settings.gradle` 이 client 와 server 를 같이 불러온다.
 Gradle 창의 루트(OpenADR) 아래 Tasks 에 묶음 태스크가 있고, 모듈별 태스크는 OpenADRClient, OpenADRServer 아래에 있다.
 
-`docker/run.sh` 는 앱 jar 를 `./gradlew` 로 만들고, Openfire 플러그인용 `mvn` 은 알아서 찾는다.
-못 찾으면 에러를 내고 멈춘다. 직접 지정하고 싶으면 `MVN` 환경변수를 넘기면 된다.
-
-## 최초 1회: 테스트 인증서 생성
+## 최초 1회: 테스트 인증서
 
 OpenADR 은 VTN 과 VEN 이 서로 인증서로 신원을 확인한다.
-`server/cert/` 가 비어 있으면 처음 한 번은 직접 만들어야 한다.
+저장소 루트의 `cert/` 에 스크립트만 있으면 처음 한 번은 직접 만들어야 한다.
 
 ```
-cd server
-./generate_test_cert.sh
+./cert/generate_test_cert.sh
 ```
 
-CA, VTN, VEN, 관리자 인증서가 생긴다.
-이게 없으면 `docker/run.sh` 가 먼저 만들라고 알려주고 멈춘다.
+어디서 불러도 `cert/` 안에 만든다. 이미 있으면 멈춘다.
+자체 서명한 CA 아래로 VTN, VEN, 관리자, 사용자, 앱 인증서가 생긴다.
+서버 테스트(`server/*/src/test/resources` 의 `../../cert/...`)와 도커 스택이 여기 인증서를 쓴다.
+없으면 VTN 테스트가 깨지고, `docker/run.sh` 는 먼저 만들라고 알려주고 멈춘다.
+
+브라우저에서 VTN 제어 API 나 웹 UI 를 쓸 때 https 경고를 없애려면 CA 인증서 `cert/oadr.com.crt` 를
+브라우저(또는 OS)에 신뢰하는 인증서로 넣는다. 안 넣어도 경고만 뜨고 진행할 수 있다.
+관리자 클라이언트 인증서 `cert/admin.oadr.com.p12`(비밀번호 changeme)를 넣으면 x509 로도 로그인할 수 있다.
+안 넣어도 admin / admin 으로 로그인하면 된다.
 
 ## 최초 1회: hosts 등록
 
@@ -95,37 +145,132 @@ VTN 인증서가 `vtn.oadr.com` 이름으로 발급되고, VEN20b 의 XMPP 테�
 echo "127.0.0.1 vtn.oadr.com" | sudo tee -a /etc/hosts
 ```
 
-## 전체 스택 띄우기
+## 데모 스택(도커)
+
+### 구성
+
+VTN 2.0b 를 가운데 두고 테스트용 VEN(dummy-ven20b)과 DR 프로그램(dummy-drprogram)을 붙인 전체 구성을 로컬에서 띄운다.
+
+- dummy-ven20b: VEN 흉내. VTN 에 HTTP(simpleHttp)와 XMPP(Openfire 경유)로 붙는다. 붙는 VEN 은
+  `docker/service/client/dummy-ven20b/application.properties` 에서 켠 것만이다(지금은 ven2 xmpp, ven3 simpleHttp).
+  VEN 인증은 x509 클라이언트 인증서로 한다. 받은 DR 이벤트를 보고 측정값을 흉내 내서 리포트를 계속 보낸다.
+- vtn20b: VTN. 데이터는 PostgreSQL 에 두고, XMPP 는 Openfire 를 쓴다.
+- dummy-drprogram: VTN 뒤에 붙는 운영 시스템 자리. VTN 제어 API 로 마켓 컨텍스트와 VEN 을 만들고
+  리포트를 구독하고 DR 이벤트를 만든다(장치 관리와 DR 프로그램 관리).
+  VTN 이 VEN 에게서 받은 것(등록, 리포트 등록, 리포트 갱신)은 RabbitMQ 로 알려 준다.
+
+<details>
+	<summary>PlantUML 구성도</summary>
+	```
+	@startuml demo_component_diagram
+
+	package "Demand / Production" {
+	    rectangle "dummy-ven20b" as dummyVen #FFF
+	}
+
+	package "OADR Provider" {
+	    rectangle "vtn20b" as vtn #FFF
+	    database postgres
+	    node rabbitmq
+	    node openfire
+	}
+
+	package "DemandResponseProgram" {
+	    rectangle "dummy-drprogram" as dummyDRProgram #FFF
+	}
+
+
+	vtn <-up-> openfire #line:red;line.bold;text:red  : OADR(XMPP)
+	openfire -> vtn #green;line.bold;text:green : AUTH(HTTP)
+	vtn -down-> rabbitmq #blue;line.bold;text:blue   : DATA(AMQP)
+	dummyVen <--> vtn #green;line.bold;text:green : OADR(HTTP)
+	dummyVen <-> openfire #line:red;line.bold;text:red  : OADR(XMPP)
+	openfire -> postgres #black;line.dotted;text:black
+	vtn -> postgres #black;line.dotted;text:black
+	rabbitmq -down-> vtn #green;line.bold;text:green : AUTH(HTTP)
+	dummyDRProgram -up-> vtn #green;line.bold;text:green : DATA(HTTP)
+	dummyDRProgram <-- rabbitmq #blue;line.bold;text:blue   : DATA(AMQP)
+
+	@enduml
+	```
+
+</details>
+
+![](demo_component_diagram.png)
+
+그림의 rabbitmq 에서 vtn 으로 가는 AUTH(HTTP) 는 예전 구성이다. 지금 RabbitMQ 는 내부 계정만 쓰고 VTN 에 인증을 묻지 않는다.
+
+<details>
+	<summary>PlantUML 시퀀스 다이어그램</summary>
+	```
+	@startuml demo_sequence_diagram
+
+	participant "dummy-ven20b" as dummyVen #FFF
+	participant "vtn20b" as vtn #FFF
+	participant "dummy-drprogram" as dummyDRProgram #FFF
+
+	group Device provisionning
+	dummyDRProgram -[#green]> vtn: Creates MarketContext / VEN
+	dummyDRProgram -[#green]> vtn: Enrolls VEN to MarketContext
+	end 
+
+	group Device registration
+	dummyVen -[#red]> vtn: Creates registration party
+	vtn -[#blue]> dummyDRProgram: Notify registration
+
+
+
+	dummyVen -[#red]> vtn: Registers reports
+	vtn -[#blue]> dummyDRProgram: Notify register reports
+	dummyDRProgram-[#green]> vtn: Subscribes reports
+	vtn -[#red]> dummyVen: Creates reports subscription
+	end
+
+	group Normal workflow
+	group DRProgram
+	dummyDRProgram -[#green]> vtn: Creates DREvents in MarketContext
+	dummyVen <[#red]- vtn: Send DREvents
+	end
+	group Data reading
+	dummyVen -[#black]-> dummyVen: Simulate data readings\n based on received DREvents
+	dummyVen -[#red]> vtn: Updates reports
+	vtn -[#blue]> dummyDRProgram: Notify data update
+	end
+
+	end
+
+	@enduml
+	```
+</details>
+
+![](demo_sequence_diagram.png)
+
+### 띄우기와 접속
 
 ```
 ./docker/run.sh start all
 ```
 
 이 문서의 `./docker/run.sh` 명령은 모두 저장소 루트 기준이다. 스크립트는 어디서 불러도 저장소 루트로 이동해서 돈다.
-서버 빌드는 `server/gradlew`, 인증서는 `server/cert` 를 쓴다(`SERVER_DIR` 로 server 위치를 바꿀 수 있다).
+서버 빌드는 `server/gradlew`, 인증서는 `cert` 를 쓴다(`SERVER_DIR` 로 server 위치를 바꿀 수 있다).
 
 jar 를 먼저 로컬에서 빌드한 다음(`./gradlew assemble`) 이미지를 만들고 컨테이너를 띄운다.
 옆에 `client` 디렉토리가 있으면 그걸 같이 빌드한다. 저장소가 나뉘면 `CLIENT_DIR` 로 client 경로를 주거나
 client 에서 `publishToMavenLocal` 을 미리 해 두면 된다.
+`docker/run.sh` 는 Openfire 플러그인용 `mvn` 을 알아서 찾는다. 못 찾으면 에러를 내고 멈춘다.
+직접 지정하고 싶으면 `MVN` 환경변수를 넘기면 된다.
 처음에는 이미지 빌드까지 포함해서 몇 분 걸린다.
 
 뜨고 나면 이렇게 접속한다.
 
-VTN 웹 UI 는 https://localhost:8181/testvtn/ 이고 `admin` / `admin` 으로 로그인한다.
-자체 서명 인증서라 브라우저가 경고를 낸다. 그냥 진행하면 된다.
-클라이언트 인증서는 필요 없다. `server/cert/admin.oadr.com.p12` (비밀번호 changeme) 를 브라우저에
-넣으면 x509 로도 들어갈 수 있는데, 로그인만 할 거면 안 해도 된다.
+- VTN 웹 UI: https://localhost:8181/testvtn/ (admin / admin). 자체 서명 인증서라 브라우저가 경고를 낸다. 그냥 진행하면 된다
+- VTN 제어 API 문서(Swagger UI): https://localhost:8181/testvtn/swagger-ui/index.html
+- API 스키마: https://localhost:8181/testvtn/v3/api-docs (API 문서와 스키마는 로그인 없이 열린다)
+- RabbitMQ 관리 화면: http://localhost:15672 (admin / admin)
+- Openfire 관리 화면: http://localhost:9090
+- Dummy VEN: https://localhost:8083. https 이고 클라이언트 인증서를 요구해서 브라우저로 볼 일은 거의 없다
 
-API 문서는 https://localhost:8181/testvtn/swagger-ui/index.html 이고,
-스키마 자체는 https://localhost:8181/testvtn/v3/api-docs 다. 둘 다 로그인 없이 열린다.
-
-RabbitMQ 관리 화면은 http://localhost:15672 이고 `admin` / `admin`.
-Openfire 관리 화면은 http://localhost:9090.
-
-Dummy VEN 은 https://localhost:8083 인데 https 이고 클라이언트 인증서를 요구한다.
-브라우저로 볼 일은 거의 없다.
-
-## run.sh 사용법
+### run.sh 사용법
 
 ```
 ./docker/run.sh <command> [target]
@@ -153,7 +298,7 @@ target 은 세 가지로 준다.
 인프라만 띄우고 VTN 을 IntelliJ 에서 돌려도 Openfire 가 VTN 에 닿는다. Openfire 는 vtn.oadr.com 을
 호스트로 보내서(host-gateway), VTN 이 컨테이너면 호스트의 8181 포트 매핑을, IntelliJ 면 호스트의 VTN 을 만난다.
 
-## docker 디렉토리 구조
+### docker 디렉토리 구조
 
 ```
 docker/
@@ -177,10 +322,10 @@ docker/
 compose 파일 안의 경로는 전부 저장소 루트 기준이다. compose 는 `-f` 여러 개의 상대 경로를
 한 기준 디렉토리로 풀어서 `run.sh` 가 `--project-directory` 로 저장소 루트를 준다.
 `service/build`, `postgres`, `rabbitmq`, `openfire` 는 저장소 루트를 빌드 컨텍스트로 쓴다.
-빌드한 jar(`server/*/build/libs`)와 `server/cert/` 가 필요해서다. 루트의 `.dockerignore`(COPY 하는 것만 들이는 허용 목록)가 적용된다.
+빌드한 jar(`server/*/build/libs`)와 `cert/` 가 필요해서다. 루트의 `.dockerignore`(COPY 하는 것만 들이는 허용 목록)가 적용된다.
 나머지 앱 이미지는 자기 디렉토리만 컨텍스트로 쓴다.
 
-## 동작 방식
+### 동작 방식
 
 앱 이미지 세 개는 전부 `openadr_build` 이미지에서 jar 를 꺼내 온다.
 그래서 앱을 띄우기 전에 그 이미지가 먼저 만들어져야 하고, `run.sh` 가 그 순서를 지킨다.
@@ -207,16 +352,7 @@ JSX 가 든 파일은 확장자가 `.jsx` 여야 한다. Vite 는 `.js` 안의 J
 VTN 은 `fake-data,rabbitmq-broker,external` 프로파일로 뜬다.
 `fake-data` 가 마켓 컨텍스트와 초기 계정을 심는다.
 
-## 자주 걸리는 것들
-
-VEN 목록이 비어 있으면 dummy 들이 아직 등록되기 전이다.
-다시 올리면 1분에서 2분 안에 재등록된다.
-
-```
-./docker/run.sh restart dummy-drprogram,dummy-ven20b
-```
-
-## DB 가 언제 비워지나
+### DB 가 언제 비워지나
 
 인프라까지 올리는 기동은 DB 를 비우고 시작한다. 매번 같은 상태에서 출발하려는 것이다.
 
@@ -251,6 +387,15 @@ DB 만 따로 비우려면 이렇게 한다.
 엔티티에서 컬럼 타입을 좁히거나 컬럼을 뺀 변경도 이때 반영된다.
 `docker/postgres/init-*.sh` 도 빈 볼륨에서만 도니까 같이 다시 돈다.
 
+## 자주 걸리는 것들
+
+VEN 목록이 비어 있으면 dummy 들이 아직 등록되기 전이다.
+다시 올리면 1분에서 2분 안에 재등록된다.
+
+```
+./docker/run.sh restart dummy-drprogram,dummy-ven20b
+```
+
 포트가 이미 쓰이고 있다고 나오면 예전 스택이 남아 있는 것이다.
 
 ```
@@ -276,3 +421,8 @@ VTNCommon, VTN20a, VTN20b 테스트는 모두 VTN 을 8182 포트로 띄워서, 
 SPA 라우트로 바로 들어가거나 새로고침해도 404 가 나지 않아야 한다.
 `/ven`, `/event/detail/...` 같은 경로는 `SpaIndexController` 가 index.html 을 내준다.
 새 프론트 라우트를 추가하면 그 컨트롤러와 `HttpSecurityConfig` 양쪽에 경로를 같이 넣어야 한다.
+
+## 참고
+
+- [OpenADR 2.0b 명세](https://cimug.ucaiug.org/Projects/CIM-OpenADR/Shared%20Documents/Source%20Documents/OpenADR%20Alliance/OpenADR_2_0b_Profile_Specification_v1.0.pdf)
+- [DR 프로그램 가이드 v1.0](https://www.openadr.org/assets/openadr_drprogramguide_v1.0.pdf)

@@ -48,11 +48,14 @@ oadr.xmpp.host xmpp.vtn.oadr.com
 oadr.xmpp.domain xmpp.vtn.oadr.com
 oadr.xmpp.port 5222
 ```
-## Build (Gradle, from the server directory)
+## Build (Gradle)
 The jar always contains both broker libraries (embedded ActiveMQ and RabbitMQ JMS) and the PostgreSQL driver.
 The broker is chosen at runtime with the Spring profile: `standalone` (embedded ActiveMQ) or `external` (RabbitMQ).
 The ReactJS frontend is built and packaged by default.
+bootJar writes two identical jars to `build/libs`: `OpenADRServerVTN20b-<version>.jar` and `OpenADRServerVTN20b.jar`.
 ```sh
-./gradlew :OpenADRServerVTN20b:bootJar
-./gradlew :OpenADRServerVTN20b:bootJar -Pfrontend=false   # without the frontend
+./gradlew :server:OpenADRServerVTN20b:bootJar                    # from the repository root
+cd server && ./gradlew :OpenADRServerVTN20b:bootJar              # from the server directory
+cd server && ./gradlew :OpenADRServerVTN20b:bootJar -Pfrontend=false   # without the frontend
 ```
+See README.kor.md / README.eng.md at the repository root for the full guide.

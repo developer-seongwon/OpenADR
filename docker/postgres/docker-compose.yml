@@ -5,7 +5,7 @@
 services:
   postgres:
     build:
-      # 빌드 컨텍스트는 저장소 루트다(server/cert 의 인증서를 COPY 한다)
+      # 빌드 컨텍스트는 저장소 루트다(cert 의 인증서를 COPY 한다)
       context: .
       dockerfile: docker/postgres/Dockerfile
     environment:

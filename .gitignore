@@ -71,7 +71,10 @@ target/
 .vagrant/nodered/provisioning/playbook.retry
 .vagrant/nodered/provisioning/roles/*
 
-cert*
+# 테스트 인증서. cert/generate_test_cert.sh 가 PC 마다 만들고 개인키가 들어 있어서 스크립트만 올린다.
+# 예전 규칙(cert*)은 경로 제한이 없어서 모듈의 src/test/resources/cert 에 새로 넣는 파일까지 가렸다
+/cert/*
+!/cert/generate_test_cert.sh
 # 메이븐 때 frontend 빌드 결과를 복사해 두던 곳. 그래들은 jar 에 바로 넣는다(남아 있어도 jar 에서 빠진다)
 server/OpenADRServerVTN20b/src/main/resources/public/
 server/OpenADRServerVTN20b/frontend/build/

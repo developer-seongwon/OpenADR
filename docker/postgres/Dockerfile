@@ -6,8 +6,8 @@ FROM postgres:18-alpine
 
 # 빌드 컨텍스트가 저장소 루트다(compose 의 context 와 dockerfile 지정).
 # 예전에는 빌드 이미지에서 인증서를 꺼냈는데, 그러면 자바 모듈을 전부 빌드해야
-# 인프라도 뜰 수 있었다. 인증서는 server/cert 에 있으니(generate_test_cert.sh) 직접 복사한다.
-COPY server/cert/xmpp.vtn.oadr.com-rsa.fingerprint /opt/oadr-vtn20b/cert/xmpp.vtn.oadr.com-rsa.fingerprint
+# 인프라도 뜰 수 있었다. 인증서는 저장소 루트 cert 에 있으니(cert/generate_test_cert.sh) 직접 복사한다.
+COPY cert/xmpp.vtn.oadr.com-rsa.fingerprint /opt/oadr-vtn20b/cert/xmpp.vtn.oadr.com-rsa.fingerprint
 COPY docker/postgres/init-* /docker-entrypoint-initdb.d/
 
 ENV POSTGRES_PASSWORD=supersecure

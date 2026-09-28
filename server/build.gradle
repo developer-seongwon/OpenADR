@@ -84,7 +84,7 @@ subprojects {
     tasks.named('test', Test) {
         useJUnitPlatform()
         usesService(serialTests)
-        // 작업 디렉토리는 모듈 디렉토리다(메이븐과 같다). 테스트가 ../cert 로 server/cert 의 인증서를 읽는다
+        // 작업 디렉토리는 모듈 디렉토리다(메이븐과 같다). 테스트가 ../../cert 로 저장소 루트 cert 의 인증서를 읽는다
         jvmArgumentProviders.add({ ["-javaagent:${mockitoAgentClasspath.get().singleFile}".toString()] } as CommandLineArgumentProvider)
         testLogging {
             events 'failed'
@@ -93,10 +93,21 @@ subprojects {
     }
 
     // 스프링 부트 실행 jar 를 만드는 모듈 공통. 일반 jar(-plain.jar)는 만들지 않는다.
-    // build/libs 에 실행 jar 하나만 남아서 도커 빌드가 이름으로 고르기 쉽다
+    // 실행 jar 는 두 개를 만든다. 버전이 붙은 것(OpenADRServerVTN20b-0.1.0-SNAPSHOT.jar)과
+    // 버전 없는 것(OpenADRServerVTN20b.jar). 내용은 같다.
+    // 도커 빌드는 버전 없는 쪽을 이름 그대로 가져간다. 버전을 올리면 build/libs 에 옛 버전 jar 가 남는데,
+    // 예전처럼 이름-*.jar 로 고르면 둘 다 걸려서 이미지 안의 mv 가 깨졌다
     plugins.withId('org.springframework.boot') {
         tasks.named('jar') {
             enabled = false
+        }
+        tasks.named('bootJar') {
+            def unversionedJar = destinationDirectory.file(archiveBaseName.map { "${it}.jar".toString() })
+            outputs.file(unversionedJar).withPropertyName('unversionedJar')
+            doLast {
+                java.nio.file.Files.copy(archiveFile.get().asFile.toPath(), unversionedJar.get().asFile.toPath(),
+                        java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+            }
         }
     }
 }
