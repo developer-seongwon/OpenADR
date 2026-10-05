@@ -5,13 +5,15 @@ services:
     # 빌드 컨텍스트는 이 디렉토리다(Dockerfile 과 설정 파일)
     build: docker/service/client/dummy-ven20b
     restart: always
+    # ven3(http push)만 호스트에 연다. ven2(XMPP)는 9976, ven4 는 9978 로 비워 둔다
     ports:
-      - "8083:8083"
+      - "9977:9977"
     depends_on:
       openfire:
         condition: service_healthy
+      # VTN 이 실제로 응답할 때까지 기다린다(vtn20b 의 healthcheck)
       vtn20b:
-        condition: service_started
+        condition: service_healthy
       dummy-drprogram:
         condition: service_started
     networks:

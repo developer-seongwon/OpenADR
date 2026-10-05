@@ -75,9 +75,10 @@ usage() {
   echo "  reset-db: DB 를 비운다(postgres 볼륨 삭제). ddl-auto 가 update 라 그래야 스키마까지 새로 만들어진다"
   echo "  all 과 infra 로 기동하면 DB 를 비우고 시작한다. 남기려면 KEEP_DB=1"
   echo
-  echo "  브라우저로 볼 것: VTN 웹 UI  https://localhost:8181/testvtn/  (admin / admin)"
-  echo "                   RabbitMQ 관리 http://localhost:15672  (admin / admin)"
-  echo "                   Openfire 관리 http://localhost:9090"
+  echo "  브라우저로 볼 것: VTN 웹 UI  https://localhost:9970/testvtn/  (admin / admin)"
+  echo "                   RabbitMQ 관리 http://localhost:9971  (admin / admin)"
+  echo "                   Openfire 관리 http://localhost:9972"
+  echo "  포트는 9970 대다: 9970 VTN, 9971 RabbitMQ 관리, 9972 Openfire 관리, 9973 AMQP, 9974 XMPP, 9975 PostgreSQL, 9976~ 더미 VEN"
   exit 1
 }
 
@@ -243,14 +244,14 @@ start() {
   echo
   # 실제로 띄운 것만 알려준다. 앱을 건너뛴 경우 SERVICES 는 비어 있다
   if [ "$WITH_INFRA" = 1 ]; then
-    echo "RabbitMQ 관리   http://localhost:15672  (admin / admin)"
-    echo "Openfire 관리   http://localhost:9090"
+    echo "RabbitMQ 관리   http://localhost:9971  (admin / admin)"
+    echo "Openfire 관리   http://localhost:9972"
   fi
   case " $SERVICES " in
-    *" vtn20b "*)       echo "VTN 웹 UI      https://localhost:8181/testvtn/  (admin / admin)" ;;
+    *" vtn20b "*)       echo "VTN 웹 UI      https://localhost:9970/testvtn/  (admin / admin)" ;;
   esac
   case " $SERVICES " in
-    *" dummy-ven20b "*) echo "Dummy VEN      https://localhost:8083  (https 다. 클라이언트 인증서가 필요하다)" ;;
+    *" dummy-ven20b "*) echo "Dummy VEN      https://localhost:9977  (https 다. 클라이언트 인증서가 필요하다)" ;;
   esac
 }
 

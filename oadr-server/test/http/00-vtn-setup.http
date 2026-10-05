@@ -42,7 +42,7 @@ GET {{baseUrl}}/Account/
 %}
 
 ### OpenAPI 스펙
-# 확인: https://localhost:8181/testvtn/swagger-ui/index.html
+# 확인: https://localhost:9970/testvtn/swagger-ui/index.html
 # 로그인 전에도 열려야 한다. 웹 화면이 여기로 swagger 클라이언트를 만들기 때문이다.
 GET {{baseUrl}}/v3/api-docs
 Accept: application/json

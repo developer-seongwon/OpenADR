@@ -112,8 +112,6 @@ public class HttpSecurityConfig {
 
 		http.authorizeHttpRequests(auth -> auth
 				.requestMatchers(RegexRequestMatcher.regexMatcher(HttpMethod.OPTIONS, ".*")).permitAll()
-				// RabbitMQ http 인증 백엔드용(RabbitmqHTTPAuthController, @Deprecated). 컨트롤러를 지울 때 같이 지운다
-				.requestMatchers(RegexRequestMatcher.regexMatcher(HttpMethod.POST, ".*/auth/.*")).permitAll()
 				// React 앱의 정적 번들은 공개한다.
 				//
 				// 예전에는 여기까지 인증을 걸어 두는 바람에 인증서 없이는 index.html 조차

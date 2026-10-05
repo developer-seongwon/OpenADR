@@ -781,6 +781,81 @@ public class VenControllerTest extends AbstractVtnTest {
 		venService.delete(findOneByUsername);
 	}
 
+	/**
+	 * VTN 이 만든 인증서 묶음을 다시 받고(GET), 다시 만든다(POST, VenID 가 바뀌고 등록이 지워진다)
+	 */
+	@Test
+	public void credentialsTest() throws Exception {
+
+		// 없는 VEN
+		this.mockMvc.perform(MockMvcRequestBuilders.get(VEN_URL + "mouaiccool/credentials").with(adminSession))
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_NOT_FOUND));
+		this.mockMvc.perform(MockMvcRequestBuilders.post(VEN_URL + "mouaiccool/credentials").with(adminSession))
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_NOT_FOUND));
+
+		// 권한 없는 사용자
+		this.mockMvc.perform(MockMvcRequestBuilders.get(VEN_URL + "mouaiccool/credentials").with(userSession))
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_FORBIDDEN));
+
+		// VTN 이 인증서를 만든 VEN 은 묶음이 남는다
+		VenCreateDto dto = new VenCreateDto();
+		dto.setCommonName("myven");
+		dto.setAuthenticationType("x509");
+		dto.setNeedCertificateGeneration("rsa");
+		MvcResult created = this.mockMvc
+				.perform(MockMvcRequestBuilders.post(VEN_URL).content(mapper.writeValueAsBytes(dto))
+						.header("Content-Type", "application/json").with(adminSession))
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_CREATED)).andReturn();
+		String venId = created.getResponse().getHeader("x-VenID");
+		assertNotNull(venId);
+
+		MvcResult detail = this.mockMvc.perform(MockMvcRequestBuilders.get(VEN_URL + venId).with(adminSession))
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK)).andReturn();
+		assertTrue(convertMvcResultToDto(detail, VenDto.class).getCredentialsAvailable());
+
+		MvcResult downloaded = this.mockMvc
+				.perform(MockMvcRequestBuilders.get(VEN_URL + venId + "/credentials").with(adminSession))
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK)).andReturn();
+		assertEquals(created.getResponse().getContentLength(), downloaded.getResponse().getContentAsByteArray().length);
+		assertTrue(downloaded.getResponse().getHeader("Content-Disposition").contains("myven-credentials.tar"));
+
+		// 모르는 알고리즘
+		this.mockMvc.perform(MockMvcRequestBuilders.post(VEN_URL + venId + "/credentials").param("algorithm", "dsa")
+				.with(adminSession)).andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_BAD_REQUEST));
+
+		// 다시 만들면 VenID 가 바뀌고 등록이 지워진다. 예전 VenID 로는 못 찾는다
+		Ven ven = venService.findOneByUsername(venId);
+		ven.setRegistrationId("registration");
+		venService.save(ven);
+		MvcResult regenerated = this.mockMvc
+				.perform(MockMvcRequestBuilders.post(VEN_URL + venId + "/credentials").with(adminSession))
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK)).andReturn();
+		String newVenId = regenerated.getResponse().getHeader("X-VenID");
+		assertNotNull(newVenId);
+		assertNotEquals(venId, newVenId);
+		assertNotEquals(0, regenerated.getResponse().getContentAsByteArray().length);
+		assertNull(venService.findOneByUsername(venId));
+		Ven renewed = venService.findOneByUsername(newVenId);
+		assertNotNull(renewed);
+		assertNull(renewed.getRegistrationId());
+		this.mockMvc.perform(MockMvcRequestBuilders.get(VEN_URL + newVenId + "/credentials").with(adminSession))
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK));
+		venService.delete(renewed);
+
+		// 인증서를 VTN 이 만들지 않은 VEN 은 남은 게 없고, 아이디 비밀번호 VEN 은 다시 만들 수 없다
+		Ven loginVen = venService.prepare("loginven", "password");
+		loginVen.setAuthenticationType("login");
+		venService.save(loginVen);
+		MvcResult loginDetail = this.mockMvc.perform(MockMvcRequestBuilders.get(VEN_URL + "loginven").with(adminSession))
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK)).andReturn();
+		assertFalse(convertMvcResultToDto(loginDetail, VenDto.class).getCredentialsAvailable());
+		this.mockMvc.perform(MockMvcRequestBuilders.get(VEN_URL + "loginven/credentials").with(adminSession))
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_NOT_FOUND));
+		this.mockMvc.perform(MockMvcRequestBuilders.post(VEN_URL + "loginven/credentials").with(adminSession))
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_NOT_ACCEPTABLE));
+		venService.delete(venService.findOneByUsername("loginven"));
+	}
+
 	private <T> T convertMvcResultToDto(MvcResult result, Class<T> klass)
 			throws IOException {
 		MockHttpServletResponse mockHttpServletResponse = result.getResponse();

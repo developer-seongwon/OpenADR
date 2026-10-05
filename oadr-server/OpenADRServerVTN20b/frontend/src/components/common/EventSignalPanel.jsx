@@ -43,6 +43,9 @@ import Button from '@mui/material/Button';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import Toolbar from '@mui/material/Toolbar';
+import Typography from '@mui/material/Typography';
+
+import { browserTimezone, timestampToZoned } from '../../utils/time';
 
 
 
@@ -356,8 +359,49 @@ const toolbarStyles = theme => ({
   },
 });
 
+// 구간 시작, 끝 시각. 같은 날이 아닐 수 있어서 월-일 시:분 으로 쓴다.
+// 시간대는 이벤트 만들기에서 고른 것, 없으면(이벤트 상세) 브라우저 시간대다
+var formatIntervalTime = (timestamp, tz) => {
+  var zoned = timestampToZoned(timestamp, tz);
+  return zoned.date.slice(5) + " " + zoned.time;
+}
+
+/**
+ * 구간마다 활성 기간 안의 자리를 계산한다. 구간은 활성 기간 시작부터 길이(분)만큼 차례로 이어진다
+ * (VTN 이 이벤트를 보낼 때도 이렇게 시작 시각을 매긴다, Oadr20bVTNEiEventService).
+ * 길이를 못 읽는 구간이 나오면 그 뒤로는 시각을 계산하지 않는다
+ */
+var intervalRows = (intervals, activeStart) => {
+  var rows = [];
+  var offset = 0;
+  var broken = false;
+  intervals.forEach((interval) => {
+    var minutes = Number(interval.duration);
+    var ok = !broken && interval.duration !== "" && !isNaN(minutes) && minutes > 0;
+    rows.push({
+      interval: interval,
+      ok: ok,
+      startOffset: offset,
+      endOffset: ok ? offset + minutes : null,
+      start: (ok && activeStart != null) ? activeStart + offset * 60000 : null,
+      end: (ok && activeStart != null) ? activeStart + (offset + minutes) * 60000 : null,
+    });
+    if (ok) {
+      offset += minutes;
+    } else {
+      broken = true;
+    }
+  });
+  return { rows: rows, total: broken ? null : offset };
+}
+
 var SignalIntervalTable = (props) => {
   const {classes} = props;
+  var activeStart = (props.activeStart != null && props.activeStart !== "") ? Number(props.activeStart) : null;
+  var activeMinutes = (props.activeMinutes != null && props.activeMinutes !== "") ? Number(props.activeMinutes) : null;
+  var computed = intervalRows(props.intervals, activeStart);
+  var total = computed.total;
+  var timezone = props.timezone || browserTimezone();
   return (
     <Paper >
       <Toolbar>
@@ -410,9 +454,13 @@ var SignalIntervalTable = (props) => {
           
       </Grid>
       </Toolbar>
-      {(props.intervals.length > 0) ? <Table className={classes.table}>
+      {/* 구간은 활성 기간을 앞에서부터 나눈 조각이다. 구간마다 활성 기간 안의 시작, 끝을 같이 보여 준다 */}
+      {(props.intervals.length > 0) ? <Table className={classes.table} size="small">
         <TableHead>
           <TableRow>
+            <TableCell align="center">#</TableCell>
+            <TableCell>{ t( 'event.intervalStart' ) }</TableCell>
+            <TableCell>{ t( 'event.intervalEnd' ) }</TableCell>
             <TableCell align="right">{ t( 'event.duration' ) }</TableCell>
             <TableCell align="right">{ t( 'event.value' ) }</TableCell>
             <TableCell align="right"></TableCell>
@@ -420,12 +468,27 @@ var SignalIntervalTable = (props) => {
           </TableRow>
         </TableHead>
         <TableBody>
-          {props.intervals.map( (row, index) => (
+          {computed.rows.map( (item, index) => (
             <TableRow key={index}>
-              <TableCell scope="row" align="right">{row.duration}</TableCell>
-              <TableCell scope="row" align="right">{row.value}</TableCell>
+              <TableCell scope="row" align="center">{ index }</TableCell>
+              <TableCell scope="row">
+                { item.start != null ? formatIntervalTime(item.start, timezone) : "-" }
+                { item.ok ? <Typography variant="caption" component="span" sx={ { color: 'text.secondary', ml: 1 } }>
+                    +{ t( 'event.minutes', { minutes: item.startOffset } ) }
+                  </Typography> : null }
+              </TableCell>
+              <TableCell scope="row">
+                { item.end != null ? formatIntervalTime(item.end, timezone) : "-" }
+                { item.ok ? <Typography variant="caption" component="span" sx={ { color: 'text.secondary', ml: 1 } }>
+                    +{ t( 'event.minutes', { minutes: item.endOffset } ) }
+                  </Typography> : null }
+              </TableCell>
               <TableCell scope="row" align="right">
-                  <Button size="small" color="primary" onClick={props.handleEditIntervalClick(row, index)}>{ t( 'common.editUpper' ) }</Button>
+                { item.ok ? t( 'event.minutes', { minutes: item.interval.duration } ) : item.interval.duration }
+              </TableCell>
+              <TableCell scope="row" align="right">{item.interval.value}</TableCell>
+              <TableCell scope="row" align="right">
+                  <Button size="small" color="primary" onClick={props.handleEditIntervalClick(item.interval, index)}>{ t( 'common.editUpper' ) }</Button>
               </TableCell>
               <TableCell scope="row" align="right">
                   <Button size="small" color="secondary" onClick={props.handleRemoveSignalIntervalAtIndex(index)}>{ t( 'common.remove' ) }</Button>
@@ -434,6 +497,20 @@ var SignalIntervalTable = (props) => {
           ))}
         </TableBody>
       </Table> : null}
+      {(props.intervals.length > 0) ? <div style={ { padding: '8px 16px 12px' } }>
+        <Typography variant="caption" component="div" sx={ { color: 'text.secondary' } }>
+          { t( 'event.intervalHelp', { timezone: timezone } ) }
+        </Typography>
+        { (total != null && activeMinutes != null) ? <Typography variant="body2" component="div" sx={ { mt: 0.5 } }>
+            { t( 'event.intervalSummary', { count: props.intervals.length, total: total, active: activeMinutes } ) }
+          </Typography> : null }
+        { (total != null && activeMinutes != null && total < activeMinutes) ? <Typography variant="body2" component="div" sx={ { color: 'warning.main' } }>
+            { t( 'event.intervalShort', { minutes: activeMinutes - total } ) }
+          </Typography> : null }
+        { (total != null && activeMinutes != null && total > activeMinutes) ? <Typography variant="body2" component="div" sx={ { color: 'warning.main' } }>
+            { t( 'event.intervalLong', { minutes: total - activeMinutes } ) }
+          </Typography> : null }
+      </div> : null}
 
     </Paper>
   );
@@ -736,6 +813,9 @@ export class EventSignalPanel extends React.Component {
            style={ { marginTop: 20 , marginBottom:10 } }>
           <Grid size={12}>
             <SignalIntervalTable intervals={eventSignal.intervals} 
+            activeStart={this.props.activeStart}
+            activeMinutes={this.props.activeMinutes}
+            timezone={this.props.timezone}
             handleRemoveSignalIntervalAtIndex={this.handleRemoveSignalIntervalAtIndex}
             needIntervalCreate={this.state.needIntervalCreate}
             createIntervalValue={this.state.createIntervalValue}

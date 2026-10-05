@@ -94,8 +94,13 @@ export class VenDetailReportRequestPage extends React.Component {
   componentDidMount() {
     this.props.venActions.loadVenAvailableReport( this.props.match.params.username, this.props.match.params.reportSpecifierId);
     this.props.venActions.loadVenRequestedReport(this.props.match.params.username, this.props.match.params.reportRequestId);
+    this.refresh();
+  }
+
+  // rID 마다 마지막 값과 받은 값 목록을 다시 읽는다. VEN 이 주기마다 올리므로 화면에서 새로 고칠 수 있게 둔다
+  refresh = () => {
     this.props.venActions.loadVenRequestedReportSpecifier(this.props.match.params.username, this.props.match.params.reportRequestId);
-    
+    this.props.venActions.loadVenRequestedReportData(this.props.match.params.username, this.props.match.params.reportRequestId);
   }
 
   render() {
@@ -118,6 +123,8 @@ export class VenDetailReportRequestPage extends React.Component {
                             requestedReport={ven_detail_report_request.requestedReport}
                           requestedReportSpecifier={ven_detail_report_request.requestedReportSpecifier}
                             availableReport={ven_detail_report_request.availableReport}
+                            reportData={ven_detail_report_request.reportData}
+                            onRefresh={this.refresh}
                             />
                        </TabContainer> }
 

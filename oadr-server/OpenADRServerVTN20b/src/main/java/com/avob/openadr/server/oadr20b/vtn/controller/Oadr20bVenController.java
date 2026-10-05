@@ -1,7 +1,6 @@
 package com.avob.openadr.server.oadr20b.vtn.controller;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -404,10 +403,7 @@ public class Oadr20bVenController {
 		checkVen(venID);
 		checkOtherReportCapability(venID, reportSpecifierId);
 
-		Iterable<OtherReportDataFloat> findAll = otherReportDataService.findAll();
-		List<OtherReportDataFloat> list = new ArrayList<>();
-		findAll.forEach(el -> list.add(el));
-
+		// 예전에는 여기서 쓰지도 않는 전체 조회(findAll)를 먼저 했다. 모든 VEN 의 값을 다 읽어서 뺐다
 		List<OtherReportDataFloat> findByReportSpecifierId = otherReportDataService.findByReportSpecifierId(venID,
 				reportSpecifierId);
 		return oadr20bDtoMapper.mapList(findByReportSpecifierId, OtherReportDataFloatDto.class);
@@ -424,6 +420,23 @@ public class Oadr20bVenController {
 
 		return oadr20bDtoMapper.mapList(
 				otherReportDataService.findByReportSpecifierIdAndRid(venID, reportSpecifierId, rid),
+				OtherReportDataFloatDto.class);
+	}
+
+	/**
+	 * 리포트 요청 하나로 받아 저장한 값(이력 저장을 켠 rID 만). 화면의 요청 상세가 최근 것부터 보여 준다.
+	 * 계속 쌓이므로 최근 size 건(기본 100, 최대 1000)만 준다
+	 */
+	@RequestMapping(value = "/{venID}/report/requested/{reportRequestId}/data/float", method = RequestMethod.GET)
+	@ResponseBody
+	public List<OtherReportDataFloatDto> viewReportRequestFloatData(@PathVariable("venID") String venID,
+			@PathVariable("reportRequestId") String reportRequestId,
+			@RequestParam(value = "size", required = false, defaultValue = "100") Integer size)
+			throws OadrElementNotFoundException {
+
+		checkVen(venID);
+		int limit = Math.max(1, Math.min(size == null ? 100 : size, 1000));
+		return oadr20bDtoMapper.mapList(otherReportDataService.findRecentByReportRequestId(venID, reportRequestId, limit),
 				OtherReportDataFloatDto.class);
 	}
 

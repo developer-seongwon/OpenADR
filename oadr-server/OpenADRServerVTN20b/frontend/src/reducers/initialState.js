@@ -36,7 +36,7 @@ export default {
     requestedReport: [],
     requestedReportSpecifier: [],
     availableReport: {},
-    
+    reportData: []
   },
   ven_create: {
     parameters: {}
@@ -55,15 +55,18 @@ export default {
   },
   event_detail: {
     event: {},
-    marketContext: [],
+    marketContext: [],
     group: [],
     venResponse:[],
-    ven: []
+    ven: [],
+    actionError: null
   },
   event_create: {
-    marketContext: [],
+    marketContext: [],
     group: [],
-    ven: []
+    ven: [],
+    creating: false,
+    createError: null
   },
   user: {
     isConnectionPending: true,

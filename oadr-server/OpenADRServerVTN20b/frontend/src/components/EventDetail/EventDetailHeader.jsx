@@ -127,8 +127,9 @@ export class EventDetailHeader extends React.Component {
 
     }
     else {
+      // 아직 게시하지 않은 이벤트다. 예전에는 상태값(ACTIVE)만 찍혀서 게시된 것처럼 보였다. VEN 은 게시해야 받는다
       statePanel = <WarningSnackbar  message={ <Typography component="span" style={ { color:"#fff" } }>
-         <strong>{event.descriptor.state}</strong>
+         <strong>{ t( 'eventStatus.notPublished' ) }</strong>
        </Typography> } />
     }
 

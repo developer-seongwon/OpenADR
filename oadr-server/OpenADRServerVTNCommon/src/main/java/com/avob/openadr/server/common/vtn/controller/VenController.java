@@ -41,6 +41,7 @@ import com.avob.openadr.server.common.vtn.models.ven.VenCreateDto;
 import com.avob.openadr.server.common.vtn.models.ven.VenDto;
 import com.avob.openadr.server.common.vtn.models.ven.VenUpdateDto;
 import com.avob.openadr.server.common.vtn.models.ven.filter.VenFilter;
+import com.avob.openadr.server.common.vtn.models.vencredential.VenCredential;
 import com.avob.openadr.server.common.vtn.models.vengroup.VenGroup;
 import com.avob.openadr.server.common.vtn.models.vengroup.VenGroupDto;
 import com.avob.openadr.server.common.vtn.models.venmarketcontext.VenMarketContext;
@@ -175,6 +176,11 @@ public class VenController {
 			Ven ven = venService.save(prepare);
 			LOGGER.info("Create Ven: " + prepare.getUsername());
 
+			// VTN 이 인증서를 만들었으면 묶음을 남긴다. VEN 상세에서 다시 받는다(GET /Ven/{venID}/credentials)
+			if (generateCertificateIfRequired.isPresent()) {
+				venService.saveCredentials(ven, generateCertificateIfRequired.get());
+			}
+
 			List<DemandResponseEventFilter> filters = new ArrayList<>();
 			OffsetDateTime now = OffsetDateTime.now();
 			Long start = now.toEpochSecond() * 1000;
@@ -271,7 +277,9 @@ public class VenController {
 			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 			return null;
 		}
-		return dtoMapper.map(ven, VenDto.class);
+		VenDto dto = dtoMapper.map(ven, VenDto.class);
+		dto.setCredentialsAvailable(venService.hasCredentials(ven));
+		return dto;
 	}
 
 	@RequestMapping(value = "/{venID}", method = RequestMethod.DELETE)
@@ -471,6 +479,72 @@ public class VenController {
 		venService.cleanRegistration(ven);
 		response.setStatus(HttpServletResponse.SC_OK);
 		LOGGER.info("Clean registration of Ven: " + ven.getUsername());
+	}
+
+	/**
+	 * VTN 이 만들어 남겨 둔 VEN 인증서 묶음(tar: crt, key, ca, fingerprint)을 다시 내려받는다.
+	 * 인증서를 VTN 이 만들지 않은 VEN 이나 이 기능 전에 만든 VEN 은 남은 게 없어서 404 다(다시 만들기로 새로 받는다)
+	 */
+	@RequestMapping(value = "/{venID}/credentials", method = RequestMethod.GET)
+	@ResponseBody
+	public ResponseEntity<byte[]> downloadVenCredentials(@PathVariable("venID") String venUsername) {
+		Ven ven = venService.findOneByUsername(venUsername);
+		if (ven == null) {
+			LOGGER.warn("Unknown Ven: " + venUsername);
+			return ResponseEntity.status(HttpServletResponse.SC_NOT_FOUND).build();
+		}
+		Optional<VenCredential> credential = venService.findCredentials(ven);
+		if (credential.isEmpty()) {
+			LOGGER.warn("No stored credentials for Ven: " + venUsername);
+			return ResponseEntity.status(HttpServletResponse.SC_NOT_FOUND).build();
+		}
+		return credentialResponse(ven, credential.get());
+	}
+
+	/**
+	 * VEN 인증서를 새 키로 다시 만들고 그 묶음을 내려준다. 잃어버렸거나 키가 샜을 때 쓴다.
+	 * VenID(인증서 지문)가 바뀌어서 새 VenID 를 X-VenID 헤더로 알려 준다. 등록 정보(registrationId)는 지워진다.
+	 * 인증서로 붙지 않는 VEN(아이디, 비밀번호)은 406
+	 *
+	 * @param algorithm rsa(기본) 또는 ecc
+	 */
+	@RequestMapping(value = "/{venID}/credentials", method = RequestMethod.POST)
+	@ResponseBody
+	public ResponseEntity<byte[]> regenerateVenCredentials(@PathVariable("venID") String venUsername,
+			@RequestParam(value = "algorithm", defaultValue = "rsa") String algorithm) {
+		Ven ven = venService.findOneByUsername(venUsername);
+		if (ven == null) {
+			LOGGER.warn("Unknown Ven: " + venUsername);
+			return ResponseEntity.status(HttpServletResponse.SC_NOT_FOUND).build();
+		}
+		if (!"rsa".equalsIgnoreCase(algorithm) && !"ecc".equalsIgnoreCase(algorithm)) {
+			LOGGER.warn("Unknown certificate algorithm: " + algorithm);
+			return ResponseEntity.status(HttpServletResponse.SC_BAD_REQUEST).build();
+		}
+		if (!"x509".equals(ven.getAuthenticationType())) {
+			LOGGER.warn("Ven does not use client certificate: " + venUsername);
+			return ResponseEntity.status(HttpServletResponse.SC_NOT_ACCEPTABLE).build();
+		}
+		try {
+			venService.regenerateCredentials(ven, algorithm.toLowerCase());
+		} catch (GenerateX509VenException e) {
+			LOGGER.warn("Cannot regenerate credentials of Ven: " + venUsername, e);
+			return ResponseEntity.status(HttpServletResponse.SC_NOT_ACCEPTABLE).build();
+		}
+		LOGGER.info("Regenerate credentials of Ven: " + venUsername + " -> " + ven.getUsername());
+		Optional<VenCredential> credential = venService.findCredentials(ven);
+		if (credential.isEmpty()) {
+			return ResponseEntity.status(HttpServletResponse.SC_INTERNAL_SERVER_ERROR).build();
+		}
+		return credentialResponse(ven, credential.get());
+	}
+
+	private ResponseEntity<byte[]> credentialResponse(Ven ven, VenCredential credential) {
+		return ResponseEntity.status(HttpServletResponse.SC_OK)
+				.header("Content-Disposition", "attachment; filename=\"" + credential.getFileName() + "\"")
+				.header("X-VenID", ven.getUsername())
+				.contentLength(credential.getData().length)
+				.contentType(MediaType.APPLICATION_OCTET_STREAM).body(credential.getData());
 	}
 
 }

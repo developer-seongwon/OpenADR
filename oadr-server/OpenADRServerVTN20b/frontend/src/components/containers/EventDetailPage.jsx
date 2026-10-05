@@ -15,6 +15,7 @@ import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
+import Alert from '@mui/material/Alert';
 
 import EventDetailDescriptor from '../EventDetail/EventDetailDescriptor'
 import EventDetailActivePeriod from '../EventDetail/EventDetailActivePeriod'
@@ -23,6 +24,8 @@ import EventDetailTarget from '../EventDetail/EventDetailTarget'
 import EventDetailVenResponse from '../EventDetail/EventDetailVenResponse'
 
 import { history } from '../../store/configureStore';
+import { signalsToMinutes } from '../../utils/time';
+import { signalsToPayload, targetsToPayload } from '../../utils/eventPayload';
 
 
 import { green, red } from '@mui/material/colors';
@@ -133,11 +136,13 @@ export class EventDetailPage extends React.Component {
     this.props.eventActions.loadEventDetail(this.props.match.params.id);
     this.props.eventActions.loadEventVenResponse(this.props.match.params.id);
 
+    // 신호는 고칠 수 있게 복사해 둔다. 구간 길이는 서버가 XML 기간(PT15M)으로 주고 화면은 분으로 다룬다
     if(this.props.event_detail.event.signals) {
-      this.setState({copySignals: this.props.event_detail.event.signals});
+      this.setState({copySignals: signalsToMinutes(this.props.event_detail.event.signals)});
     }
+    // 대상도 복사해서 고친다. 예전에는 스토어 배열을 그대로 넘겨 대상 패널이 제자리에서 고쳤다
     if(this.props.event_detail.event.targets) {
-      this.setState({copyTargets: this.props.event_detail.event.targets});
+      this.setState({copyTargets: this.props.event_detail.event.targets.slice()});
     }
 
     this.setState({ value: this.panelIndex(this.props.match.params.panel) });
@@ -156,10 +161,15 @@ export class EventDetailPage extends React.Component {
       this.setState({ value: this.panelIndex(this.props.match.params.panel) });
     }
     if(this.props.event_detail.event.signals !== prevProps.event_detail.event.signals) {
-      this.setState({copySignals: this.props.event_detail.event.signals});
+      this.setState({copySignals: signalsToMinutes(this.props.event_detail.event.signals)});
     }
     if(this.props.event_detail.event.targets !== prevProps.event_detail.event.targets) {
-      this.setState({copyTargets: this.props.event_detail.event.targets});
+      this.setState({copyTargets: (this.props.event_detail.event.targets || []).slice()});
+    }
+    // 서버에서 이벤트를 다시 받으면(고치기 성공, 게시 뒤 다시 읽기) 고치던 상태를 끝낸다.
+    // 예전에는 보내자마자 끝내서 서버가 거절하면 고친 내용과 버튼이 같이 사라졌다
+    if(this.props.event_detail.event !== prevProps.event_detail.event && this.state.editMode) {
+      this.setState({editMode: false});
     }
 
     
@@ -194,30 +204,30 @@ export class EventDetailPage extends React.Component {
     this.setState({copySignals: copySignals, editMode: true});
   }
 
+  // 신호와 대상은 이벤트 만들기와 같은 모양으로 보낸다(utils/eventPayload)
   updateEvent = (published) => {
     var dto = {
-      published:published,
-      signals: this.state.copySignals,
-      targets: this.state.copyTargets
+      published: published === true,
+      signals: signalsToPayload(this.state.copySignals),
+      targets: targetsToPayload(this.state.copyTargets)
     }
     this.props.eventActions.updateEvent(this.props.match.params.id, dto)
-    this.setState({editMode: false});
   }
 
+  // 이벤트의 MarketContext 에 가입한 VEN 만 찾는다(이벤트 만들기와 같다)
   onVenSuggestionsFetchRequested = (e) => {
     var filters = [];
-    filters.push({type:"VEN", value:e.value});
-    this.props.venActions.searchVen(filters, 0, 5);
+    if (e.value) {
+      filters.push({type:"VEN", value:e.value});
+    }
+    var descriptor = this.props.event_detail.event.descriptor;
+    if (descriptor && descriptor.marketContext) {
+      filters.push({type:"MARKET_CONTEXT", value:descriptor.marketContext});
+    }
+    this.props.venActions.searchVen(filters, 0, 10);
   }
 
   onVenSuggestionsClearRequested = () => {
-  }
-
-  onVenSuggestionsSelect = (ven) => {
-     var filters = this.state.filters;
-    filters.push({type:"VEN", value:ven.username});
-    this.setState({filters});
-    this.refreshEvent();
   }
 
   render() {
@@ -238,6 +248,12 @@ export class EventDetailPage extends React.Component {
         <Tab label={ t( 'eventDetail.tab.venResponses' ) } />
       </Tabs>
       <Divider variant="middle" />
+      {/* 고치기, 게시, 활성, 취소를 서버가 거절했을 때. 예전에는 아무것도 안 떠서 버튼이 안 먹는 것처럼 보였다 */}
+      { event_detail.actionError ? <Alert severity="error" sx={ { mt: 2, mx: 3 } }>
+          { t( 'eventDetail.actionError', {
+            status: event_detail.actionError.status || '-',
+            detail: event_detail.actionError.detail ? ' ' + event_detail.actionError.detail : '' } ) }
+        </Alert> : null }
       { value === 0 && <TabContainer>
                 <EventDetailDescriptor classes={classes} event={event_detail.event} 
                   activeEvent={this.props.eventActions.activeEvent}
@@ -272,10 +288,10 @@ export class EventDetailPage extends React.Component {
                   editMode={this.state.editMode}
                   copyTargets={this.state.copyTargets}
                   updateCopyTargets={this.updateCopyTargets}
-                   ven={event_detail.ven}
-                onVenSuggestionsFetchRequested={this.onVenSuggestionsFetchRequested}
-                onVenSuggestionsClearRequested={this.onVenSuggestionsClearRequested}
-                onVenSuggestionsSelect={this.props.onVenSuggestionsSelect}
+                  publishEvent={this.props.eventActions.publishEvent}
+                  ven={event_detail.ven}
+                  onVenSuggestionsFetchRequested={this.onVenSuggestionsFetchRequested}
+                  onVenSuggestionsClearRequested={this.onVenSuggestionsClearRequested}
                   />
                      
                        </TabContainer> }

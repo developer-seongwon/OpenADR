@@ -153,10 +153,14 @@ export class EventPage extends React.Component {
     this.refreshEvent();
   }
 
+  // VEN 필터 창의 VEN 찾기. 예전에는 this.state.filters.splice(0) 이라 글자를 칠 때마다 걸어 둔 이벤트 필터가
+  // 다 지워졌고, 이벤트 필터를 VEN 검색에 섞어 보냈다. 입력한 글자로만 찾는다
   onVenSuggestionsFetchRequested = (e) => {
-    var filters = this.state.filters.splice(0);
-    filters.push({type:"VEN", value:e.value});
-    this.props.venActions.searchVen(filters, 0, 5);
+    var filters = [];
+    if (e.value) {
+      filters.push({type:"VEN", value:e.value});
+    }
+    this.props.venActions.searchVen(filters, 0, 10);
   }
 
   onVenSuggestionsClearRequested = () => {

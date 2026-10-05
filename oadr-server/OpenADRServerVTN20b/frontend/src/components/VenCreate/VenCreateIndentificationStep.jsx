@@ -165,7 +165,8 @@ export class VenCreateIndentificationStep extends React.Component {
               { t( 'accountCreate.help.notGenerated' ) }
             </Typography>
             <Typography variant="caption" gutterBottom>
-              { t( 'accountCreate.help.generated' ) }
+              {/* 사용자, 앱 만들기와 같이 쓰던 문구인데 VEN 은 인증서를 다시 받고 다시 만들 수 있어서 따로 둔다 */}
+              { t( 'venCreate.help.generated' ) }
             </Typography>
           </Grid>
           <Grid size={2} />

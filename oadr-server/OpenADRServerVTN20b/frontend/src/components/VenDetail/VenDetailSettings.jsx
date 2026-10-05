@@ -42,6 +42,14 @@ import RemoveIcon from '@mui/icons-material/Remove';
 
 
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
+import AutorenewIcon from '@mui/icons-material/Autorenew';
+
+import Tooltip from '@mui/material/Tooltip';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogActions from '@mui/material/DialogActions';
 
 
 
@@ -71,7 +79,8 @@ var VenTextField = (props) => {
 export class VenDetailSettings extends React.Component {
   constructor( props ) {
     super( props );
-    this.state = {}
+    // regenerateOpen: 인증서 다시 만들기 확인 창
+    this.state = { regenerateOpen: false }
    
     
 
@@ -94,9 +103,30 @@ export class VenDetailSettings extends React.Component {
     this.props.cleanRegistration( this.props.ven.username);
   }
 
+  // VTN 이 남겨 둔 인증서 묶음을 다시 받는다(VEN 을 만들 때 받은 것과 같다)
+  handleDownloadCredentialsClick = () => {
+    this.props.downloadVenCredentials( this.props.ven.username, this.props.ven.commonName );
+  }
+
+  handleRegenerateCredentialsOpen = () => {
+    this.setState( { regenerateOpen: true } );
+  }
+
+  handleRegenerateCredentialsClose = () => {
+    this.setState( { regenerateOpen: false } );
+  }
+
+  // 새 키로 다시 만든다. 키 방식은 RSA 로 만든다(VEN 만들기의 기본값과 같다)
+  handleRegenerateCredentialsConfirm = () => {
+    this.setState( { regenerateOpen: false } );
+    this.props.regenerateVenCredentials( this.props.ven.username, this.props.ven.commonName, 'rsa' );
+  }
+
 
   render() {
     const {classes, ven} = this.props;
+    // 인증서로 붙는 VEN 만 인증서를 다시 받거나 만들 수 있다. 다시 받기는 VTN 에 남은 게 있을 때만(credentialsAvailable)
+    var usesCertificate = ven.authenticationType === 'x509';
 
     
 
@@ -138,7 +168,54 @@ export class VenDetailSettings extends React.Component {
               </Button>
             </Grid>
         </Grid>
-        }/>
+        }
+        alwaysActions={ usesCertificate ? (
+          <Grid container spacing={ 1.5 }>
+            <Grid size={6}>
+              {/* 끈 버튼에는 마우스 이벤트가 안 가서 Tooltip 이 안 뜬다. span 으로 감싼다 */}
+              <Tooltip title={ ven.credentialsAvailable ? '' : t( 'venDetail.credentialsUnavailable' ) }>
+                <span>
+                  <Button key="btn_download_credentials"
+                          style={ { marginTop: 15 } }
+                          variant="outlined"
+                          color="primary"
+                          fullWidth={true}
+                          size="small"
+                          disabled={ !ven.credentialsAvailable }
+                          onClick={this.handleDownloadCredentialsClick}>
+                    <CloudDownloadIcon style={ { marginRight: 15 } }/> { t( 'venDetail.downloadCredentials' ) }
+                  </Button>
+                </span>
+              </Tooltip>
+            </Grid>
+            <Grid size={6}>
+              <Button key="btn_regenerate_credentials"
+                      style={ { marginTop: 15 } }
+                      variant="outlined"
+                      color="secondary"
+                      fullWidth={true}
+                      size="small"
+                      onClick={this.handleRegenerateCredentialsOpen}>
+                <AutorenewIcon style={ { marginRight: 15 } }/> { t( 'venDetail.regenerateCredentials' ) }
+              </Button>
+            </Grid>
+          </Grid>
+        ) : null }/>
+
+        <Dialog open={ this.state.regenerateOpen } onClose={ this.handleRegenerateCredentialsClose }>
+          <DialogTitle>{ t( 'venDetail.regenerate.title' ) }</DialogTitle>
+          <DialogContent>
+            <DialogContentText sx={ { mb: 1 } }>{ t( 'venDetail.regenerate.body1' ) }</DialogContentText>
+            <DialogContentText sx={ { mb: 1 } }>{ t( 'venDetail.regenerate.body2' ) }</DialogContentText>
+            <DialogContentText>{ t( 'venDetail.regenerate.body3' ) }</DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={ this.handleRegenerateCredentialsClose }>{ t( 'common.cancel' ) }</Button>
+            <Button color="secondary" variant="contained" onClick={ this.handleRegenerateCredentialsConfirm }>
+              { t( 'venDetail.regenerate.confirm' ) }
+            </Button>
+          </DialogActions>
+        </Dialog>
 
         <Divider style={ { marginTop: '20px' } } />
         <Grid>

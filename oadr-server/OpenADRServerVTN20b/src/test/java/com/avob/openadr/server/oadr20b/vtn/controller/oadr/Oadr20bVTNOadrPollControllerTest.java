@@ -5,6 +5,7 @@ import com.avob.openadr.server.oadr20b.vtn.AbstractVtn20bTest;
 import java.io.StringWriter;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import java.io.Writer;
 
 import jakarta.annotation.Resource;
@@ -179,8 +180,32 @@ public class Oadr20bVTNOadrPollControllerTest extends AbstractVtn20bTest {
 				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK)).andReturn();
 		unmarshal = jaxbContext.unmarshal(andReturn.getResponse().getContentAsString(), OadrPayload.class);
 		signedObjectFromOadrPayload = Oadr20bFactory.getSignedObjectFromOadrPayload(unmarshal, OadrResponseType.class);
-		assertEquals(String.valueOf(Oadr20bApplicationLayerErrorCode.INVALID_DATA_454),
+		// 서명 없는 oadrPayload 는 이제 서명 안 한 요청으로 본다(Signature 는 minOccurs=0).
+		// 이 VEN 은 XML 서명을 켜 둬서 예전처럼 454(서명 검증 실패)가 아니라 459(서명이 있어야 하는데 없음)로 거절한다
+		assertEquals(String.valueOf(Oadr20bApplicationLayerErrorCode.COMPLIANCE_ERROR_459),
 				signedObjectFromOadrPayload.getEiResponse().getResponseCode());
+
+		// XML 서명을 안 쓰는 VEN 이 서명 없이 oadrPayload 로 감싸 보내면 받는다(서명 오류로 거절하지 않는다)
+		OadrPollType unsignedPoll = Oadr20bPollBuilders.newOadr20bPollBuilder(OadrDataBaseSetup.VEN_HTTP_PULL).build();
+		DOMResult unsignedRes = new DOMResult();
+		jaxbContext.marshal(Oadr20bFactory.createOadrPayload("mypayload", unsignedPoll), unsignedRes);
+		Document unsignedDoc = (Document) unsignedRes.getNode();
+		Writer unsignedWriter = new StringWriter();
+		LSOutput unsignedOutput = domImplLS.createLSOutput();
+		unsignedOutput.setEncoding("UTF-8");
+		unsignedOutput.setCharacterStream(unsignedWriter);
+		serializer.write(unsignedDoc, unsignedOutput);
+		andReturn = this.oadrMockEiHttpMvc
+				.perform(MockMvcRequestBuilders.post(OADRPOLL_ENDPOINT)
+						.with(OadrDataBaseSetup.ANOTHER_VEN_SECURITY_SESSION)
+						.content(unsignedWriter.toString().replaceAll("\n", "")))
+				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK)).andReturn();
+		Object unsignedResponse = jaxbContext.unmarshal(andReturn.getResponse().getContentAsString());
+		if (unsignedResponse instanceof OadrResponseType) {
+			String code = ((OadrResponseType) unsignedResponse).getEiResponse().getResponseCode();
+			assertNotEquals(String.valueOf(Oadr20bApplicationLayerErrorCode.INVALID_DATA_454), code);
+			assertNotEquals(String.valueOf(Oadr20bApplicationLayerErrorCode.COMPLIANCE_ERROR_459), code);
+		}
 
 		// no signature while expected
 		content = jaxbContext.marshalRoot(build);

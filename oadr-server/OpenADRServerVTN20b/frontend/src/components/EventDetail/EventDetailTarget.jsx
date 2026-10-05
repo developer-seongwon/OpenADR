@@ -19,6 +19,11 @@ export class EventDetailTarget extends React.Component {
 
   }
 
+  // 예전에는 이 메서드가 없어서 대상 탭의 게시 버튼을 눌러도 아무 일이 없었다
+  handlePublishEventClick = () => {
+    this.props.publishEvent(this.props.event.id);
+  }
+
   render() {
    const {classes, event, copyTargets, group, editMode, ven} = this.props;
     return (
@@ -66,10 +71,10 @@ export class EventDetailTarget extends React.Component {
         <Divider style={ { marginTop: '20px', marginBottom:20 } } />
 
         <EventTargetPanel classes={classes} eventTarget={copyTargets} group={group} onChange={this.props.updateCopyTargets}
+         marketContext={event.descriptor ? event.descriptor.marketContext : null}
          ven={ven}
          onVenSuggestionsFetchRequested={this.props.onVenSuggestionsFetchRequested}
-         onVenSuggestionsClearRequested={this.props.onVenSuggestionsClearRequested}
-         onVenSuggestionsSelect={this.props.onVenSuggestionsSelect}/>
+         onVenSuggestionsClearRequested={this.props.onVenSuggestionsClearRequested}/>
 
       </div>
     );

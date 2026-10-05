@@ -26,6 +26,12 @@ public class VenDto extends AbstractUserDto {
 
 	private Boolean xmlSignature;
 
+	/**
+	 * VTN 이 만든 인증서 묶음이 남아 있어서 다시 내려받을 수 있는지(GET /Ven/{venID}/credentials).
+	 * VEN 하나를 볼 때(findVenByUsername)만 채운다. 목록에서는 비어 있다
+	 */
+	private Boolean credentialsAvailable;
+
 	public String getOadrName() {
 		return oadrName;
 	}
@@ -96,5 +102,13 @@ public class VenDto extends AbstractUserDto {
 
 	public void setXmlSignature(Boolean xmlSignature) {
 		this.xmlSignature = xmlSignature;
+	}
+
+	public Boolean getCredentialsAvailable() {
+		return credentialsAvailable;
+	}
+
+	public void setCredentialsAvailable(Boolean credentialsAvailable) {
+		this.credentialsAvailable = credentialsAvailable;
 	}
 }

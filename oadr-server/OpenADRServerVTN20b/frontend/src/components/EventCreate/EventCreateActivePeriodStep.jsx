@@ -149,7 +149,9 @@ export class EventCreateEventActivePeriodStep extends React.Component {
             <TimezonePicker label={ t( 'event.timezone' ) }  classes={classes} value={activePeriod.timezone} onChange={this.handleTimezoneChange}/>
           </Grid> 
           <Grid size={3}>
+             {/* 시작 날짜, 시각은 왼쪽에서 고른 시간대로 보이고 읽힌다 */}
              <DateAndTimePicker classes={ classes } field={ t( 'event.startDate' ) } error={hasError && activePeriod.start == null}
+               timezone={activePeriod.timezone}
                value={activePeriod.start} onChange={this.handleStartChange} />
           </Grid>
           <Grid size={2}>
@@ -196,7 +198,7 @@ export class EventCreateEventActivePeriodStep extends React.Component {
           </Grid>
            <Grid size={2}>
              <DurationPicker classes={ classes } field={ t( 'event.toleranceMinutes' ) } 
-                 value={activePeriod.toleranceDuration} onChange={this.handleToleranceDurationchange}/>
+                 value={activePeriod.toleranceDuration} onChange={this.handleToleranceDurationChange}/>
           </Grid>
           <Grid size={2}>
              <DurationPicker classes={ classes } field={ t( 'event.recoveryMinutes' ) } 

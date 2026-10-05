@@ -37,6 +37,14 @@ export default function venDetailReportRequestReducer( state = initialState.ven_
       case types.LOAD_VEN_REQUESTED_REPORT_SPECIFIER_ERROR:
         return state;
 
+    case types.LOAD_VEN_REQUESTED_REPORT_DATA_SUCCESS:
+      return objectAssign( {}, state, {
+        reportData: action.payload
+      } );
+
+    case types.LOAD_VEN_REQUESTED_REPORT_DATA_ERROR:
+      return state;
+
      // REPORTS
     case types.LOAD_VEN_AVAILABLE_REPORT:
       return state;

@@ -74,7 +74,8 @@ public class GenerateX509CertificateService {
 
 			HashMap<String, File> fileMap = Maps.newHashMap();
 			fileMap.put(commonName + ".crt", generateCredentials.getCertificateFile());
-			fileMap.put("ca.crt", generateCredentials.getCaCertificateFile());
+			// VTN CA 인증서. 예전 이름은 ca.crt 였다. 무엇인지 바로 보이게 ROOT_CA.crt 로 내준다
+			fileMap.put("ROOT_CA.crt", generateCredentials.getCaCertificateFile());
 			fileMap.put(commonName + ".key", generateCredentials.getPrivateKeyFile());
 			fileMap.put(commonName + ".fingerprint", generateCredentials.getFingerprintFile());
 			String archiveName = now + "-" + commonName + "-credentials.tar.gz";

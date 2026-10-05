@@ -78,7 +78,8 @@ public class VtnConfig {
 	@Value("${" + CONTEXT_PATH_CONF + ":#{null}}")
 	private String contextPath;
 
-	@Value("${" + PORT_CONF + ":#{8443}}")
+	// 설정이 없을 때의 기본값. 이 저장소의 VTN 포트(9970 대)에 맞춘다. 예전 기본값은 8443 이었다
+	@Value("${" + PORT_CONF + ":#{9970}}")
 	private int port;
 
 	@Value("${" + TRUSTED_CERTIFICATES_CONF + ":#{null}}")
@@ -114,7 +115,9 @@ public class VtnConfig {
 	@Value("${" + SUPPORT_UNSECURED_PHTTP_PUSH_CONF + ":#{false}}")
 	private Boolean supportUnsecuredHttpPush;
 
-	@Value("${" + PULL_FREQUENCY_SECONDS_CONF + ":#{null}}")
+	// VTN 이 등록 응답(oadrRequestedOadrPollFreq)으로 VEN 에 알려 주는 기본 폴링 주기(초). VEN 마다 따로 정할 수도 있다(Ven.pullFrequencySeconds).
+	// 설정이 없으면 30초(PT30S). 예전 기본값은 null 이라 응답에 PTnullS 가 실렸다
+	@Value("${" + PULL_FREQUENCY_SECONDS_CONF + ":30}")
 	private Long pullFrequencySeconds;
 
 	@Value("${" + VALIDATE_OADR_PAYLOAD_XSD_CONF + ":#{false}}")
@@ -123,7 +126,8 @@ public class VtnConfig {
 	@Value("${" + VALIDATE_OADR_PAYLOAD_XSD_FILEPATH_CONF + ":#{null}}")
 	private String validateOadrPayloadAgainstXsdFilePath;
 
-	@Value("${" + VTN_ID_CONF + ":#{null}}")
+	// VTN 이 응답에 싣는 vtnID. 설정이 없으면 이 저장소의 기본 이름을 쓴다(예전에는 null 이라 응답의 vtnID 가 비었다)
+	@Value("${" + VTN_ID_CONF + ":AVOB_OPEN_ADR}")
 	private String vtnId;
 
 	@Value("${" + REPLAY_PROTECTACCEPTED_DELAY_SECONDS_CONF + ":#{1200}}")

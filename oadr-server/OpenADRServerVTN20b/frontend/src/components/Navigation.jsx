@@ -10,6 +10,7 @@ import SettingsInputComponentIcon from '@mui/icons-material/SettingsInputCompone
 
 import SettingsIcon from '@mui/icons-material/Settings';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import MenuBookIcon from '@mui/icons-material/MenuBook';
 
 import AccountBoxIcon from '@mui/icons-material/AccountBox';
 import ListItemButton from "@mui/material/ListItemButton";
@@ -18,6 +19,9 @@ import ListItemButton from "@mui/material/ListItemButton";
  class NavigationMain extends React.Component {
  	render() {
  		var user = this.props.user.user;
+			// 등록 가이드는 문서라 역할과 상관없이 로그인하면 보인다
+			const hasGuideAccess = Boolean(user);
+
 			const hasEventAccess = user && user.roles 
 				&& (user.roles.includes("ROLE_DRPROGRAM") || user.roles.includes("ROLE_ADMIN"));
 
@@ -30,6 +34,13 @@ import ListItemButton from "@mui/material/ListItemButton";
 
 		  return (
             <div>
+              {(hasGuideAccess) ? <ListItemButton component={ NavLink } to="/guide">
+              <ListItemIcon>
+                <MenuBookIcon />
+              </ListItemIcon>
+              <ListItemText primary={ t( 'nav.guide' ) } />
+            </ListItemButton> : null}
+
               {(hasEventAccess) ? <ListItemButton component={ NavLink } to="/event">
               <ListItemIcon>
                 <CalendarTodayIcon />

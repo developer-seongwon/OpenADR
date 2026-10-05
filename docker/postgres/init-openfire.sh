@@ -438,7 +438,7 @@ psql -v ON_ERROR_STOP=1 --username "oadr-openfire" --dbname "oadr-openfire" <<-E
 	INSERT INTO ofproperty(name,propvalue) VALUES('xmpp.client.cert.policy','wanted');
 	INSERT INTO ofproperty(name,propvalue) VALUES('xmpp.client.tls.policy','required');
 
-	INSERT INTO ofproperty(name,propvalue) VALUES('xmpp.oadr.vtnAuthEndpoint','https://vtn.oadr.com:8181/testvtn/Role');
+	INSERT INTO ofproperty(name,propvalue) VALUES('xmpp.oadr.vtnAuthEndpoint','https://vtn.oadr.com:9970/testvtn/Role');
 	INSERT INTO ofproperty(name,propvalue) VALUES('xmpp.oadr.vtnId','%VTN_ID%');
 EOSQL
 

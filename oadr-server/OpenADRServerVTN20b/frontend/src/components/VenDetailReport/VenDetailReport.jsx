@@ -60,9 +60,10 @@ var VenAvailableReportDescriptionTable = (props) => {
               <TableCell align="right">{row.rid}</TableCell>
               <TableCell align="right">{row.reportType}</TableCell>
               <TableCell align="right">{row.readingType}</TableCell>
-              <TableCell align="right">{row.oadrMinPeriod}</TableCell>
-              <TableCell align="right">{row.oadrMaxPeriod}</TableCell>
-              <TableCell align="right">{(row.oadrOnChange) ? t( 'common.true' ) : t( 'common.false' )}</TableCell>
+              {/* 서버는 주기를 samplingRate 아래에 준다(ReportCapabilityDescriptionDto). 예전에는 평평한 필드를 읽어서 늘 비어 있었다 */}
+              <TableCell align="right">{row.samplingRate ? row.samplingRate.oadrMinPeriod : null}</TableCell>
+              <TableCell align="right">{row.samplingRate ? row.samplingRate.oadrMaxPeriod : null}</TableCell>
+              <TableCell align="right">{(row.samplingRate && row.samplingRate.oadrOnChange) ? t( 'common.true' ) : t( 'common.false' )}</TableCell>
             </TableRow>
           ))}
         </TableBody>

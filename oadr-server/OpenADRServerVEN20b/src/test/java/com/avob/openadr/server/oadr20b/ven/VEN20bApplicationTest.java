@@ -36,7 +36,7 @@ public class VEN20bApplicationTest {
 	 *
 	 * MultiVtnConfigTest 가 "XMPP 설정은 세션으로 등록되지 않는다" 를 단언한다.
 	 * 예전에는 그 실패를 만들려고 진짜 서버에 붙어보고 타임아웃을 기다렸다.
-	 * 도커 스택이 떠 있으면 openfire 가 5222 를 잡고 /etc/hosts 가 vtn.oadr.com 을
+	 * 도커 스택이 떠 있으면 openfire 가 9974(예전 5222)를 잡고 /etc/hosts 가 vtn.oadr.com 을
 	 * 127.0.0.1 로 보내기 때문에, 실제로 붙어서 5초를 버리고 스택트레이스를 쏟았다.
 	 * 더 나쁜 건 어쩌다 연결이 성공하면 테스트가 깨진다는 것이다.
 	 *

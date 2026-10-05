@@ -1,0 +1,106 @@
+# 개발 서버용 VTN 2.0b 스택(postgres, rabbitmq, openfire, vtn20b). 이미지로만 띄운다(빌드는 로컬 build.sh).
+# bin/run.sh 로 다룬다. 서버마다 다른 값(포트, 디렉토리)은 config/oadr.env 에 있고 bin/run.sh 가 --env-file 로 넘긴다.
+# 서비스 이름, 네트워크 별칭은 로컬 docker/ 의 compose 와 같다. 이미지 안 설정(application.properties)이 이 이름들을 본다
+# (postgres, rabbitmq, xmpp.vtn.oadr.com, vtn.oadr.com).
+name: oadr
+
+services:
+  postgres:
+    image: openadr/postgres:latest
+    # 이미지는 bin/run.sh load(update)로 넣는다. 도커 허브에서 받으려 하지 않게 한다
+    pull_policy: never
+    restart: unless-stopped
+    # CentOS 7(커널 3.10) 서버에서는 postgres:18-alpine 이 도커 기본 seccomp 에 막혀서 initdb 가
+    # could not write to file "postmaster.pid": Operation not permitted 로 계속 죽는다. 그래서 postgres 만 seccomp 를 끈다.
+    # 개발 서버 전용이다. 커널이 새로운 서버면 지워도 된다
+    security_opt:
+      - seccomp=unconfined
+    volumes:
+      # VTN(oadr-vtn20b), Openfire(oadr-openfire) DB
+      - ${PGDATA_DIR:?config/oadr.env 에 PGDATA_DIR 가 없다}:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U postgres"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  rabbitmq:
+    image: openadr/rabbitmq:latest
+    pull_policy: never
+    restart: unless-stopped
+    ports:
+      - "${ADMIN_BIND:?config/oadr.env 에 ADMIN_BIND 가 없다}:${RABBITMQ_ADMIN_PORT:?config/oadr.env 에 RABBITMQ_ADMIN_PORT 가 없다}:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_port_connectivity"]
+      interval: 5s
+      timeout: 10s
+      retries: 30
+
+  openfire:
+    image: openadr/openfire:latest
+    pull_policy: never
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${ADMIN_BIND}:${OPENFIRE_ADMIN_PORT:?config/oadr.env 에 OPENFIRE_ADMIN_PORT 가 없다}:9090"
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/5222"]
+      interval: 3s
+      timeout: 3s
+      retries: 60
+    # 플러그인이 VEN 인증을 https://vtn.oadr.com:9970 에 묻는다. 로컬 docker/ 와 달리 extra_hosts 로 호스트에 보내지 않고
+    # http 네트워크의 별칭(vtn20b)으로 바로 간다. 그래서 VTN_PORT 를 바꿔도 영향이 없다
+    networks:
+      default:
+      http:
+      xmpp:
+        aliases:
+          - xmpp.vtn.oadr.com
+
+  vtn20b:
+    image: openadr/vtn20b:latest
+    pull_policy: never
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      openfire:
+        condition: service_healthy
+    environment:
+      TZ: ${TZ:?config/oadr.env 에 TZ 가 없다}
+      # VTN 서버 인증서를 이미지 안 것(vtn.oadr.com 이름만 있다) 대신 bin/run.sh 가 VTN_HOST 로 만든 것으로 쓴다.
+      # 이미지의 application.properties(oadr.security.vtn.key, cert)를 환경 변수가 덮는다
+      OADR_SECURITY_VTN_KEY: /opt/oadr-vtn20b/keystore/vtn.key
+      OADR_SECURITY_VTN_CERT: /opt/oadr-vtn20b/keystore/vtn.crt
+      # VTN 이 응답에 싣는 vtnID(oadr.vtnid). 이미지 기본값도 AVOB_OPEN_ADR 다
+      OADR_VTNID: ${VTN_ID:-AVOB_OPEN_ADR}
+      # 리포트 등록 응답에 리포트 요청을 싣는다(oadr.report.requestOnRegister, 이미지 기본은 false).
+      # oadrPoll 을 하지 않는 VEN 은 등록 응답의 요청으로만 reportRequestID 를 받는다
+      OADR_REPORT_REQUESTONREGISTER: ${REPORT_REQUEST_ON_REGISTER:-true}
+    # 9970 이 열리면 스프링 기동이 끝난 뒤다. bin/run.sh status 에 healthy 로 보인다.
+    # 이미지에 curl 이 없어서 bash 의 /dev/tcp 로 본다(로컬 docker/ 와 같다)
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/9970"]
+      interval: 5s
+      timeout: 3s
+      retries: 60
+    ports:
+      # VEN 과 웹 UI 가 붙는 곳
+      - "${VTN_PORT:?config/oadr.env 에 VTN_PORT 가 없다}:9970"
+    volumes:
+      - ${KEYSTORE_DIR:?config/oadr.env 에 KEYSTORE_DIR 가 없다}:/opt/oadr-vtn20b/keystore:ro
+      - ${LOG_DIR:?config/oadr.env 에 LOG_DIR 가 없다}:/var/log/oadr-vtn20b
+    networks:
+      default:
+      xmpp:
+      http:
+        aliases:
+          - vtn.oadr.com
+
+networks:
+  http:
+  xmpp:

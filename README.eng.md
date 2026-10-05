@@ -47,7 +47,7 @@ oadr-server/ holds the servers and test applications. It takes oadr-client by co
 - DummyDRProgram: test DR program. Manages devices and events through the VTN control API
 - OpenfireOadrPlugin: Openfire plugin that authenticates XMPP VENs against the VTN (Maven)
 
-kpx-service uses the OpenADRModel20b and OpenADRSecurity jars from oadr-client.
+Other projects that build a VEN or a VTN can use the OpenADRModel20b and OpenADRSecurity jars from oadr-client.
 
 ## Directory layout
 
@@ -99,7 +99,7 @@ Each build root has the same aggregate tasks, so they run over all modules.
 
 ```
 cd oadr-client && ./gradlew build                  # build and test the libraries
-cd oadr-client && ./gradlew publishToMavenLocal    # publish to ~/.m2 (to build oadr-server without oadr-client, jars for kpx-service)
+cd oadr-client && ./gradlew publishToMavenLocal    # publish to ~/.m2 (to build oadr-server without oadr-client, jars for other projects)
 cd oadr-server && ./gradlew build                  # build and test the servers (builds the sibling oadr-client from source)
 cd oadr-server && ./gradlew build -x test          # jars only, no tests
 cd oadr-server && ./gradlew build -Pfrontend=false # leave the React UI out of VTN20b (skips the node build, faster)
@@ -112,7 +112,7 @@ or run `publishToMavenLocal` in oadr-client and oadr-server picks the jars from 
 Jars go to `build/libs` of each module. VTN20a, VTN20b, DummyVEN20b and DummyDRProgram build two Spring Boot executable jars:
 one with the version (`OpenADRServerVTN20b-2.0.jar`) and one without (`OpenADRServerVTN20b.jar`). They are identical.
 The Docker build uses the one without the version, so old jars left after a version bump do not get mixed in.
-The jars for kpx-service are in `oadr-client/OpenADRModel20b/build/libs` and `oadr-client/OpenADRSecurity/build/libs`.
+The jars for other projects are in `oadr-client/OpenADRModel20b/build/libs` and `oadr-client/OpenADRSecurity/build/libs`.
 
 Running `build` or `assemble` from the repository root also collects the versioned jars into `target/client` and `target/server` (`collectJars` task).
 target/client gets the 7 libraries, target/server gets the 4 executable jars (VTN20a, VTN20b, DummyVEN20b, DummyDRProgram) and 2 libraries (VTNCommon, VEN20b).
@@ -268,14 +268,17 @@ or run `publishToMavenLocal` in oadr-client beforehand.
 Pass the `MVN` environment variable to set it yourself.
 The first run takes a few minutes including the image builds.
 
-Once it is up:
+Once it is up. Host ports are grouped in the 9970 range
+(9970 VTN, 9971 RabbitMQ management, 9972 Openfire admin, 9973 AMQP, 9974 XMPP, 9975 PostgreSQL, 9976+ dummy VENs).
+Containers talk to each other by service name and default port (rabbitmq:5672, openfire:5222, postgres:5432); only the VTN uses 9970 both inside and outside.
 
-- VTN web UI: https://localhost:8181/testvtn/ (admin / admin). The browser warns about the self-signed certificate. Just proceed
-- VTN control API docs (Swagger UI): https://localhost:8181/testvtn/swagger-ui/index.html
-- API schema: https://localhost:8181/testvtn/v3/api-docs (the API docs and schema open without login)
-- RabbitMQ management: http://localhost:15672 (admin / admin)
-- Openfire admin: http://localhost:9090
-- Dummy VEN: https://localhost:8083. It is https and requires a client certificate, so there is little to see in a browser
+- VTN web UI: https://localhost:9970/testvtn/ (admin / admin). The browser warns about the self-signed certificate. Just proceed
+- VTN control API docs (Swagger UI): https://localhost:9970/testvtn/swagger-ui/index.html
+- API schema: https://localhost:9970/testvtn/v3/api-docs (the API docs and schema open without login)
+- RabbitMQ management: http://localhost:9971 (admin / admin)
+- Openfire admin: http://localhost:9972
+- PostgreSQL: localhost:9975 (postgres / supersecure)
+- Dummy VEN: https://localhost:9977. It is https and requires a client certificate, so there is little to see in a browser
 
 ### run.sh usage
 
@@ -303,7 +306,7 @@ List several with commas or spaces and they start in that order.
 The infrastructure and the applications are one stack (compose project oadr). You can start the infrastructure with `start infra`
 and add applications later, for example `start vtn20b`.
 Openfire reaches the VTN even when only the infrastructure runs in Docker and the VTN runs in IntelliJ. Openfire sends vtn.oadr.com
-to the host (host-gateway), so it reaches the host port mapping 8181 when the VTN is a container, or the VTN on the host when it runs in IntelliJ.
+to the host (host-gateway), so it reaches the host port mapping 9970 when the VTN is a container, or the VTN on the host when it runs in IntelliJ.
 
 ### docker directory layout
 
@@ -416,7 +419,7 @@ If a port is reported as already in use, an old stack is still running.
 ./docker/run.sh stop all
 ```
 
-`ERR_CONNECTION_RESET` on 8083 is expected. It is https, not http,
+`ERR_CONNECTION_RESET` on 9977 is expected. It is https, not http,
 and requires a client certificate.
 
 If Gradle cannot find a Java 25 toolchain, install JDK 25 or check the network (it downloads through foojay).

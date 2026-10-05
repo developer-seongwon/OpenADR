@@ -1,5 +1,5 @@
 #!/bin/bash
-B=https://localhost:8181/testvtn
+B=https://localhost:9970/testvtn
 A=(-sk -u admin:admin)
 # VEN 삭제가 VTN20b 쪽 리포트 테이블까지 알아서 치운다.
 # 그래서 여기서 DB 를 직접 건드릴 일이 없다.

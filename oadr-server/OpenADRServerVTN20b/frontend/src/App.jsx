@@ -13,20 +13,66 @@ import LinearProgress from '@mui/material/LinearProgress';
 // 로그인, 홈, 404 처럼 처음에 바로 보이는 화면만 그대로 두고 나머지는 처음 열 때 따로 받아 온다.
 // 이벤트 캘린더(react-big-calendar, dayjs) 같은 화면 전용 의존성도 그 화면 조각으로 빠진다.
 // 받는 동안은 아래 <Suspense> 의 진행 막대가 보인다
-const AboutPage = lazy( () => import( './components/AboutPage' ) );
-const VtnConfigurationPage = lazy( () => import( './components/containers/VtnConfigurationPage' ) );
-const VenPage = lazy( () => import( './components/containers/VenPage' ) );
-const AccountPage = lazy( () => import( './components/containers/AccountPage' ) );
-const AccountUserCreatePage = lazy( () => import( './components/containers/AccountUserCreatePage' ) );
-const AccountAppCreatePage = lazy( () => import( './components/containers/AccountAppCreatePage' ) );
-const EventPage = lazy( () => import( './components/containers/EventPage' ) );
-const EventDetailPage = lazy( () => import( './components/containers/EventDetailPage' ) );
-const EventCreatePage = lazy( () => import( './components/containers/EventCreatePage' ) );
-const VenDetailPage = lazy( () => import( './components/containers/VenDetailPage' ) );
-const VenDetailCreateReportPage = lazy( () => import( './components/containers/VenDetailCreateReportPage' ) );
-const VenDetailReportPage = lazy( () => import( './components/containers/VenDetailReportPage' ) );
-const VenDetailReportRequestPage = lazy( () => import( './components/containers/VenDetailReportRequestPage' ) );
-const VenCreatePage = lazy( () => import( './components/containers/VenCreatePage' ) );
+//
+// 화면 조각 이름에는 해시가 붙는다(VtnConfigurationPage-해시.js). 다시 배포하면 해시가 바뀌고 예전 파일은 없어진다.
+// 배포 전에 열어 둔 탭은 예전 index 가 예전 이름을 불러서 404 가 나고
+// "Failed to fetch dynamically imported module" 로 화면이 통째로 에러가 됐다.
+// 그럴 때 한 번만 새로고침해서 새 index.html 을 받는다. 새로고침한 뒤에도 실패하면(진짜 장애) 에러를 그대로 보여 준다.
+// 새로고침했는지는 sessionStorage 에 남긴다. 저장소를 못 쓰면 무한 새로고침이 될 수 있어서 새로고침하지 않는다
+const CHUNK_RELOAD_KEY = 'vtn.chunkReload';
+
+function writeChunkReload( value ) {
+  try {
+    if ( value == null ) {
+      window.sessionStorage.removeItem( CHUNK_RELOAD_KEY );
+    } else {
+      window.sessionStorage.setItem( CHUNK_RELOAD_KEY, value );
+    }
+    return true;
+  } catch ( e ) {
+    return false;
+  }
+}
+
+function readChunkReload() {
+  try {
+    return window.sessionStorage.getItem( CHUNK_RELOAD_KEY );
+  } catch ( e ) {
+    return null;
+  }
+}
+
+function lazyPage( factory ) {
+  return lazy( () => factory().then(
+    ( module ) => {
+      writeChunkReload( null );
+      return module;
+    },
+    ( error ) => {
+      if ( readChunkReload() !== '1' && writeChunkReload( '1' ) ) {
+        window.location.reload();
+        // 새로고침되는 동안 Suspense 진행 막대를 그대로 둔다
+        return new Promise( () => {} );
+      }
+      throw error;
+    } ) );
+}
+
+const AboutPage = lazyPage( () => import( './components/AboutPage' ) );
+const RegistrationGuidePage = lazyPage( () => import( './components/Guide/RegistrationGuidePage' ) );
+const VtnConfigurationPage = lazyPage( () => import( './components/containers/VtnConfigurationPage' ) );
+const VenPage = lazyPage( () => import( './components/containers/VenPage' ) );
+const AccountPage = lazyPage( () => import( './components/containers/AccountPage' ) );
+const AccountUserCreatePage = lazyPage( () => import( './components/containers/AccountUserCreatePage' ) );
+const AccountAppCreatePage = lazyPage( () => import( './components/containers/AccountAppCreatePage' ) );
+const EventPage = lazyPage( () => import( './components/containers/EventPage' ) );
+const EventDetailPage = lazyPage( () => import( './components/containers/EventDetailPage' ) );
+const EventCreatePage = lazyPage( () => import( './components/containers/EventCreatePage' ) );
+const VenDetailPage = lazyPage( () => import( './components/containers/VenDetailPage' ) );
+const VenDetailCreateReportPage = lazyPage( () => import( './components/containers/VenDetailCreateReportPage' ) );
+const VenDetailReportPage = lazyPage( () => import( './components/containers/VenDetailReportPage' ) );
+const VenDetailReportRequestPage = lazyPage( () => import( './components/containers/VenDetailReportRequestPage' ) );
+const VenCreatePage = lazyPage( () => import( './components/containers/VenCreatePage' ) );
 
 
 
@@ -362,6 +408,9 @@ class App extends React.Component {
 
             { publicRoute( '/login', LoginPage ) }
             { publicRoute( '/about', AboutPage ) }
+
+            {/* VEN 등록 순서를 적은 정적 문서. 메뉴에서는 이벤트 위에 있다 */}
+            { privateRoute( '/guide', RegistrationGuidePage ) }
 
             { privateRoute( '/account/app/create', AccountAppCreatePage ) }
             { privateRoute( '/account/user/create', AccountUserCreatePage ) }

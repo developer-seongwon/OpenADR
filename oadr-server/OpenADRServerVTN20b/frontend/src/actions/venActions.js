@@ -145,6 +145,35 @@ export const cleanRegistration = (venId) => {
   );
 }
 
+// VTN 이 남겨 둔 VEN 인증서 묶음(tar)을 다시 받는다. 응답이 파일이라 createVen 처럼 내려받기로 저장한다
+export const downloadVenCredentials = (venId, commonName) => {
+  return swaggerAction(types.DOWNLOAD_VEN_CREDENTIALS,
+    (api) => {
+      var params = { venID: venId };
+      return api.apis[ 'ven-controller' ].downloadVenCredentialsUsingGET(params, multipartResponseContentType);
+    },
+    (data) => { saveData( data.data, commonName + '-credentials.tar' ); }
+  );
+}
+
+// VEN 인증서를 새 키로 다시 만들고 내려받는다. VenID(인증서 지문)가 바뀌어서 새 VenID 의 상세 화면으로 옮긴다.
+// 새 VenID 는 응답 헤더 X-VenID 로 온다(swagger-client 는 헤더 이름을 소문자로 준다)
+export const regenerateVenCredentials = (venId, commonName, algorithm) => {
+  return swaggerAction(types.REGENERATE_VEN_CREDENTIALS,
+    (api) => {
+      var params = { venID: venId, algorithm: algorithm };
+      return api.apis[ 'ven-controller' ].regenerateVenCredentialsUsingPOST(params, multipartResponseContentType);
+    },
+    (data) => {
+      saveData( data.data, commonName + '-credentials.tar' );
+      var newVenId = data.headers && data.headers[ 'x-venid' ];
+      if ( newVenId ) {
+        history.push( '/ven/detail/' + newVenId + '/settings' );
+      }
+    }
+  );
+}
+
 export const loadVenAvailableReport = (venId, reportSpecifierId) => {
   return swaggerAction(types.LOAD_VEN_AVAILABLE_REPORT, 
     (api) => {
@@ -184,6 +213,17 @@ export const loadVenRequestedReportSpecifier = (venId, reportRequestId) => {
 	    parseJsonData
 	  );
 	}
+
+// 리포트 요청 하나로 받은 값을 최근 것부터 size 건(서버 기본 100, 최대 1000). 이력 저장을 켠 rID 값만 있다
+export const loadVenRequestedReportData = (venId, reportRequestId, size) => {
+  return swaggerAction(types.LOAD_VEN_REQUESTED_REPORT_DATA,
+    (api) => {
+      var params = { venID: venId, reportRequestId: reportRequestId, size: size || 100 };
+      return api.apis[ 'oadr-20b-ven-controller' ].viewReportRequestFloatDataUsingGET(params, jsonResponseContentType);
+    },
+    parseJsonData
+  );
+}
 
 export const requestRegisterReport  = (venId) => {
   return swaggerAction(types.REQUEST_VEN_REGISTER_REPORT, 

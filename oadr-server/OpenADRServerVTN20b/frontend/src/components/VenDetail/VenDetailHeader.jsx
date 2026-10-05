@@ -110,6 +110,10 @@ export class VenDetailHeader extends React.Component {
 
     }
 
+    // 등록과 상관없이 늘 보이는 버튼(설정 탭의 인증서 내려받기, 다시 만들기).
+    // actions 는 등록된 뒤에만 보여서, 등록 전에 인증서를 받아야 하는 버튼을 거기 두면 안 보였다
+    var alwaysPanel = this.props.alwaysActions || null;
+
     return (
       <Grid container>
         <Grid container spacing={ 3 }>
@@ -137,6 +141,7 @@ export class VenDetailHeader extends React.Component {
   
               </Grid>
               {actionPanel}
+              {alwaysPanel}
             
 
             </Grid>
