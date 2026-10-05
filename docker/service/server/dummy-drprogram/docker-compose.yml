@@ -8,8 +8,10 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
+      # VTN 이 실제로 응답할 때까지 기다린다. 기동할 때 VTN API 로 DummyMarketContext, VEN, 이벤트를 한 번만 만들고
+      # 실패해도 다시 하지 않아서, 컨테이너만 뜬 VTN 에 붙으면 아무것도 안 생긴다
       vtn20b:
-        condition: service_started
+        condition: service_healthy
     networks:
       default:
       http:

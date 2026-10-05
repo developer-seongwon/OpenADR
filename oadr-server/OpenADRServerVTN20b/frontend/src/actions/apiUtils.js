@@ -57,6 +57,17 @@ export var saveData = ( function () {
   };
 }());
 
+// swagger-client 오류에서 응답 코드와 이유를 꺼낸다. 화면에 오류를 보여 줄 때 쓴다.
+// 스프링 기본 오류 응답은 message 없이 error(Bad Request) 만 준다. 자세한 이유는 서버 로그에 남는다
+export var errorOf = ( err ) => {
+  var response = err && err.response;
+  var body = response && response.body;
+  return {
+    status: ( response && response.status ) || ( err && err.status ) || null,
+    detail: ( body && ( body.message || body.detail || body.error ) ) || ( err && err.message ) || '',
+  };
+}
+
 export var parseJsonData = (data) => {
   return JSON.parse( data.data );
 }

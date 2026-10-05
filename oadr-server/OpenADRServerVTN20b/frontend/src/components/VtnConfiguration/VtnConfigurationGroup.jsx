@@ -145,8 +145,10 @@ export class VtnConfigurationGroup extends React.Component {
         <form className={ classes.root }>
           <Grid container spacing={ 1 }>
             <Grid container>
+              {/* MarketContext 탭과 같은 이유로 입력칸 marginTop 24 를 빼고 id 를 줬다(VtnConfigurationMarketContext 참고) */}
               <Grid size={3}>
                 <TextField
+                  id="group_name"
                   label={ t( 'vtnConfig.name' ) }
                   value={ this.state.name }
                   className={ classes.textField }
@@ -154,8 +156,6 @@ export class VtnConfigurationGroup extends React.Component {
                   disabled={ this.state.editMode }
                   style={{width:"95%"}}
                   slotProps={{
-                    input: {style:{marginTop:24}},
-
                     inputLabel: {
                     shrink: true,
                   }
@@ -163,14 +163,13 @@ export class VtnConfigurationGroup extends React.Component {
               </Grid>
               <Grid size={7}>
                 <TextField
+                  id="group_description"
                   label={ t( 'vtnConfig.description' ) }
                   value={ this.state.description }
                   className={ classes.textField }
                   onChange={ this.handleGroupDescriptionChange }
                   style={{width:"95%"}}
                   slotProps={{
-                    input: {style:{marginTop:24, }},
-
                     inputLabel: {
                     shrink: true,
                   }

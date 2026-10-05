@@ -77,9 +77,15 @@ public class Oadr20bVTNPayloadService {
 		boolean signed = false;
 		if (unmarshal instanceof OadrPayload) {
 			OadrPayload oadrPayload = (OadrPayload) unmarshal;
-			xmlSignatureService.validate(payload, oadrPayload);
+			// 2.0b 스키마에서 oadrPayload 의 Signature 는 minOccurs=0 이다. 서명 없이 oadrPayload 로 감싸 보내는 VEN 도 있다.
+			// 예전에는 oadrPayload 면 무조건 서명을 확인해서
+			// 454(Can't validate payload xml signature)로 거절했다. 서명이 있을 때만 확인하고 없으면 서명 안 한 요청으로 본다.
+			// XML 서명을 켠 VEN 이 서명 없이 보내면 아래에서 거절한다. 응답은 서명 안 한 요청과 같이 감싸지 않고 보낸다
+			if (oadrPayload.getSignature() != null) {
+				xmlSignatureService.validate(payload, oadrPayload);
+				signed = true;
+			}
 			unsignedPayload = Oadr20bFactory.getSignedObjectFromOadrPayload(oadrPayload);
-			signed = true;
 		} else {
 			unsignedPayload = unmarshal;
 		}

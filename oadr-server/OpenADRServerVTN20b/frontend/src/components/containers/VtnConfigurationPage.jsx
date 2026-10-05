@@ -148,7 +148,9 @@ export class VtnConfigurationPage extends React.Component {
                                                 deleteGroup={ this.props.actions.deleteGroup } />
                        </TabContainer> }
       { value === 2 && <TabContainer>
-                         <VtnConfigurationParameter classes={ classes } vtnConfiguration={ vtnConfiguration.parameters } />
+                         <VtnConfigurationParameter classes={ classes }
+                                                    vtnConfiguration={ vtnConfiguration.parameters }
+                                                    marketContext={ vtnConfiguration.marketContext } />
                        </TabContainer> }
     </div>
 

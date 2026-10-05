@@ -1,6 +1,8 @@
 package com.avob.openadr.server.common.vtn.service;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -24,6 +26,8 @@ import com.avob.openadr.server.common.vtn.models.ven.VenCreateDto;
 import com.avob.openadr.server.common.vtn.models.ven.VenDao;
 import com.avob.openadr.server.common.vtn.models.ven.VenSpecification;
 import com.avob.openadr.server.common.vtn.models.ven.filter.VenFilter;
+import com.avob.openadr.server.common.vtn.models.vencredential.VenCredential;
+import com.avob.openadr.server.common.vtn.models.vencredential.VenCredentialDao;
 import com.avob.openadr.server.common.vtn.models.vendemandresponseevent.VenDemandResponseEvent;
 import com.avob.openadr.server.common.vtn.models.vendemandresponseevent.VenDemandResponseEventDao;
 import com.avob.openadr.server.common.vtn.models.vengroup.VenGroup;
@@ -44,6 +48,9 @@ public class VenService extends AbstractUserService<Ven> {
 
 	@Resource
 	private VenResourceDao venResourceDao;
+
+	@Resource
+	private VenCredentialDao venCredentialDao;
 
 	/**
 	 * VEN 을 지우기 전에 불릴 모듈별 뒷정리. 없으면 비어 있다.
@@ -128,6 +135,7 @@ public class VenService extends AbstractUserService<Ven> {
 
 		venResourceDao.deleteByVenId(instance.getId());
 		venDemandResponseEventDao.deleteByVenId(instance.getId());
+		venCredentialDao.deleteByVenId(instance.getId());
 		venDao.delete(instance);
 	}
 
@@ -182,6 +190,66 @@ public class VenService extends AbstractUserService<Ven> {
 	public void cleanRegistration(Ven ven) {
 		ven.setRegistrationId(null);
 		this.save(ven);
+	}
+
+	/**
+	 * VTN 이 만든 VEN 인증서 묶음(tar)을 남긴다. 이미 있으면 바꾼다.
+	 * VEN 을 만들 때와 다시 만들 때(regenerateCredentials) 부른다. ven 은 저장된 뒤라 id 가 있어야 한다
+	 */
+	public void saveCredentials(Ven ven, File credentials) throws GenerateX509VenException {
+		byte[] data;
+		try {
+			data = Files.readAllBytes(credentials.toPath());
+		} catch (IOException e) {
+			throw new GenerateX509VenException(e);
+		}
+		VenCredential credential = venCredentialDao.findOneByVenId(ven.getId());
+		if (credential == null) {
+			credential = new VenCredential();
+			credential.setVenId(ven.getId());
+		}
+		credential.setFileName(ven.getCommonName() + "-credentials.tar");
+		credential.setData(data);
+		credential.setCreatedDatetime(System.currentTimeMillis());
+		venCredentialDao.save(credential);
+	}
+
+	/** 남겨 둔 인증서 묶음. VTN 이 인증서를 만들지 않은 VEN 이나 이 기능 전에 만든 VEN 은 없다 */
+	public Optional<VenCredential> findCredentials(Ven ven) {
+		return Optional.ofNullable(venCredentialDao.findOneByVenId(ven.getId()));
+	}
+
+	public boolean hasCredentials(Ven ven) {
+		return venCredentialDao.existsByVenId(ven.getId());
+	}
+
+	/**
+	 * VEN 인증서를 새 키로 다시 만들고 남긴다.
+	 *
+	 * VenID 는 인증서 지문이라 새 지문으로 바뀐다(generateCredentials 가 username 을 바꾼다).
+	 * 예전 인증서로 한 등록은 쓸 수 없으니 registrationId 도 지운다. VEN 은 새 인증서로 다시 등록해야 한다.
+	 * 이벤트, 가입(MarketContext), 그룹, 리소스는 VEN 행(id)에 붙어 있어서 그대로 남는다
+	 *
+	 * @param algorithm rsa 또는 ecc
+	 */
+	@Transactional
+	public File regenerateCredentials(Ven ven, String algorithm) throws GenerateX509VenException {
+		if (generateX509VenService == null) {
+			throw new GenerateX509VenException(
+					"Client certificate feature require CA certificate to be provided to the vtn");
+		}
+		if (ven.getCommonName() == null || ven.getCommonName().isBlank()) {
+			throw new GenerateX509VenException("Ven has no common name: " + ven.getUsername());
+		}
+		VenCreateDto dto = new VenCreateDto();
+		dto.setCommonName(ven.getCommonName());
+		dto.setAuthenticationType("x509");
+		dto.setNeedCertificateGeneration(algorithm);
+		File credentials = generateX509VenService.generateCredentials(dto, ven);
+		ven.setRegistrationId(null);
+		Ven saved = this.save(ven);
+		saveCredentials(saved, credentials);
+		return credentials;
 	}
 
 	public Page<Ven> search(List<VenFilter> filters) {

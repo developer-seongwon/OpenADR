@@ -85,10 +85,17 @@ export class EventCreatePage extends React.Component {
     this.props.vtnConfigurationActions.loadGroup();
   }
 
+  // 입력한 글자로 찾는다(venID, commonName, oadrName). 예전에는 필터를 버리고 늘 앞의 5개만 보여 줬다.
+  // 이벤트의 MarketContext 가 오면 그 마켓에 가입한 VEN 으로 좁힌다(서버는 필터 종류끼리 AND)
   onVenSuggestionsFetchRequested = (e) => {
-     var filters = [];
-    filters.push({type:"VEN", value:e.value});
-    this.props.venActions.searchVen([], 0, 5);
+    var filters = [];
+    if (e.value) {
+      filters.push({type:"VEN", value:e.value});
+    }
+    if (e.marketContext) {
+      filters.push({type:"MARKET_CONTEXT", value:e.marketContext});
+    }
+    this.props.venActions.searchVen(filters, 0, 10);
   }
 
   onVenSuggestionsClearRequested = () => {
@@ -115,6 +122,8 @@ export class EventCreatePage extends React.Component {
       { value === 0 && <TabContainer>
                           <EventCreate classes={classes} marketContext={event_create.marketContext} group={event_create.group} 
                           createEvent={this.props.eventActions.createEvent}
+                          creating={event_create.creating}
+                          createError={event_create.createError}
                           ven={event_create.ven}
                           onVenSuggestionsFetchRequested={this.onVenSuggestionsFetchRequested}
                           onVenSuggestionsClearRequested={this.onVenSuggestionsClearRequested}

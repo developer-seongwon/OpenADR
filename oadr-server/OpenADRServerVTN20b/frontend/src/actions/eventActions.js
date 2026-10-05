@@ -29,15 +29,21 @@ export const searchEvent = (filters, start, end, page, size) => {
   );
 }
 
+// 보내기 전에 CREATE_EVENT_PENDING 을 먼저 보낸다. 화면이 버튼을 잠그고 지난 오류를 지운다
 export const createEvent = (dto) => {
-	var params = { event: dto }
-  return swaggerAction(types.CREATE_EVENT, 
+  var params = { event: dto }
+  var action = swaggerAction(types.CREATE_EVENT, 
     (api) => {
-      return api.apis[ 'demand-response-controller' ].createUsingPOST(params, jsonResponseContentType);
+      // 호출 자체가 던져도(오퍼레이션 이름이 없을 때 등) CREATE_EVENT_ERROR 로 가게 Promise 로 감싼다. 안 그러면 버튼이 잠긴 채 남는다
+      return Promise.resolve().then(() => api.apis[ 'demand-response-controller' ].createUsingPOST(params, jsonResponseContentType));
     }, 
     (data) => {  history.push("/event/") }
 
   );
+  return (dispatch, getState) => {
+    dispatch( { type: types.CREATE_EVENT_PENDING } );
+    return action(dispatch, getState);
+  }
 }
 
 export const updateEvent = (id, dto) => {

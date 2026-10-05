@@ -53,7 +53,9 @@ public class Oadr20bVtnController {
 	public VtnConfigurationDto viewConf() throws Oadr20bMarshalException, OadrSecurityException {
 
 		VtnConfigurationDto dto = oadr20bDtoMapper.map(vtnConfig, VtnConfigurationDto.class);
-		dto.setVtnId(vtnConfig.getOadr20bFingerprint());
+		// vtnId 는 매퍼가 oadr.vtnid 로 채운다. 예전에는 여기서 인증서 지문으로 덮어써서
+		// 화면의 VTN ID 를 VEN 쪽에 넣으면 응답의 vtnID 와 맞지 않았다. 지문은 따로 싣는다
+		dto.setFingerprint(vtnConfig.getOadr20bFingerprint());
 		dto.setSupportCertificateGeneration(vtnConfig.getCaKey() != null && vtnConfig.getCaCert() != null);
 		dto.setXmlSignatureReplayProtectSecond(vtnConfig.getReplayProtectAcceptedDelaySecond());
 		dto.setXsdValidation(vtnConfig.getValidateOadrPayloadAgainstXsd());

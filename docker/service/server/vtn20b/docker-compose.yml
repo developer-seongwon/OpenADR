@@ -12,8 +12,16 @@ services:
         condition: service_healthy
       openfire:
         condition: service_healthy
+    # VTN 은 컨테이너 안과 호스트 모두 9970 이다(application.properties 의 oadr.server.port)
     ports:
-      - "8181:8181"
+      - "9970:9970"
+    # 9970 이 열리면 스프링 기동이 끝난 뒤다(내장 톰캣은 컨텍스트를 다 올린 뒤에 포트를 연다).
+    # dummy-drprogram, dummy-ven20b 가 이걸 기다린다. 이미지에 curl 이 없어서 bash 의 /dev/tcp 로 본다
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/9970"]
+      interval: 5s
+      timeout: 3s
+      retries: 60
     networks:
       default:
       xmpp:

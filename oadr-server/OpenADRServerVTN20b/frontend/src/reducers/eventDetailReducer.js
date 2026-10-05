@@ -1,6 +1,7 @@
 import * as types from '../constants/actionTypes';
 import objectAssign from 'object-assign';
 import initialState from './initialState';
+import { errorOf } from '../actions/apiUtils';
 
 // IMPORTANT: Note that with Redux, state should NEVER be changed.
 // State is considered immutable. Instead,
@@ -30,40 +31,39 @@ export default function eventDetailReducer( state = initialState.event_detail, a
 
     case types.UPDATE_EVENT_SUCCESS:
       newState = objectAssign( {}, state, {
-        event: action.payload
+        event: action.payload,
+        actionError: null
       } );
       return newState;
 
+    // 고치기, 게시, 활성, 취소 오류는 actionError 에 담아 화면 위에 보여 준다(EventDetailPage).
+    // 예전에는 전부 그냥 넘겨서 서버가 거절해도 화면에 아무것도 안 떴다
     case types.UPDATE_EVENT_ERROR:
-      return state;
+    case types.PUBLISH_EVENT_ERROR:
+    case types.ACTIVE_EVENT_ERROR:
+    case types.CANCEL_EVENT_ERROR:
+      return objectAssign( {}, state, {
+        actionError: errorOf( action.payload )
+      } );
 
     case types.PUBLISH_EVENT:
       return state;
 
     case types.PUBLISH_EVENT_SUCCESS:
-      return state;
-
-    case types.PUBLISH_EVENT_ERROR:
-      return state;
+    case types.ACTIVE_EVENT_SUCCESS:
+    case types.CANCEL_EVENT_SUCCESS:
+      return objectAssign( {}, state, {
+        actionError: null
+      } );
 
 
     case types.ACTIVE_EVENT:
       return state;
 
-    case types.ACTIVE_EVENT_SUCCESS:
-      return state;
-
-    case types.ACTIVE_EVENT_ERROR:
-      return state;
 
     case types.CANCEL_EVENT:
       return state;
 
-    case types.CANCEL_EVENT_SUCCESS:
-      return state;
-
-    case types.CANCEL_EVENT_ERROR:
-      return state;
 
     case types.LOAD_EVENT_VEN_RESPONSE:
       return state;

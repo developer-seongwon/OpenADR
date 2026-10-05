@@ -12,7 +12,7 @@ public class Oadr20bVENEiEventServiceTest {
 //
 //	static {
 //		PROPERTIES.setProperty("oadr.vtn.vtnid", "AVOB_TEST_VTN");
-//		PROPERTIES.setProperty("oadr.vtn.vtnUrl", "https://localhost:8181/testvtn");
+//		PROPERTIES.setProperty("oadr.vtn.vtnUrl", "https://localhost:9970/testvtn");
 //		VTN_SOURCE = new VtnSessionConfiguration(PROPERTIES, new VenConfig());
 //	}
 //

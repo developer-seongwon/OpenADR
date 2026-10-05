@@ -29,6 +29,7 @@ import Grid from '@mui/material/Grid';
 
 
 import {EventSignalPanel} from '../common/EventSignalPanel'
+import { durationToMinutes } from '../../utils/time';
 
 
 export class EventDetailSignal extends React.Component {
@@ -55,6 +56,9 @@ export class EventDetailSignal extends React.Component {
 
   render() {
     const {classes, event, copySignals, editMode} = this.props;
+    // 구간 표에 구간마다 활성 기간 안의 시작, 끝을 보여 주려고 넘긴다. 서버의 활성 기간 길이는 XML 기간이라 분으로 바꾼다
+    var activeStart = (event && event.activePeriod) ? event.activePeriod.start : null;
+    var activeMinutes = (event && event.activePeriod) ? durationToMinutes(event.activePeriod.duration) : null;
     var that = this;
     var hasError = false;
 
@@ -115,6 +119,7 @@ export class EventDetailSignal extends React.Component {
 
                <EventSignalPanel 
                  classes={classes} eventSignal={signal} hasError={hasError} 
+                   activeStart={activeStart} activeMinutes={activeMinutes}
                    onChange={that.handleEventSignalChange(index)}
                    onRemove={that.handleRemoveEventSignalChange(index)}
                    canBeRemoved={copySignals.length >0}/>

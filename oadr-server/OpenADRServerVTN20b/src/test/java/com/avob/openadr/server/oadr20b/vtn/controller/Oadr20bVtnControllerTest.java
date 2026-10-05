@@ -38,6 +38,8 @@ public class Oadr20bVtnControllerTest extends AbstractVtn20bTest {
 
 		assertNotNull(conf);
 
+		assertEquals(vtnConfig.getVtnId(), conf.getVtnId());
+		assertEquals(vtnConfig.getOadr20bFingerprint(), conf.getFingerprint());
 		assertEquals(vtnConfig.getContextPath(), conf.getContextPath());
 		assertTrue(vtnConfig.getPort() == conf.getPort());
 		assertEquals(vtnConfig.getPullFrequencySeconds(), conf.getPullFrequencySeconds());

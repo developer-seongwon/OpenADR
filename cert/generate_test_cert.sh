@@ -8,8 +8,8 @@
 # - client ven1 rsa
 # - client ven2 ecc
 # use openssl_client / curl to test ssl handshake between components:
-# openssl s_client -key ven1.oadr.com.key -cert ven1.oadr.com.crt -CAfile oadr.com.crt -connect vtn.oadr.com:8181
-# curl --key admin.oadr.com.key --cert admin.oadr.com.crt --cacert oadr.com.crt -H "Content-Type: application/json" -X GET https://localhost:8181/testvtn/Ven/ 
+# openssl s_client -key ven1.oadr.com.key -cert ven1.oadr.com.crt -CAfile oadr.com.crt -connect vtn.oadr.com:9970
+# curl --key admin.oadr.com.key --cert admin.oadr.com.crt --cacert oadr.com.crt -H "Content-Type: application/json" -X GET https://localhost:9970/testvtn/Ven/ 
 #
 # 저장소 루트의 cert 디렉토리(이 스크립트가 있는 곳)에 만든다. 어디서 불러도 같다.
 #   ./cert/generate_test_cert.sh

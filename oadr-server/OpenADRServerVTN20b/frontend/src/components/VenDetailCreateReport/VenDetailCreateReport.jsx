@@ -185,9 +185,10 @@ class VenAvailableReportDescriptionTable extends React.Component {
                     <TableCell align="right">{row.rid}</TableCell>
                     <TableCell align="right">{row.reportType}</TableCell>
                     <TableCell align="right">{row.readingType}</TableCell>
-                    <TableCell align="right">{row.oadrMinPeriod}</TableCell>
-                    <TableCell align="right">{row.oadrMaxPeriod}</TableCell>
-                    <TableCell align="right">{(row.oadrOnChange) ? t( 'common.true' ) : t( 'common.false' )}</TableCell>
+                    {/* 주기는 samplingRate 아래에 온다(ReportCapabilityDescriptionDto) */}
+                    <TableCell align="right">{row.samplingRate ? row.samplingRate.oadrMinPeriod : null}</TableCell>
+                    <TableCell align="right">{row.samplingRate ? row.samplingRate.oadrMaxPeriod : null}</TableCell>
+                    <TableCell align="right">{(row.samplingRate && row.samplingRate.oadrOnChange) ? t( 'common.true' ) : t( 'common.false' )}</TableCell>
                 </TableRow>
               )
               })}

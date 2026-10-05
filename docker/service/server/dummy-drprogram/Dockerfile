@@ -20,7 +20,9 @@ RUN mv /opt/dummy-drprogram/*.jar /opt/dummy-drprogram/dummy-drprogram.jar
 
 RUN chmod +x /opt/dummy-drprogram/wait-for-it.sh
 
-# VTN 은 8181 로 뜬다. 예전 설정에 8081 이 남아 있어서 여기서 150초를 그냥 기다리다
-# VTN 이 준비된 줄 모르고 뒤늦게 기동했다
-CMD ["/opt/dummy-drprogram/wait-for-it.sh", "vtn.oadr.com:8181", "-t", "120", "--" \
+# VTN 은 9970 으로 뜬다(application.properties 의 oadr.server.port).
+# 포트를 9970 대로 옮길 때 여기만 8181 로 남아서, 열리지 않는 포트를 120초 꽉 채워 기다린 뒤에야 떴다
+# (그래서 DummyMarketContext 가 2분쯤 늦게 생겼다). 기동 순서는 compose 의 depends_on(vtn20b healthy)이 맞추고
+# 이건 compose 밖에서 띄울 때를 위한 안전장치다
+CMD ["/opt/dummy-drprogram/wait-for-it.sh", "vtn.oadr.com:9970", "-t", "120", "--" \
 	, "java", "-jar", "/opt/dummy-drprogram/dummy-drprogram.jar", "--spring.config.location=/opt/dummy-drprogram/application.properties"]

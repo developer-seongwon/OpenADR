@@ -181,7 +181,9 @@ public class Oadr20bVTNEiReportControllerTest extends AbstractVtn20bTest {
 				.andExpect(MockMvcResultMatchers.status().is(HttpServletResponse.SC_OK)).andReturn();
 		unmarshal = jaxbContext.unmarshal(andReturn.getResponse().getContentAsString(), OadrPayload.class);
 		signedObjectFromOadrPayload = Oadr20bFactory.getSignedObjectFromOadrPayload(unmarshal, OadrResponseType.class);
-		assertEquals(String.valueOf(Oadr20bApplicationLayerErrorCode.INVALID_DATA_454),
+		// 서명 없는 oadrPayload 는 이제 서명 안 한 요청으로 본다(Signature 는 minOccurs=0, Oadr20bVTNPayloadService.unmarshall).
+		// 이 VEN 은 XML 서명을 켜 둬서 예전처럼 454(서명 검증 실패)가 아니라 459(서명이 있어야 하는데 없음)로 거절한다
+		assertEquals(String.valueOf(Oadr20bApplicationLayerErrorCode.COMPLIANCE_ERROR_459),
 				signedObjectFromOadrPayload.getEiResponse().getResponseCode());
 
 		// no signature while expected

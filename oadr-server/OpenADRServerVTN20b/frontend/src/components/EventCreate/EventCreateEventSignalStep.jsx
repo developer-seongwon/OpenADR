@@ -48,7 +48,10 @@ export class EventCreateEventSignalStep extends React.Component {
 
 
   render() {
-    const {classes, hasError, eventSignal} = this.props;
+    const {classes, hasError, eventSignal, activePeriod} = this.props;
+    // 구간 표에 구간마다 활성 기간 안의 시작, 끝을 보여 주려고 넘긴다. 활성 기간 길이는 분이다(활성 기간 단계)
+    var activeStart = activePeriod ? activePeriod.start : null;
+    var activeMinutes = activePeriod ? activePeriod.duration : null;
     var that = this;
     return (
       <div>
@@ -73,6 +76,8 @@ export class EventCreateEventSignalStep extends React.Component {
 
                   <EventSignalPanel 
                     classes={classes} eventSignal={signal} hasError={hasError} 
+                      activeStart={activeStart} activeMinutes={activeMinutes}
+                      timezone={activePeriod ? activePeriod.timezone : null}
                       onChange={that.handleEventSignalChange(index)}
                       onRemove={that.handleRemoveEventSignalChange(index)}
                       canBeRemoved={eventSignal.length >0}/>

@@ -6,25 +6,18 @@ import FormLabel from '@mui/material/FormLabel';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 
-import {isoToTimestamp, formatTimestamp} from '../../utils/time'
+import {browserTimezone, timestampToZoned, zonedToTimestamp} from '../../utils/time'
 import timezone from './timezone'
 
+// 날짜는 props.timezone(없으면 브라우저 시간대)의 자정이다.
+// 예전에는 보여 줄 때는 브라우저 시간대, 고른 값은 UTC 로 읽었다
 export var DatePicker = (props) => {
   const { classes } = props;
-  var valDate = null;
-  var now = new Date();
-  var f;
-  if(props.value != null) {
-     f  = formatTimestamp(props.value); 
-    valDate = f.date ;
-  }
-  else {
-     f  = formatTimestamp(now.getTime()); 
-    valDate = f.date ;
-  }
+  var tz = props.timezone || browserTimezone();
+  var valDate = timestampToZoned(props.value != null ? props.value : Date.now(), tz).date;
 
   var onDateChange = (e) => {
-    props.onChange(isoToTimestamp(e.target.value + "T00:00"));
+    props.onChange(zonedToTimestamp(e.target.value, "00:00", tz));
   }
 
 
@@ -48,32 +41,22 @@ export var DatePicker = (props) => {
   );
 }
 
+// 보이는 날짜, 시각은 props.timezone(없으면 브라우저 시간대) 기준이다.
+// 예전에는 보여 줄 때는 브라우저 시간대, 고친 값은 UTC 로 읽어서 한국에서 시각을 고치면 9시간 뒤로 갔다.
+// 날짜나 시각을 지우면 null 을 넘긴다
 export var DateAndTimePicker = (props) => {
   const { classes } = props;
-  var valDate = null;
-  var valTime = null;
-  var now = new Date();
-  var f;
-  if(props.value != null) {
-     f  = formatTimestamp(props.value); 
-    valDate = f.date ;
-    valTime = f.time    
-  }
-  else {
-     f  = formatTimestamp(now.getTime()); 
-    valDate = f.date ;
-    valTime = "00:00"  
-  }
+  var tz = props.timezone || browserTimezone();
+  var shown = timestampToZoned(props.value != null ? props.value : Date.now(), tz);
+  var valDate = shown.date;
+  var valTime = (props.value != null) ? shown.time : "00:00";
 
   var onDateChange = (e) => {
-    var d  = new Date();
-    d.setTime(isoToTimestamp(e.target.value + "T"+valTime));
-    props.onChange(isoToTimestamp(e.target.value + "T"+valTime));
+    props.onChange(zonedToTimestamp(e.target.value, valTime, tz));
   }
 
   var onTimeChange = (e) => {
-    console.log(e.target.value)
-    props.onChange(isoToTimestamp(valDate + "T"+e.target.value));
+    props.onChange(e.target.value ? zonedToTimestamp(valDate, e.target.value, tz) : null);
   }
 
   return (
@@ -97,6 +80,7 @@ export var DateAndTimePicker = (props) => {
         type="time"
         className={classes.textField}
         value={valTime}
+        helperText={ tz }
         onChange={ onTimeChange}
         slotProps={{
           htmlInput: {
@@ -187,6 +171,11 @@ export var TimezonePicker = (props) => {
       timezoneView.push( <MenuItem key={ tz.name } value={ tz.name }>
                                    { tz.name } ({offsetStr})
                                    </MenuItem> )
+    }
+
+    // 목록에 없는 값(브라우저 시간대가 목록에 없을 때 등)도 고른 값으로 보이게 맨 앞에 넣는다
+    if (val !== "" && !timezone.some((item) => item.name === val)) {
+      timezoneView.unshift( <MenuItem key={ val } value={ val }>{ val }</MenuItem> )
     }
 
 

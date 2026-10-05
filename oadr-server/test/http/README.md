@@ -73,7 +73,7 @@ opt 는 이벤트 하나에 대한 답이 아니라 기간에 대한 것이다(�
 ## 화면에서 어디를 보나
 
 각 요청 바로 아래에 `# 확인:` 으로 그 결과가 화면 어디에 나오는지 적어 뒀다.
-웹 UI 는 https://localhost:8181/testvtn/ 이고 `admin` / `admin` 이다.
+웹 UI 는 https://localhost:9970/testvtn/ 이고 `admin` / `admin` 이다.
 
 큰 틀은 이렇다.
 

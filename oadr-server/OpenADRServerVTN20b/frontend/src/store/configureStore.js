@@ -22,8 +22,6 @@ export { history } from './history';
 var swaggerUrl = import.meta.env.REACT_APP_SWAGGER_URL
   || (window.location.origin + (publicPath || '/') + 'v3/api-docs').replace(/\/\//g, '/').replace(':/', '://');
 export var config = {
-//		vtnSwaggerUrl: 'https://192.168.1.11:8181/testvtn/v2/api-docs',
-//  vtnSwaggerUrl: 'https://192.168.10.42:8181/testvtn/v2/api-docs',
   vtnSwaggerUrl: swaggerUrl,
   isConnectionPending: true,
   isConnected: false

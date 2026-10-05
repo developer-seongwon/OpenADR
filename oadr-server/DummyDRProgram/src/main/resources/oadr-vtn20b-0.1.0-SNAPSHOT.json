@@ -15,7 +15,7 @@
             "url": "API license URL"
         }
     },
-    "host": "vtn.oadr.com:8181",
+    "host": "vtn.oadr.com:9970",
     "basePath": "/testvtn",
     "tags": [
         {

@@ -153,19 +153,29 @@ export class VenDetailPage extends React.Component {
   	if (prevProps.match.params.panel !== this.props.match.params.panel) {
   		this.setState({ value: this.panelIndex(this.props.match.params.panel) });
   	}
+  	// 같은 화면에서 다른 VEN 주소로 옮기면(인증서를 다시 만들어 VenID 가 바뀐 경우 등) 컴포넌트는 그대로라
+  	// componentDidMount 가 다시 불리지 않는다. VEN 이 바뀌면 다시 읽는다
+  	if (prevProps.match.params.username !== this.props.match.params.username) {
+  		this.loadVen( this.props.match.params.username );
+  	}
+  }
+
+  // 리포트, 요청 탭은 venId 로 목록을 읽는다. state.venId 는 첫 그리기 뒤에 채워져서 주소의 username 을 바로 넘긴다
+  loadVen = (username) => {
+    this.props.venActions.loadVenDetail( username );
+    this.props.venActions.loadVenGroup( username );
+    this.props.venActions.loadVenMarketContext( username );
+//    this.props.venActions.loadVenAvailableReport( username );
+    this.props.venActions.loadVenRequestedReport( username );
+    this.props.venActions.loadVenOpt( username );
+    this.setState({venId: username})
   }
 
   componentDidMount() {
 	  
     this.props.vtnConfigurationActions.loadMarketContext();
     this.props.vtnConfigurationActions.loadGroup();
-    this.props.venActions.loadVenDetail( this.props.match.params.username );
-    this.props.venActions.loadVenGroup( this.props.match.params.username );
-    this.props.venActions.loadVenMarketContext( this.props.match.params.username );
-//    this.props.venActions.loadVenAvailableReport( this.props.match.params.username );
-    this.props.venActions.loadVenRequestedReport( this.props.match.params.username );
-    this.props.venActions.loadVenOpt( this.props.match.params.username );
-    this.setState({venId: this.props.match.params.username})
+    this.loadVen( this.props.match.params.username );
     
     this.setState({ value: this.panelIndex(this.props.match.params.panel) });
   }
@@ -198,6 +208,8 @@ export class VenDetailPage extends React.Component {
                                             registerPartyRequestReregistration={this.props.venActions.registerPartyRequestReregistration}
                                             registerPartyCancelPartyRegistration={this.props.venActions.registerPartyCancelPartyRegistration}
                                             cleanRegistration={this.props.venActions.cleanRegistration}
+                                            downloadVenCredentials={this.props.venActions.downloadVenCredentials}
+                                            regenerateVenCredentials={this.props.venActions.regenerateVenCredentials}
 
                                              />
                                             
@@ -215,7 +227,7 @@ export class VenDetailPage extends React.Component {
                                             cancelRequestReportSubscription={this.props.venActions.cancelRequestReportSubscription}
 
                         					pageVenAvailableReport={this.props.venActions.pageVenAvailableReport}
-                        					venId={this.state.venId}
+                        					venId={this.props.match.params.username}
                                              />
                                           
         
@@ -234,7 +246,7 @@ export class VenDetailPage extends React.Component {
 					                          cancelRequestReportSubscription={this.props.venActions.cancelRequestReportSubscription}
 					
 					      						pageVenRequestedReport={this.props.venActions.pageVenRequestedReport}
-					      venId={this.state.venId}
+					      venId={this.props.match.params.username}
 					                           />
 					                        
 					

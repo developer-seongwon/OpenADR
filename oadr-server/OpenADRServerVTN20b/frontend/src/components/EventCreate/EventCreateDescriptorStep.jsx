@@ -132,7 +132,7 @@ export class EventCreateDescriptorStep extends React.Component {
                        2.0a
                        </MenuItem> 
 
-                       <MenuItem key="menu_item_oadr_profile_20a" value="OADR20B">
+                       <MenuItem key="menu_item_oadr_profile_20b" value="OADR20B">
                        2.0b
                        </MenuItem> 
                 </Select>
@@ -204,7 +204,7 @@ export class EventCreateDescriptorStep extends React.Component {
         
         <Grid size={4}>
       
-               <TextField required label={ t( 'event.marketContext' ) } error={hasError && descriptor.marketContext == null}
+               <TextField required label={ t( 'event.marketContext' ) } error={hasError && !descriptor.marketContext}
                   value={ (descriptor.marketContext) ? descriptor.marketContext : "" }
                   className={classes.textField}
                   fullWidth={true}

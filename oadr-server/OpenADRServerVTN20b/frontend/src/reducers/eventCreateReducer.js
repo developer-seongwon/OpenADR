@@ -1,12 +1,14 @@
 import * as types from '../constants/actionTypes';
 import objectAssign from 'object-assign';
 import initialState from './initialState';
+import { errorOf } from '../actions/apiUtils';
 
 // IMPORTANT: Note that with Redux, state should NEVER be changed.
 // State is considered immutable. Instead,
 // create a copy of the state passed and set new values on the copy.
 // Note that I'm using Object.assign to create a copy of current state
 // and update values on the copy.
+
 export default function eventCreateReducer( state = initialState.event_create, action ) {
   let newState;
 
@@ -50,6 +52,25 @@ export default function eventCreateReducer( state = initialState.event_create, a
 
     case types.SEARCH_VEN_ERROR:
       return state;
+
+      // EVENT. CREATE_EVENT 는 swagger 미들웨어가 리듀서에 넘기지 않아서 PENDING 으로 받는다
+    case types.CREATE_EVENT_PENDING:
+      return objectAssign( {}, state, {
+        creating: true,
+        createError: null
+      } );
+
+    case types.CREATE_EVENT_SUCCESS:
+      return objectAssign( {}, state, {
+        creating: false
+      } );
+
+    // 예전에는 처리하지 않아서 서버가 거절해도 화면이 그대로였다
+    case types.CREATE_EVENT_ERROR:
+      return objectAssign( {}, state, {
+        creating: false,
+        createError: errorOf( action.payload )
+      } );
 
     case types.LOCATION_CHANGE:
       return initialState.event_create;

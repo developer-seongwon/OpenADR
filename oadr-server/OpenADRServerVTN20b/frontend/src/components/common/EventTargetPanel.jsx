@@ -28,6 +28,7 @@ import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
+import Typography from '@mui/material/Typography';
 
 
 
@@ -40,6 +41,18 @@ import {VenAutocomplete} from './Autocomplete'
 
 
 
+// 서버는 대상 유형을 VEN, GROUP 으로 주고받는다. 표에는 번역한 이름을 보여 준다(확인 단계도 쓴다)
+export var targetTypeLabel = (targetType) => {
+  var type = String(targetType || '').toUpperCase();
+  if (type === 'VEN') {
+    return t( 'target.ven' );
+  }
+  if (type === 'GROUP') {
+    return t( 'target.group' );
+  }
+  return targetType;
+}
+
 var EventTargetTable = (props) => {
   const {classes} = props;
   return (
@@ -49,16 +62,14 @@ var EventTargetTable = (props) => {
           <TableRow>
             <TableCell align="right">{ t( 'event.targetType' ) }</TableCell>
             <TableCell align="right">{ t( 'event.targetId' ) }</TableCell>
-            <TableCell align="right">{ t( 'event.targetedDevices' ) }</TableCell>
             <TableCell align="right"></TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
           {props.eventTarget.map( (row, index) => (
             <TableRow key={index}>
-              <TableCell scope="row" align="right">{row.targetType}</TableCell>
+              <TableCell scope="row" align="right">{targetTypeLabel(row.targetType)}</TableCell>
               <TableCell scope="row" align="right">{row.targetId}</TableCell>
-              <TableCell scope="row" align="right"></TableCell>
               <TableCell scope="row" align="right">
                   <Button size="small" color="secondary" onClick={props.handleRemoveTargetAtIndex(index)}>{ t( 'common.remove' ) }</Button>
               </TableCell>
@@ -82,13 +93,19 @@ export class EventTargetPanel extends React.Component {
     }
   }
 
+  // 받은 배열을 고치지 않고 새 배열을 넘긴다. 이벤트 상세는 리덕스에서 읽은 배열을 그대로 받던 적이 있어
+  // 제자리에서 push, splice 하면 저장도 안 했는데 스토어 값이 바뀌었다
   handleCreateTarget = () => {
-    let target = this.props.eventTarget;
-    target.push({
-      targetType: this.state.createTargetType,
+    // 고르는 창은 ven, group 을 돌려주지만 서버 TargetTypeEnum 은 VEN, GROUP 만 읽는다(소문자면 400)
+    var created = {
+      targetType: this.state.createTargetType.toUpperCase(),
       targetId: this.state.createTargetId
-    });
-    this.props.onChange(target);
+    };
+    var exists = this.props.eventTarget.some((target) =>
+      String(target.targetType).toUpperCase() === created.targetType && target.targetId === created.targetId);
+    if (!exists) {
+      this.props.onChange(this.props.eventTarget.concat([ created ]));
+    }
     this.setState({
       createTargetType: "",
       createTargetId: "",
@@ -103,9 +120,7 @@ export class EventTargetPanel extends React.Component {
   }
 
   handleRemoveTargetAtIndex = (index) => () => {
-    let target = this.props.eventTarget;
-    target.splice(index,1);
-    this.props.onChange(target);
+    this.props.onChange(this.props.eventTarget.filter((target, i) => i !== index));
   }
 
   handleTargetTypeChange = (e) => {
@@ -120,6 +135,10 @@ export class EventTargetPanel extends React.Component {
     var newState = {targetSelectDialog: false}
     if(targetType != null){
       newState.createTargetType = targetType;
+      // 유형을 바꾸면 앞서 고른 그룹 이름이나 VenID 는 버린다
+      if (targetType !== this.state.createTargetType) {
+        newState.createTargetId = "";
+      }
     }
     this.setState(newState);
   }
@@ -140,16 +159,16 @@ export class EventTargetPanel extends React.Component {
     this.setState({groupSelectDialog: true});
   }
 
+  // 입력칸을 지우면 null 이 온다
   onVenSuggestionsSelect = (ven) => {
-    console.log(ven)
-    if(ven != null){
-      this.setState({createTargetId: ven.username});
-    }
-  } 
+    this.setState({createTargetId: (ven != null) ? ven.username : ""});
+  }
 
 
   render() {
-    const {classes, hasError, eventTarget, group} = this.props;
+    const {classes, hasError, eventTarget, group, marketContext} = this.props;
+    // 대상 단계에서 다음을 눌렀는데 목록이 비었을 때
+    var targetMissing = Boolean(hasError) && eventTarget.length === 0;
 
     return (
       <Grid container
@@ -162,8 +181,8 @@ export class EventTargetPanel extends React.Component {
             <Grid size={2}>
              <TextField
                label={ t( 'event.selectTargetType' ) }
-               error={hasError && eventTarget.marketContext == null}
-               value={ this.state.createTargetType }
+               error={targetMissing}
+               value={ this.state.createTargetType ? targetTypeLabel(this.state.createTargetType) : "" }
                placeholder={ t( 'event.targetTypePlaceholder' ) }
                className={classes.textField}
                fullWidth={true}
@@ -202,6 +221,9 @@ export class EventTargetPanel extends React.Component {
                 onSuggestionsFetchRequested={this.props.onVenSuggestionsFetchRequested}
                 onSuggestionsClearRequested={this.props.onVenSuggestionsClearRequested}
                 onSuggestionsSelect={this.onVenSuggestionsSelect}/>
+              { marketContext ? <Typography variant="caption" color="text.secondary" component="div" sx={ { mt: 0.5 } }>
+                  { t( 'event.venSearchHint', { marketContext: marketContext } ) }
+                </Typography> : null }
             </Grid> : null}
 
             { (this.state.createTargetType !== "" && this.state.createTargetId !== "") ? <Grid size={2}>
@@ -228,6 +250,14 @@ export class EventTargetPanel extends React.Component {
                       </Button>
             </Grid> : null}
         </Grid>
+        { (targetMissing || (this.state.createTargetType !== "" && this.state.createTargetId !== "")) ?
+          <Grid container spacing={ 3 } style={ { marginTop: 8 } }>
+            <Grid size={12}>
+              <Typography variant="body2" sx={ { color: targetMissing ? 'error.main' : 'text.secondary' } }>
+                { t( 'event.targetAddHint' ) }
+              </Typography>
+            </Grid>
+          </Grid> : null }
         <Grid container spacing={ 3 }
            style={ { marginTop: 20, marginBottom:10 } }>
           <Grid size={12}>

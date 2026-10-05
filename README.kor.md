@@ -47,7 +47,7 @@ oadr-server/ 는 서버와 테스트용 앱이다. oadr-client 를 좌표(com.av
 - DummyDRProgram: 테스트용 DR 프로그램. VTN 제어 API 로 장치와 이벤트를 관리한다
 - OpenfireOadrPlugin: XMPP 로 붙는 VEN 을 VTN 에 물어 인증하는 Openfire 플러그인(메이븐)
 
-kpx-service 는 oadr-client 의 OpenADRModel20b, OpenADRSecurity jar 를 쓴다.
+다른 프로젝트에서 VEN, VTN 을 만들 때는 oadr-client 의 OpenADRModel20b, OpenADRSecurity jar 를 가져다 쓴다.
 
 ## 디렉토리 구조
 
@@ -99,7 +99,7 @@ oadr-client, oadr-server 디렉토리에서 각각 돌려도 된다(저장소를
 
 ```
 cd oadr-client && ./gradlew build                  # 라이브러리 빌드와 테스트
-cd oadr-client && ./gradlew publishToMavenLocal    # ~/.m2 에 올리기(oadr-server 를 oadr-client 없이 빌드할 때, kpx-service 용 jar)
+cd oadr-client && ./gradlew publishToMavenLocal    # ~/.m2 에 올리기(oadr-server 를 oadr-client 없이 빌드할 때, 다른 프로젝트에서 jar 를 쓸 때)
 cd oadr-server && ./gradlew build                  # 서버 빌드와 테스트(옆의 oadr-client 를 소스로 같이 빌드한다)
 cd oadr-server && ./gradlew build -x test          # 테스트 없이 jar 만
 cd oadr-server && ./gradlew build -Pfrontend=false # VTN20b 에 React UI 를 넣지 않는다(node 빌드를 건너뛰어 빠르다)
@@ -112,7 +112,7 @@ oadr-server 는 옆에 oadr-client 디렉토리가 있으면 includeBuild 로 �
 jar 는 각 모듈의 `build/libs` 에 생긴다. VTN20a, VTN20b, DummyVEN20b, DummyDRProgram 은 스프링 부트 실행 jar 를
 버전이 붙은 것(`OpenADRServerVTN20b-2.0.jar`)과 버전 없는 것(`OpenADRServerVTN20b.jar`) 두 개 만든다. 내용은 같다.
 도커 빌드는 버전 없는 쪽을 쓴다(버전을 올려도 옛 jar 와 섞이지 않는다).
-kpx-service 에 넣는 jar 는 `oadr-client/OpenADRModel20b/build/libs`, `oadr-client/OpenADRSecurity/build/libs` 에 있다.
+다른 프로젝트에 넣는 jar 는 `oadr-client/OpenADRModel20b/build/libs`, `oadr-client/OpenADRSecurity/build/libs` 에 있다.
 
 저장소 루트에서 `build` 나 `assemble` 을 돌리면 버전 붙은 jar 를 `target/client`, `target/server` 에도 모은다(`collectJars` 태스크).
 target/client 는 라이브러리 7개, target/server 는 실행 jar 4개(VTN20a, VTN20b, DummyVEN20b, DummyDRProgram)와 라이브러리 2개(VTNCommon, VEN20b)다.
@@ -269,14 +269,17 @@ oadr-client 에서 `publishToMavenLocal` 을 미리 해 두면 된다.
 직접 지정하고 싶으면 `MVN` 환경변수를 넘기면 된다.
 처음에는 이미지 빌드까지 포함해서 몇 분 걸린다.
 
-뜨고 나면 이렇게 접속한다.
+뜨고 나면 이렇게 접속한다. 호스트 포트는 9970 대로 묶었다
+(9970 VTN, 9971 RabbitMQ 관리, 9972 Openfire 관리, 9973 AMQP, 9974 XMPP, 9975 PostgreSQL, 9976~ 더미 VEN).
+컨테이너끼리는 서비스 이름과 기본 포트(rabbitmq:5672, openfire:5222, postgres:5432)로 붙고, VTN 만 안과 밖 모두 9970 이다.
 
-- VTN 웹 UI: https://localhost:8181/testvtn/ (admin / admin). 자체 서명 인증서라 브라우저가 경고를 낸다. 그냥 진행하면 된다
-- VTN 제어 API 문서(Swagger UI): https://localhost:8181/testvtn/swagger-ui/index.html
-- API 스키마: https://localhost:8181/testvtn/v3/api-docs (API 문서와 스키마는 로그인 없이 열린다)
-- RabbitMQ 관리 화면: http://localhost:15672 (admin / admin)
-- Openfire 관리 화면: http://localhost:9090
-- Dummy VEN: https://localhost:8083. https 이고 클라이언트 인증서를 요구해서 브라우저로 볼 일은 거의 없다
+- VTN 웹 UI: https://localhost:9970/testvtn/ (admin / admin). 자체 서명 인증서라 브라우저가 경고를 낸다. 그냥 진행하면 된다
+- VTN 제어 API 문서(Swagger UI): https://localhost:9970/testvtn/swagger-ui/index.html
+- API 스키마: https://localhost:9970/testvtn/v3/api-docs (API 문서와 스키마는 로그인 없이 열린다)
+- RabbitMQ 관리 화면: http://localhost:9971 (admin / admin)
+- Openfire 관리 화면: http://localhost:9972
+- PostgreSQL: localhost:9975 (postgres / supersecure)
+- Dummy VEN: https://localhost:9977. https 이고 클라이언트 인증서를 요구해서 브라우저로 볼 일은 거의 없다
 
 ### run.sh 사용법
 
@@ -304,7 +307,7 @@ target 은 세 가지로 준다.
 인프라와 앱은 한 스택(compose 프로젝트 oadr)이다. `start infra` 로 인프라만 올려 두고
 나중에 `start vtn20b` 처럼 앱만 더 올려도 된다.
 인프라만 띄우고 VTN 을 IntelliJ 에서 돌려도 Openfire 가 VTN 에 닿는다. Openfire 는 vtn.oadr.com 을
-호스트로 보내서(host-gateway), VTN 이 컨테이너면 호스트의 8181 포트 매핑을, IntelliJ 면 호스트의 VTN 을 만난다.
+호스트로 보내서(host-gateway), VTN 이 컨테이너면 호스트의 9970 포트 매핑을, IntelliJ 면 호스트의 VTN 을 만난다.
 
 ### docker 디렉토리 구조
 
@@ -417,7 +420,7 @@ VEN 목록이 비어 있으면 dummy 들이 아직 등록되기 전이다.
 ./docker/run.sh stop all
 ```
 
-8083 이 `ERR_CONNECTION_RESET` 을 내는 건 정상이다. http 가 아니라 https 이고
+9977 이 `ERR_CONNECTION_RESET` 을 내는 건 정상이다. http 가 아니라 https 이고
 클라이언트 인증서를 요구한다.
 
 그래들이 자바 25 툴체인을 못 찾는다고 하면 JDK 25 를 설치하거나 네트워크(foojay 로 받는다)를 확인해라.

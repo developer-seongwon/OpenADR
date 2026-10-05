@@ -18,6 +18,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -124,6 +125,10 @@ public class Oadr20bVTNEiReportService implements Oadr20bVTNEiService {
 
 	protected static final String METADATA_REPORT_RID = "METADATA";
 
+	// 등록 응답에 실어 만든 구독(subscribeOnRegister)의 reportRequestID 앞부분. 다시 등록할 때 이것으로 찾는다.
+	// 요청자로는 못 가른다. 관리자가 화면에서 건 구독도 요청자가 비어 있다
+	private static final String REGISTER_REQUEST_ID_PREFIX = "register-";
+
 	@Resource
 	protected Oadr20bJAXBContext jaxbContext;
 
@@ -176,6 +181,18 @@ public class Oadr20bVTNEiReportService implements Oadr20bVTNEiService {
 	private Oadr20bDtoMapper oadr20bDtoMapper;
 
 	private ObjectMapper jsonMapper = new ObjectMapper();
+
+	/**
+	 * 리포트 등록(oadrRegisterReport)을 받으면 그 응답(oadrRegisteredReport)에 리포트 요청을 같이 싣는다.
+	 *
+	 * 원래 이 VTN 은 등록만 받고, 요청은 화면이나 앱이 구독을 건 뒤 oadrCreateReport 로 보낸다(pull 이면 oadrPoll 응답).
+	 * 그런데 등록 응답에 담긴 요청만 받아 쓰고 oadrPoll 은 하지 않는 VEN 은
+	 * 요청을 받을 길이 없고, reportRequestID 가 없으니 리포트를 보내지 못한다.
+	 * 켜면 명세마다 구독을 하나 두고(모든 rID 이력 저장) 그 요청을 응답에 싣는다(subscribeOnRegister).
+	 * 기본은 끈다. 원래 동작이고, DummyVEN20b 는 등록 응답의 요청을 읽지 않는다
+	 */
+	@Value("${oadr.report.requestOnRegister:false}")
+	private boolean requestOnRegister;
 
 	/**
 	 * Register reporting capabilities
@@ -378,8 +395,101 @@ public class Oadr20bVTNEiReportService implements Oadr20bVTNEiService {
 			otherReportRequestService.deleteByOtherReportCapabilitySource(ven);
 		}
 
-		return Oadr20bEiReportBuilders.newOadr20bRegisteredReportBuilder(requestID, responseCode, venID).build();
+		// 등록 응답에 리포트 요청을 싣는다(oadr.report.requestOnRegister). 지울 것을 다 지운 뒤에 만든다
+		List<OadrReportRequestType> registeredRequests = requestOnRegister ? subscribeOnRegister(ven, capabilities)
+				: new ArrayList<>();
 
+		return Oadr20bEiReportBuilders.newOadr20bRegisteredReportBuilder(requestID, responseCode, venID)
+				.addReportRequest(registeredRequests).build();
+
+	}
+
+	/**
+	 * 등록한 명세마다 구독을 하나씩 두고 그 요청을 돌려준다(oadr.report.requestOnRegister).
+	 *
+	 * 주기(granularity)는 명세 설명의 oadrSamplingRate 에서 oadrMaxPeriod, 없으면 oadrMinPeriod 를 쓴다.
+	 * 그런 VEN 은 설명의 oadrMaxPeriod 에 자기 주기(예: PT15M)를 싣고, 등록 응답에서 주기가 같은 요청을 고른다.
+	 * reportBackDuration 도 같은 값이다(한 주기마다 보낸다). 주기를 못 정하면 그 명세는 요청하지 않는다.
+	 *
+	 * 다시 등록하면 같은 명세에 이 방식으로 만든 구독(reportRequestID 가 register- 로 시작)을 다시 쓰고 reportRequestID 를 그대로 돌려준다.
+	 * 새로 생긴 rID 는 구독에 더한다. 모든 rID 의 이력을 남긴다(archived. 이력이 있어야 화면의 받은 값 목록에 나온다)
+	 */
+	private List<OadrReportRequestType> subscribeOnRegister(Ven ven, List<OtherReportCapability> capabilities) {
+		List<OadrReportRequestType> result = new ArrayList<>();
+		List<OtherReportRequest> existing = otherReportRequestService.findBySource(ven);
+		for (OtherReportCapability capability : capabilities) {
+			if (METADATA_REPORT_SPECIFIER_ID.equals(capability.getReportSpecifierId())) {
+				continue;
+			}
+			List<OtherReportCapabilityDescription> descriptions = otherReportCapabilityDescriptionService
+					.findByOtherReportCapability(capability);
+			String granularity = samplingPeriod(descriptions);
+			if (descriptions.isEmpty() || granularity == null) {
+				LOGGER.warn("{} - {} 는 rID 나 oadrSamplingRate 가 없어 등록 응답에 리포트 요청을 싣지 않는다", ven.getUsername(),
+						capability.getReportSpecifierId());
+				continue;
+			}
+
+			OtherReportRequest request = existing.stream()
+					.filter(r -> r.getReportRequestId() != null
+							&& r.getReportRequestId().startsWith(REGISTER_REQUEST_ID_PREFIX)
+							&& r.getOtherReportCapability() != null && r.getOtherReportCapability().getId() != null
+							&& r.getOtherReportCapability().getId().equals(capability.getId()))
+					.findFirst().orElse(null);
+			if (request == null) {
+				request = new OtherReportRequest();
+				request.setReportRequestId(REGISTER_REQUEST_ID_PREFIX + UUID.randomUUID());
+				request.setSource(ven);
+				request.setOtherReportCapability(capability);
+			}
+			request.setGranularity(granularity);
+			request.setReportBackDuration(granularity);
+			request = otherReportRequestService.save(request);
+
+			Set<String> subscribedRids = otherReportRequestSpecifierDao.findByRequest(request).stream()
+					.map(specifier -> specifier.getOtherReportCapabilityDescription().getRid())
+					.collect(Collectors.toSet());
+			List<OtherReportRequestSpecifier> specifiers = new ArrayList<>();
+			for (OtherReportCapabilityDescription description : descriptions) {
+				if (!subscribedRids.contains(description.getRid())) {
+					OtherReportRequestSpecifier specifier = new OtherReportRequestSpecifier();
+					specifier.setArchived(true);
+					specifier.setOtherReportCapabilityDescription(description);
+					specifier.setRequest(request);
+					specifiers.add(specifier);
+				}
+			}
+			otherReportRequestSpecifierDao.saveAll(specifiers);
+
+			Oadr20bReportRequestTypeBuilder builder = Oadr20bEiReportBuilders.newOadr20bReportRequestTypeBuilder(
+					request.getReportRequestId(), capability.getReportSpecifierId(), granularity, granularity);
+			for (OtherReportCapabilityDescription description : descriptions) {
+				JAXBElement<? extends ItemBaseType> itemBase = description.getItemBase() == null ? null
+						: Oadr20bVTNEiServiceUtils.createItemBase(description.getItemBase());
+				builder.addSpecifierPayload(itemBase, description.getReadingType(), description.getRid());
+			}
+			result.add(builder.build());
+			LOGGER.info("{} - {} 등록 응답에 리포트 요청 reportRequestID={} granularity={}", ven.getUsername(),
+					capability.getReportSpecifierId(), request.getReportRequestId(), granularity);
+		}
+		return result;
+	}
+
+	/** 명세 설명들의 oadrSamplingRate 에서 처음 나오는 oadrMaxPeriod, 없으면 oadrMinPeriod */
+	private static String samplingPeriod(List<OtherReportCapabilityDescription> descriptions) {
+		for (OtherReportCapabilityDescription description : descriptions) {
+			SamplingRate rate = description.getSamplingRate();
+			if (rate == null) {
+				continue;
+			}
+			if (rate.getOadrMaxPeriod() != null && !rate.getOadrMaxPeriod().isBlank()) {
+				return rate.getOadrMaxPeriod();
+			}
+			if (rate.getOadrMinPeriod() != null && !rate.getOadrMinPeriod().isBlank()) {
+				return rate.getOadrMinPeriod();
+			}
+		}
+		return null;
 	}
 
 	public Object oadrRegisteredReport(Ven ven, OadrRegisteredReportType payload) {
@@ -683,13 +793,15 @@ public class Oadr20bVTNEiReportService implements Oadr20bVTNEiService {
 
 		int responseCode = HttpServletResponse.SC_OK;
 
-		List<OtherReportDataFloat> listPayloadFloat = Lists.newArrayList();
-		List<OtherReportDataFloat> listPayloadFloatToSave = Lists.newArrayList();
-		List<OtherReportDataPayloadResourceStatus> listPayloadResourceStatus = Lists.newArrayList();
-		List<OtherReportDataPayloadResourceStatus> listPayloadResourceStatusToSave = Lists.newArrayList();
-		List<OtherReportDataKeyToken> listPayloadKeyToken = Lists.newArrayList();
-		List<OtherReportDataKeyToken> listPayloadKeyTokenToSave = Lists.newArrayList();
 		for (OadrReportType oadrReportType : payload.getOadrReport()) {
+			// 목록은 리포트마다 새로 만든다. 예전에는 반복 밖에 두고 리포트마다 알림, 저장을 해서
+			// oadrReport 가 여러 개 오면 앞 리포트의 값이 다시 알려지고 다시 저장됐다
+			List<OtherReportDataFloat> listPayloadFloat = Lists.newArrayList();
+			List<OtherReportDataFloat> listPayloadFloatToSave = Lists.newArrayList();
+			List<OtherReportDataPayloadResourceStatus> listPayloadResourceStatus = Lists.newArrayList();
+			List<OtherReportDataPayloadResourceStatus> listPayloadResourceStatusToSave = Lists.newArrayList();
+			List<OtherReportDataKeyToken> listPayloadKeyToken = Lists.newArrayList();
+			List<OtherReportDataKeyToken> listPayloadKeyTokenToSave = Lists.newArrayList();
 			String reportRequestId = oadrReportType.getReportRequestID();
 			String reportSpecifierID = oadrReportType.getReportSpecifierID();
 			Intervals intervals = oadrReportType.getIntervals();
@@ -748,8 +860,8 @@ public class Oadr20bVTNEiReportService implements Oadr20bVTNEiService {
 							if (perRid.containsKey(rid)) {
 								OtherReportRequestSpecifier otherReportRequestSpecifier = perRid.get(rid);
 								if (otherReportRequestSpecifier != null) {
-									if (otherReportRequestSpecifier.getLastUpdateDatetime() == null
-											|| otherReportRequestSpecifier.getLastUpdateDatetime() < start) {
+									if (otherReportRequestSpecifier.getLastUpdateDatetime() == null || (start != null
+											&& otherReportRequestSpecifier.getLastUpdateDatetime() < start)) {
 										otherReportRequestSpecifier.setLastUpdateDatetime(start);
 										otherReportRequestSpecifier.setLastUpdateValue(lastUpdateValue);
 									}
@@ -784,8 +896,8 @@ public class Oadr20bVTNEiReportService implements Oadr20bVTNEiService {
 								if (perRid.containsKey(rid)) {
 									OtherReportRequestSpecifier otherReportRequestSpecifier = perRid.get(rid);
 									if (otherReportRequestSpecifier != null) {
-										if (otherReportRequestSpecifier.getLastUpdateDatetime() == null
-												|| otherReportRequestSpecifier.getLastUpdateDatetime() < start) {
+										if (otherReportRequestSpecifier.getLastUpdateDatetime() == null || (start != null
+												&& otherReportRequestSpecifier.getLastUpdateDatetime() < start)) {
 											otherReportRequestSpecifier.setLastUpdateDatetime(start);
 											otherReportRequestSpecifier.setLastUpdateValue(lastUpdateValue);
 										}
@@ -859,8 +971,8 @@ public class Oadr20bVTNEiReportService implements Oadr20bVTNEiService {
 							if (perRid.containsKey(rid)) {
 								OtherReportRequestSpecifier otherReportRequestSpecifier = perRid.get(rid);
 								if (otherReportRequestSpecifier != null) {
-									if (otherReportRequestSpecifier.getLastUpdateDatetime() == null
-											|| otherReportRequestSpecifier.getLastUpdateDatetime() < start) {
+									if (otherReportRequestSpecifier.getLastUpdateDatetime() == null || (start != null
+											&& otherReportRequestSpecifier.getLastUpdateDatetime() < start)) {
 										otherReportRequestSpecifier.setLastUpdateDatetime(start);
 										otherReportRequestSpecifier.setLastUpdateValue(lastUpdateValue);
 									}
@@ -896,16 +1008,17 @@ public class Oadr20bVTNEiReportService implements Oadr20bVTNEiService {
 						oadr20bDtoMapper.mapList(listPayloadKeyToken, OtherReportDataKeyTokenDto.class), venID);
 			}
 
+			// 이력은 이력 저장(archived)을 켠 rID 값만 남긴다. 예전에는 하나라도 켜져 있으면 받은 값을 전부 저장했다
 			if (!listPayloadFloatToSave.isEmpty()) {
-				otherReportDataService.save(listPayloadFloat);
+				otherReportDataService.save(listPayloadFloatToSave);
 
 			}
 			if (!listPayloadResourceStatusToSave.isEmpty()) {
-				otherReportDataPayloadResourceStatusService.save(listPayloadResourceStatus);
+				otherReportDataPayloadResourceStatusService.save(listPayloadResourceStatusToSave);
 
 			}
 			if (!listPayloadKeyTokenToSave.isEmpty()) {
-				otherReportDataKeyTokenService.save(listPayloadKeyToken);
+				otherReportDataKeyTokenService.save(listPayloadKeyTokenToSave);
 
 			}
 
