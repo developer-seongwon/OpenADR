@@ -8,12 +8,12 @@
 //   ./gradlew publishToMavenLocal   client 라이브러리를 ~/.m2 에 올린다(다른 프로젝트에서 jar 를 쓸 때, client 없이 server 빌드할 때)
 //
 // -Pfrontend=false 같은 -P 값은 포함된 빌드에도 그대로 간다.
-// 한 모듈만 돌릴 때는 경로(:빌드이름:모듈:태스크)로 부른다. 예: ./gradlew :oadr-server:OpenADRServerVTN20b:bootRun
+// 한 모듈만 돌릴 때는 경로(:빌드이름:모듈:태스크)로 부른다. 예: ./gradlew :avob-server:OpenADRServerVTN20b:bootRun
 
 import groovy.xml.XmlSlurper
 
-def client = gradle.includedBuild('oadr-client')
-def server = gradle.includedBuild('oadr-server')
+def client = gradle.includedBuild('avob-client')
+def server = gradle.includedBuild('avob-server')
 
 [clean: 'build', assemble: 'build', build: 'build', check: 'verification', test: 'verification'].each { name, taskGroup ->
     tasks.register(name) {
@@ -23,7 +23,7 @@ def server = gradle.includedBuild('oadr-server')
     }
 }
 
-// 빌드한 jar 를 루트 target 에 모은다. oadr-client 는 target/client, oadr-server 는 target/server.
+// 빌드한 jar 를 루트 target 에 모은다. avob-client 는 target/client, avob-server 는 target/server.
 // 모듈마다 build/libs 의 버전 붙은 jar(이름-버전.jar)만 가져간다. 버전은 각 빌드의 gradle.properties 값이다.
 // sources jar, 도커용 버전 없는 사본(OpenADRServerVTN20b.jar), 테스트 전용 모듈(OpenADRServerVTNTestSupport)은 뺀다.
 // Sync 라서 모듈이나 버전이 바뀌어 없어진 jar 는 target 에서도 지워진다
@@ -38,7 +38,7 @@ def collectJars = tasks.register('collectJars', Sync) {
     description = '빌드한 jar 를 target/client, target/server 로 모은다'
     dependsOn client.task(':assemble'), server.task(':assemble')
     into layout.projectDirectory.dir('target')
-    [client: 'oadr-client', server: 'oadr-server'].each { targetDir, buildDir ->
+    [client: 'avob-client', server: 'avob-server'].each { targetDir, buildDir ->
         def version = buildVersion(buildDir)
         (file(buildDir).listFiles() ?: [])
                 .findAll { new File(it, 'build.gradle').isFile() && it.name != 'OpenADRServerVTNTestSupport' }
@@ -78,7 +78,7 @@ tasks.register('publishToMavenLocal') {
 // 전체 테스트 리포트. client, server 모든 모듈의 테스트 결과를 HTML 하나로 합친다(build/reports/tests/index.html).
 // 포함된 빌드의 태스크 출력은 루트에서 직접 이어 받을 수 없어서, 각 모듈의 결과 디렉토리(build/test-results/test/binary)를 읽는다.
 // 테스트가 없는 모듈(NO-SOURCE)은 그 디렉토리가 없어서 빠진다. 테스트가 up-to-date 로 건너뛰면 지난번 결과가 들어간다
-def testModuleDirs = ['oadr-client', 'oadr-server'].collectMany { buildDir ->
+def testModuleDirs = ['avob-client', 'avob-server'].collectMany { buildDir ->
     (file(buildDir).listFiles() ?: []).findAll { new File(it, 'build.gradle').isFile() }.sort()
 }
 

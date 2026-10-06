@@ -1,0 +1,134 @@
+// 서버 모듈 공통 설정. 공통 부분(자바 버전, 테스트, BOM 정책)은 avob-client/build.gradle 과 같게 유지한다.
+// 한쪽을 고치면 다른 쪽도 본다.
+
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
+import org.gradle.api.services.BuildService
+import org.gradle.api.services.BuildServiceParameters
+
+plugins {
+    // 루트 묶음 태스크(assemble, check, build, clean)용. 아래 "루트 묶음 태스크" 참고
+    id 'base'
+    // 모듈이 plugins 블록에서 버전 없이 쓰도록 여기서 버전만 정해 둔다
+    alias(libs.plugins.spring.boot) apply false
+    alias(libs.plugins.openapi.generator) apply false
+    alias(libs.plugins.node.gradle) apply false
+}
+
+// VTNCommon, VTN20a, VTN20b 테스트가 모두 VTN 을 8182 포트로 띄운다(각 모듈 테스트 설정의 oadr.server.port).
+// 모듈 테스트가 동시에 돌면 포트가 부딪히므로 테스트 태스크는 한 번에 하나만 돌린다. 컴파일은 병렬 그대로다.
+// 메이븐 때는 모듈을 차례로 빌드해서 이 문제가 없었다
+abstract class SerialTestService implements BuildService<BuildServiceParameters.None> {}
+def serialTests = gradle.sharedServices.registerIfAbsent('serialTests', SerialTestService) {
+    maxParallelUsages = 1
+}
+
+// 버전 카탈로그(gradle/libs.versions.toml). subprojects 블록 안에서 libs 를 바로 쓰면 하위 프로젝트에서
+// 찾다가 루트로 올라가는 암묵 조회가 돼서 그래들 10 에서 막힌다. 루트의 것을 잡아 두고 쓴다
+def catalog = libs
+
+// subprojects 블록 안에서는 plugins 블록을 못 써서 apply plugin 으로 붙인다
+subprojects {
+    apply plugin: 'java-library'
+    apply plugin: 'jacoco'
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(25)
+        }
+    }
+
+    // Boot BOM 을 버전 관리용으로만 쓴다. avob-client/build.gradle 과 같은 방식이다
+    configurations.dependencyScope('bom')
+    ['compileClasspath', 'runtimeClasspath', 'testCompileClasspath', 'testRuntimeClasspath', 'annotationProcessor'].each {
+        configurations.named(it) { extendsFrom configurations.bom }
+    }
+
+    // Java 21 부터 JVM 이 런타임에 에이전트를 붙이는 걸 경고하고(JEP 451) 나중에는 막을 예정이다.
+    // Mockito 의 inline mock maker 가 그렇게 자기 자신을 붙이므로 테스트 JVM 에 -javaagent 로 미리 올린다
+    configurations.dependencyScope('mockitoAgent')
+    def mockitoAgentClasspath = configurations.resolvable('mockitoAgentClasspath') {
+        extendsFrom configurations.bom, configurations.mockitoAgent
+    }
+
+    configurations.configureEach {
+        // 부트 기본 로깅(logback)을 뺀다. 이 프로젝트는 log4j2(spring-boot-starter-log4j2)를 쓴다.
+        // 둘이 같이 있으면 log4j-slf4j2-impl 과 log4j-to-slf4j 가 충돌해서 "cannot be present with" 로
+        // 컨텍스트가 아예 안 뜬다. 메이븐 때는 스타터마다 exclusion 을 달았다
+        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+    }
+
+    dependencies {
+        // enforcedPlatform: 그래들은 기본으로 BOM 값보다 전이 의존성이 요구하는 높은 버전을 고른다.
+        // 메이븐의 dependencyManagement 처럼 BOM 값으로 고정해야 Boot 가 검증한 조합 그대로 간다
+        // (예: rabbitmq-jms 3.9.0 은 amqp-client 5.35.0 을 적어 두었지만 Boot 4.1.1 은 5.30.0 이다)
+        bom enforcedPlatform(catalog.spring.boot.bom)
+
+        testImplementation catalog.junit.jupiter
+        testImplementation catalog.mockito.core
+        testRuntimeOnly catalog.junit.platform.launcher
+
+        mockitoAgent(catalog.mockito.core) {
+            transitive = false
+        }
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+        options.encoding = 'UTF-8'
+        // 스프링이 파라미터 이름을 리플렉션으로 읽는다(메이븐 때 spring-boot-starter-parent 기본값)
+        options.compilerArgs.add('-parameters')
+    }
+
+    tasks.withType(Javadoc).configureEach {
+        options.encoding = 'UTF-8'
+    }
+
+    jacoco {
+        toolVersion = catalog.versions.jacoco.get()
+    }
+
+    tasks.named('test', Test) {
+        useJUnitPlatform()
+        usesService(serialTests)
+        // 작업 디렉토리는 모듈 디렉토리다(메이븐과 같다). 테스트가 ../../cert 로 저장소 루트 cert 의 인증서를 읽는다
+        jvmArgumentProviders.add({ ["-javaagent:${mockitoAgentClasspath.get().singleFile}".toString()] } as CommandLineArgumentProvider)
+        testLogging {
+            events 'failed'
+            exceptionFormat = 'full'
+        }
+    }
+
+    // 스프링 부트 실행 jar 를 만드는 모듈 공통. 일반 jar(-plain.jar)는 만들지 않는다.
+    // 실행 jar 는 두 개를 만든다. 버전이 붙은 것(OpenADRServerVTN20b-2.0.jar)과
+    // 버전 없는 것(OpenADRServerVTN20b.jar). 내용은 같다.
+    // 도커 빌드는 버전 없는 쪽을 이름 그대로 가져간다. 버전을 올리면 build/libs 에 옛 버전 jar 가 남는데,
+    // 예전처럼 이름-*.jar 로 고르면 둘 다 걸려서 이미지 안의 mv 가 깨졌다
+    plugins.withId('org.springframework.boot') {
+        tasks.named('jar') {
+            enabled = false
+        }
+        tasks.named('bootJar') {
+            def unversionedJar = destinationDirectory.file(archiveBaseName.map { "${it}.jar".toString() })
+            outputs.file(unversionedJar).withPropertyName('unversionedJar')
+            doLast {
+                Files.copy(archiveFile.get().asFile.toPath(), unversionedJar.get().asFile.toPath(),
+                        StandardCopyOption.REPLACE_EXISTING)
+            }
+        }
+    }
+}
+
+// 루트 묶음 태스크. 저장소 루트(composite)에서 includedBuild('avob-server').task(':build') 처럼 경로 하나로 모듈 전체를 부르려고 둔다.
+// 이 디렉토리에서 ./gradlew build 로 부를 때는 원래도 그래들이 모든 모듈의 build 를 이름으로 찾아 돌리므로 달라지는 게 없다
+
+['assemble', 'check', 'build', 'clean'].each { name ->
+    tasks.named(name) {
+        dependsOn subprojects.collect { "${it.path}:${name}" }
+    }
+}
+
+tasks.register('test') {
+    group = 'verification'
+    description = '모든 모듈의 테스트'
+    dependsOn subprojects.collect { "${it.path}:test" }
+}

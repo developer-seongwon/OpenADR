@@ -6,6 +6,6 @@ services:
     # 앱 Dockerfile 들이 이 이름으로 찾는다(COPY --from=openadr_build:latest)
     image: openadr_build:latest
     build:
-      # 빌드 컨텍스트는 저장소 루트다(oadr-server 의 jar, cert 의 인증서를 COPY 한다)
+      # 빌드 컨텍스트는 저장소 루트다(avob-server 의 jar, cert 의 인증서를 COPY 한다)
       context: .
       dockerfile: docker/service/build/Dockerfile
