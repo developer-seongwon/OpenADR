@@ -29,14 +29,14 @@ OpenADR 프로토콜(https://www.openadr.org/)의 자바 구현이다. Spring Bo
 
 ## 모듈
 
-oadr-client/ 는 라이브러리다. oadr-server 를 참조하지 않는다.
+avob-client/ 는 라이브러리다. avob-server 를 참조하지 않는다.
 
 - OpenADRSecurity: OpenADR 보안(PKI RSA/ECC, XML 서명)
 - OpenADRModel20a, OpenADRModel20b: XSD 에서 만든 OpenADR 2.0a, 2.0b 모델 클래스
 - OpenADRHTTPClient, OpenADRHTTPClient20a, OpenADRHTTPClient20b: OpenADR HTTP 클라이언트(java.net.http)
 - OpenADRXMPPClient: OpenADR 2.0b XMPP 클라이언트(smack)
 
-oadr-server/ 는 서버와 테스트용 앱이다. oadr-client 를 좌표(com.avob.openadr:OpenADR*)로 받는다.
+avob-server/ 는 서버와 테스트용 앱이다. avob-client 를 좌표(com.avob.openadr:OpenADR*)로 받는다.
 
 - OpenADRServerVTNCommon: VTN 공통(엔티티, 서비스, 제어 API, 브로커 설정)
 - OpenADRServerVTN20a: OpenADR 2.0a VTN
@@ -47,21 +47,22 @@ oadr-server/ 는 서버와 테스트용 앱이다. oadr-client 를 좌표(com.av
 - DummyDRProgram: 테스트용 DR 프로그램. VTN 제어 API 로 장치와 이벤트를 관리한다
 - OpenfireOadrPlugin: XMPP 로 붙는 VEN 을 VTN 에 물어 인증하는 Openfire 플러그인(메이븐)
 
-다른 프로젝트에서 VEN, VTN 을 만들 때는 oadr-client 의 OpenADRModel20b, OpenADRSecurity jar 를 가져다 쓴다.
+다른 프로젝트에서 VEN, VTN 을 만들 때는 avob-client 의 OpenADRModel20b, OpenADRSecurity jar 를 가져다 쓴다.
 
 ## 디렉토리 구조
 
 ```
-settings.gradle  oadr-client, oadr-server 를 한 번에 열고 빌드하는 묶음(composite build). 설정은 물려주지 않는다
+settings.gradle  avob-client, avob-server 를 한 번에 열고 빌드하는 묶음(composite build). 설정은 물려주지 않는다
 build.gradle     묶음 태스크(build, assemble, test, check, clean, publishToMavenLocal, testReport)
-oadr-client/     라이브러리(위 모듈)
-oadr-server/     서버와 테스트용 앱(위 모듈), test/http/(IntelliJ HTTP 요청 시나리오)
-docker/          로컬 도커 스택(run.sh, compose, 서비스별 Dockerfile). oadr-server 의 jar 와 cert 의 인증서를 쓴다
+avob-client/     라이브러리(위 모듈)
+avob-server/     서버와 테스트용 앱(위 모듈), test/http/(IntelliJ HTTP 요청 시나리오)
+docker/          로컬 도커 스택(run.sh, compose, 서비스별 Dockerfile). avob-server 의 jar 와 cert 의 인증서를 쓴다
+deploy/          개발 서버 배포. build.sh 는 로컬에서 이미지 묶음을 만들고, avob/ 는 서버에 올리는 것(bin/run.sh init, compose, 설정). deploy/avob/README.md 참고
 cert/            테스트 인증서. generate_test_cert.sh 만 git 에 있고 나머지는 생성물(서버 테스트와 도커가 쓴다)
 target/          루트에서 빌드하면 jar 가 모이는 곳(생성물, git 에 없다)
 ```
 
-oadr-client 와 oadr-server 는 각자 독립된 그래들 빌드라서 `settings.gradle`, `build.gradle`,
+avob-client 와 avob-server 는 각자 독립된 그래들 빌드라서 `settings.gradle`, `build.gradle`,
 `gradle/libs.versions.toml`(버전 목록), `gradlew` 를 따로 갖고 있다. 나중에 저장소를 나누면 각 디렉토리가 저장소 루트가 된다.
 자바 버전, 테스트, BOM 정책 같은 공통 설정은 두 `build.gradle` 에 같게 들어 있으니 한쪽을 고치면 다른 쪽도 본다.
 라이브러리 버전은 `gradle/libs.versions.toml` 에서 바꾼다. 버전이 안 적힌 것은 Spring Boot BOM 값을 그대로 쓴다.
@@ -82,44 +83,44 @@ Docker Desktop, Java 25 가 필요하다. Openfire 플러그인을 빌드할 때
 
 ## 빌드
 
-저장소 루트에서 oadr-client, oadr-server 를 한 번에 돌린다.
+저장소 루트에서 avob-client, avob-server 를 한 번에 돌린다.
 
 ```
-./gradlew build                  # oadr-client, oadr-server 빌드와 테스트. jar 는 target 에도 모인다
+./gradlew build                  # avob-client, avob-server 빌드와 테스트. jar 는 target 에도 모인다
 ./gradlew assemble               # 테스트 없이 jar 만(루트에서는 -x test 로 포함된 빌드의 테스트를 못 뺀다). target 에도 모인다
 ./gradlew test                   # 전체 테스트. 끝나면 모듈별 건수를 찍고 build/reports/tests/index.html 에 합친 리포트를 만든다
 ./gradlew test --continue        # 한 모듈이 실패해도 나머지 모듈 테스트를 끝까지 돌린다
 ./gradlew clean                  # target 도 지운다
-./gradlew publishToMavenLocal    # oadr-client 라이브러리를 ~/.m2 에 올린다
-./gradlew :oadr-server:OpenADRServerVTN20b:bootRun   # 모듈 하나는 경로(:빌드이름:모듈:태스크)로 부른다
+./gradlew publishToMavenLocal    # avob-client 라이브러리를 ~/.m2 에 올린다
+./gradlew :avob-server:OpenADRServerVTN20b:bootRun   # 모듈 하나는 경로(:빌드이름:모듈:태스크)로 부른다
 ```
 
-oadr-client, oadr-server 디렉토리에서 각각 돌려도 된다(저장소를 나눈 뒤에는 이렇게 쓴다).
+avob-client, avob-server 디렉토리에서 각각 돌려도 된다(저장소를 나눈 뒤에는 이렇게 쓴다).
 각 빌드의 루트에도 같은 이름의 묶음 태스크가 있어서 모듈 전체가 돈다.
 
 ```
-cd oadr-client && ./gradlew build                  # 라이브러리 빌드와 테스트
-cd oadr-client && ./gradlew publishToMavenLocal    # ~/.m2 에 올리기(oadr-server 를 oadr-client 없이 빌드할 때, 다른 프로젝트에서 jar 를 쓸 때)
-cd oadr-server && ./gradlew build                  # 서버 빌드와 테스트(옆의 oadr-client 를 소스로 같이 빌드한다)
-cd oadr-server && ./gradlew build -x test          # 테스트 없이 jar 만
-cd oadr-server && ./gradlew build -Pfrontend=false # VTN20b 에 React UI 를 넣지 않는다(node 빌드를 건너뛰어 빠르다)
+cd avob-client && ./gradlew build                  # 라이브러리 빌드와 테스트
+cd avob-client && ./gradlew publishToMavenLocal    # ~/.m2 에 올리기(avob-server 를 avob-client 없이 빌드할 때, 다른 프로젝트에서 jar 를 쓸 때)
+cd avob-server && ./gradlew build                  # 서버 빌드와 테스트(옆의 avob-client 를 소스로 같이 빌드한다)
+cd avob-server && ./gradlew build -x test          # 테스트 없이 jar 만
+cd avob-server && ./gradlew build -Pfrontend=false # VTN20b 에 React UI 를 넣지 않는다(node 빌드를 건너뛰어 빠르다)
 ```
 
-oadr-server 는 옆에 oadr-client 디렉토리가 있으면 includeBuild 로 물고 들어가서 oadr-client 소스에서 바로 만들어 쓴다.
-그래서 oadr-client 를 고친 뒤 따로 install 할 필요가 없다. 저장소를 나눈 뒤에는 `-PopenadrClientDir=<oadr-client 경로>` 로
-위치를 주거나, oadr-client 에서 `publishToMavenLocal` 을 해 두면 oadr-server 가 ~/.m2 에서 받는다.
+avob-server 는 옆에 avob-client 디렉토리가 있으면 includeBuild 로 물고 들어가서 avob-client 소스에서 바로 만들어 쓴다.
+그래서 avob-client 를 고친 뒤 따로 install 할 필요가 없다. 저장소를 나눈 뒤에는 `-PopenadrClientDir=<avob-client 경로>` 로
+위치를 주거나, avob-client 에서 `publishToMavenLocal` 을 해 두면 avob-server 가 ~/.m2 에서 받는다.
 
 jar 는 각 모듈의 `build/libs` 에 생긴다. VTN20a, VTN20b, DummyVEN20b, DummyDRProgram 은 스프링 부트 실행 jar 를
 버전이 붙은 것(`OpenADRServerVTN20b-2.0.jar`)과 버전 없는 것(`OpenADRServerVTN20b.jar`) 두 개 만든다. 내용은 같다.
 도커 빌드는 버전 없는 쪽을 쓴다(버전을 올려도 옛 jar 와 섞이지 않는다).
-다른 프로젝트에 넣는 jar 는 `oadr-client/OpenADRModel20b/build/libs`, `oadr-client/OpenADRSecurity/build/libs` 에 있다.
+다른 프로젝트에 넣는 jar 는 `avob-client/OpenADRModel20b/build/libs`, `avob-client/OpenADRSecurity/build/libs` 에 있다.
 
 저장소 루트에서 `build` 나 `assemble` 을 돌리면 버전 붙은 jar 를 `target/client`, `target/server` 에도 모은다(`collectJars` 태스크).
 target/client 는 라이브러리 7개, target/server 는 실행 jar 4개(VTN20a, VTN20b, DummyVEN20b, DummyDRProgram)와 라이브러리 2개(VTNCommon, VEN20b)다.
 sources jar, 도커용 버전 없는 사본, 테스트 전용 VTNTestSupport 는 빠진다.
-모듈이나 버전이 바뀌어 없어진 jar 는 target 에서도 지워진다. oadr-client, oadr-server 디렉토리에서 따로 빌드할 때는 모이지 않는다.
+모듈이나 버전이 바뀌어 없어진 jar 는 target 에서도 지워진다. avob-client, avob-server 디렉토리에서 따로 빌드할 때는 모이지 않는다.
 
-IntelliJ 에서는 저장소 루트를 열면 루트의 `settings.gradle` 이 oadr-client 와 oadr-server 를 같이 불러온다.
+IntelliJ 에서는 저장소 루트를 열면 루트의 `settings.gradle` 이 avob-client 와 avob-server 를 같이 불러온다.
 Gradle 창의 루트(OpenADR) 아래 Tasks 에 묶음 태스크가 있고, 모듈별 태스크는 OpenADRClient, OpenADRServer 아래에 있다.
 
 빌드 스크립트 문법과 이 저장소의 작성 규칙은 [GRADLE.kor.md](GRADLE.kor.md) 에 정리해 두었다.
@@ -135,7 +136,7 @@ OpenADR 은 VTN 과 VEN 이 서로 인증서로 신원을 확인한다.
 
 어디서 불러도 `cert/` 안에 만든다. 이미 있으면 멈춘다.
 자체 서명한 CA 아래로 VTN, VEN, 관리자, 사용자, 앱 인증서가 생긴다.
-서버 테스트(`oadr-server/*/src/test/resources` 의 `../../cert/...`)와 도커 스택이 여기 인증서를 쓴다.
+서버 테스트(`avob-server/*/src/test/resources` 의 `../../cert/...`)와 도커 스택이 여기 인증서를 쓴다.
 없으면 VTN 테스트가 깨지고, `docker/run.sh` 는 먼저 만들라고 알려주고 멈춘다.
 
 브라우저에서 VTN 제어 API 나 웹 UI 를 쓸 때 https 경고를 없애려면 CA 인증서 `cert/oadr.com.crt` 를
@@ -260,11 +261,11 @@ VTN 2.0b 를 가운데 두고 테스트용 VEN(dummy-ven20b)과 DR 프로그램(
 ```
 
 이 문서의 `./docker/run.sh` 명령은 모두 저장소 루트 기준이다. 스크립트는 어디서 불러도 저장소 루트로 이동해서 돈다.
-서버 빌드는 `oadr-server/gradlew`, 인증서는 `cert` 를 쓴다(`SERVER_DIR` 로 oadr-server 위치를 바꿀 수 있다).
+서버 빌드는 `avob-server/gradlew`, 인증서는 `cert` 를 쓴다(`SERVER_DIR` 로 avob-server 위치를 바꿀 수 있다).
 
 jar 를 먼저 로컬에서 빌드한 다음(`./gradlew assemble`) 이미지를 만들고 컨테이너를 띄운다.
-옆에 `oadr-client` 디렉토리가 있으면 그걸 같이 빌드한다. 저장소가 나뉘면 `CLIENT_DIR` 로 oadr-client 경로를 주거나
-oadr-client 에서 `publishToMavenLocal` 을 미리 해 두면 된다.
+옆에 `avob-client` 디렉토리가 있으면 그걸 같이 빌드한다. 저장소가 나뉘면 `CLIENT_DIR` 로 avob-client 경로를 주거나
+avob-client 에서 `publishToMavenLocal` 을 미리 해 두면 된다.
 `docker/run.sh` 는 Openfire 플러그인용 `mvn` 을 알아서 찾는다. 못 찾으면 에러를 내고 멈춘다.
 직접 지정하고 싶으면 `MVN` 환경변수를 넘기면 된다.
 처음에는 이미지 빌드까지 포함해서 몇 분 걸린다.
@@ -333,7 +334,7 @@ docker/
 compose 파일 안의 경로는 전부 저장소 루트 기준이다. compose 는 `-f` 여러 개의 상대 경로를
 한 기준 디렉토리로 풀어서 `run.sh` 가 `--project-directory` 로 저장소 루트를 준다.
 `service/build`, `postgres`, `rabbitmq`, `openfire` 는 저장소 루트를 빌드 컨텍스트로 쓴다.
-빌드한 jar(`oadr-server/*/build/libs`)와 `cert/` 가 필요해서다. 루트의 `.dockerignore`(COPY 하는 것만 들이는 허용 목록)가 적용된다.
+빌드한 jar(`avob-server/*/build/libs`)와 `cert/` 가 필요해서다. 루트의 `.dockerignore`(COPY 하는 것만 들이는 허용 목록)가 적용된다.
 나머지 앱 이미지는 자기 디렉토리만 컨텍스트로 쓴다.
 
 ### 동작 방식
@@ -348,7 +349,7 @@ VTN20b jar 에는 브로커 라이브러리 두 벌(ActiveMQ 내장 브로커, R
 `RMQConnectionFactory` 를 못 찾고 죽었다. 그 함정은 없어졌다.
 DummyDRProgram 도 ActiveMQ, RabbitMQ 클라이언트를 둘 다 넣고 스프링 프로파일로 고른다.
 
-프론트엔드는 `oadr-server/OpenADRServerVTN20b/frontend` 에 있고 Vite 로 빌드한다(예전엔 react-scripts).
+프론트엔드는 `avob-server/OpenADRServerVTN20b/frontend` 에 있고 Vite 로 빌드한다(예전엔 react-scripts).
 `npm run build` 결과가 `frontend/build` 에 생기고, 그래들이 그걸 jar 의 `public/` 에 바로 넣는다
 (`frontendBuild` 태스크, 입력이 안 바뀌면 다시 돌지 않는다).
 메이븐 때 복사해 두던 `src/main/resources/public` 은 이제 안 쓰고, 남아 있어도 jar 에서 빠진다.
@@ -434,7 +435,7 @@ VEN20b 테스트는 실제로 서버 소켓을 연다. 포트는 18081, 18082 �
 모듈에 있다. 테스트만 쓰는 모듈이라 운영 산출물에는 안 들어간다.
 
 VTNCommon, VTN20a, VTN20b 테스트는 모두 VTN 을 8182 포트로 띄워서, 그래들이 이 모듈들의 테스트는
-하나씩 차례로 돌린다(oadr-server/build.gradle 의 serialTests). 컴파일은 병렬이다.
+하나씩 차례로 돌린다(avob-server/build.gradle 의 serialTests). 컴파일은 병렬이다.
 
 SPA 라우트로 바로 들어가거나 새로고침해도 404 가 나지 않아야 한다.
 `/ven`, `/event/detail/...` 같은 경로는 `SpaIndexController` 가 index.html 을 내준다.

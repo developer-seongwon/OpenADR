@@ -29,12 +29,12 @@ gradle/libs.versions.toml 버전 카탈로그(라이브러리, 플러그인 버�
 gradlew, gradle/wrapper/ wrapper. 정해진 그래들 버전(9.7.1)을 받아서 돌린다. 그래들을 따로 깔 필요 없다
 ```
 
-빌드는 세 개다. oadr-client 와 oadr-server 가 각자 독립된 빌드이고, 저장소 루트는 둘을 묶는 composite 빌드다.
+빌드는 세 개다. avob-client 와 avob-server 가 각자 독립된 빌드이고, 저장소 루트는 둘을 묶는 composite 빌드다.
 
 ```
-OpenADR(루트)       settings.gradle(includeBuild oadr-client, oadr-server), build.gradle(묶음 태스크)
-  oadr-client       settings.gradle, build.gradle(공통 설정), gradle/libs.versions.toml, 모듈 7개
-  oadr-server       settings.gradle, build.gradle(공통 설정), gradle/libs.versions.toml, 모듈 7개
+OpenADR(루트)       settings.gradle(includeBuild avob-client, avob-server), build.gradle(묶음 태스크)
+  avob-client       settings.gradle, build.gradle(공통 설정), gradle/libs.versions.toml, 모듈 7개
+  avob-server       settings.gradle, build.gradle(공통 설정), gradle/libs.versions.toml, 모듈 7개
 ```
 
 ## 작성 규칙
@@ -58,7 +58,7 @@ OpenADR(루트)       settings.gradle(includeBuild oadr-client, oadr-server), bu
 빌드에 어떤 프로젝트가 들어가는지 정한다. `build.gradle` 보다 먼저 읽힌다.
 
 ```groovy
-// oadr-client/settings.gradle
+// avob-client/settings.gradle
 plugins {
     // 자바 25 가 없는 PC 에서도 툴체인을 받아 오게 한다
     id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
@@ -80,10 +80,10 @@ include 'OpenADRModel20a'
 - `include 'X'` 는 디렉토리 X 를 모듈(:X)로 넣는다. X 안의 build.gradle 이 그 모듈 설정이다.
 - `dependencyResolutionManagement.repositories` 는 모든 모듈이 같이 쓰는 저장소다.
   `FAIL_ON_PROJECT_REPOS` 라서 모듈 build.gradle 에 `repositories { }` 를 쓰면 에러가 난다. 저장소는 여기에만 둔다.
-- 저장소마다 받을 것을 좁힐 수 있다. oadr-server 는 mavenLocal 에서 우리 그룹만 받는다.
+- 저장소마다 받을 것을 좁힐 수 있다. avob-server 는 mavenLocal 에서 우리 그룹만 받는다.
 
 ```groovy
-// oadr-server/settings.gradle
+// avob-server/settings.gradle
 mavenLocal {
     content {
         includeGroup 'com.avob.openadr'
@@ -93,11 +93,11 @@ mavenLocal {
 
 - `includeBuild 경로` 는 다른 그래들 빌드를 통째로 물고 들어온다(composite build).
   물린 빌드가 만드는 좌표(group:name)를 쓰는 의존성은 저장소에서 받지 않고 그 빌드의 소스로 바로 만든다.
-  oadr-server 는 옆에 oadr-client 가 있으면 이렇게 해서 `com.avob.openadr:OpenADRModel20b` 를 oadr-client 소스로 받는다.
+  avob-server 는 옆에 avob-client 가 있으면 이렇게 해서 `com.avob.openadr:OpenADRModel20b` 를 avob-client 소스로 받는다.
 
 ```groovy
-// oadr-server/settings.gradle
-def clientDir = file(providers.gradleProperty('openadrClientDir').getOrElse('../oadr-client'))
+// avob-server/settings.gradle
+def clientDir = file(providers.gradleProperty('openadrClientDir').getOrElse('../avob-client'))
 if (new File(clientDir, 'settings.gradle').isFile()) {
     includeBuild clientDir
 }
@@ -139,7 +139,7 @@ alias(libs.plugins.spring.boot) apply false // [plugins] spring-boot
 ## 플러그인
 
 ```groovy
-// oadr-server/build.gradle(빌드 루트): 버전만 정하고 붙이지 않는다
+// avob-server/build.gradle(빌드 루트): 버전만 정하고 붙이지 않는다
 plugins {
     id 'base'
     alias(libs.plugins.spring.boot) apply false
@@ -147,7 +147,7 @@ plugins {
     alias(libs.plugins.node.gradle) apply false
 }
 
-// oadr-server/OpenADRServerVTN20b/build.gradle(모듈): 버전 없이 붙인다
+// avob-server/OpenADRServerVTN20b/build.gradle(모듈): 버전 없이 붙인다
 plugins {
     id 'org.springframework.boot'
     id 'com.github.node-gradle.node'
@@ -186,7 +186,7 @@ jacoco {                  // jacoco 플러그인
 ```groovy
 dependencies {
     api project(':OpenADRSecurity')               // 같은 빌드의 다른 모듈
-    api libs.openadr.httpclient                   // 좌표(includeBuild 로 물린 oadr-client 에서 온다)
+    api libs.openadr.httpclient                   // 좌표(includeBuild 로 물린 avob-client 에서 온다)
     compileOnly libs.bundles.vtn.brokers
     runtimeOnly libs.postgresql
     testImplementation libs.spring.boot.starter.test
@@ -199,7 +199,7 @@ dependencies {
 }
 ```
 
-모든 configuration 에서 한 번에 뺄 때는 `configurations.configureEach` 를 쓴다(oadr-server 의 spring-boot-starter-logging).
+모든 configuration 에서 한 번에 뺄 때는 `configurations.configureEach` 를 쓴다(avob-server 의 spring-boot-starter-logging).
 
 ```groovy
 configurations.configureEach {
@@ -213,7 +213,7 @@ configuration 을 직접 만들 수도 있다. 선언용과 푸는 용을 나눈
 - `configurations.resolvable('y') { extendsFrom ... }`: 실제로 파일 목록으로 푸는 자리. 여기엔 의존성을 직접 적지 않는다.
 
 ```groovy
-// oadr-client/OpenADRModel20b/build.gradle: XJC 를 돌릴 클래스패스
+// avob-client/OpenADRModel20b/build.gradle: XJC 를 돌릴 클래스패스
 configurations.dependencyScope('xjc')
 def xjcClasspath = configurations.resolvable('xjcClasspath') {
     extendsFrom configurations.bom, configurations.xjc
@@ -248,7 +248,7 @@ dependencies {
 - `platform(...)`: BOM 을 권장 버전으로 쓴다. 다른 의존성이 더 높은 버전을 원하면 그쪽이 이긴다.
 - `enforcedPlatform(...)`: BOM 값으로 고정한다. 메이븐 dependencyManagement 와 같다. 이 저장소는 이걸 쓴다.
   `platform` 이었을 때 rabbitmq-jms 가 원하는 amqp-client 5.35.0 이 BOM 의 5.30.0 을 이기는 식으로 버전이 올라갔다.
-- `bom` 을 따로 둔 이유: `implementation` 에 BOM 을 넣으면 oadr-client 를 배포할 때 pom 에 BOM 이 같이 실려서 쓰는 쪽에 강제된다.
+- `bom` 을 따로 둔 이유: `implementation` 에 BOM 을 넣으면 avob-client 를 배포할 때 pom 에 BOM 이 같이 실려서 쓰는 쪽에 강제된다.
   배포되지 않는 configuration 에 두고 클래스패스들이 이어 받게 했다. 배포 pom 의 버전은 `versionMapping` 이 실제로 고른 값으로 채운다.
 
 ## 태스크
@@ -260,7 +260,7 @@ tasks.withType(타입).configureEach { }  // 그 타입 태스크 전부
 ```
 
 ```groovy
-// oadr-server/build.gradle: 모든 컴파일 태스크
+// avob-server/build.gradle: 모든 컴파일 태스크
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
     options.compilerArgs.add('-parameters')
@@ -283,7 +283,7 @@ tasks.named('test', Test) {
 증분 빌드(입력이 안 바뀌면 건너뛰기)는 입력과 출력을 적어야 동작한다.
 
 ```groovy
-// oadr-server/OpenADRServerVTN20b/build.gradle
+// avob-server/OpenADRServerVTN20b/build.gradle
 def frontendBuild = tasks.register('frontendBuild', NpmTask) {
     description = 'React UI 를 빌드한다(npm run build, 결과는 frontend/build)'
     group = 'build'
@@ -357,10 +357,10 @@ def serialTests = gradle.sharedServices.registerIfAbsent('serialTests', SerialTe
 }
 ```
 
-- composite 루트에서 물린 빌드의 태스크는 `gradle.includedBuild('oadr-client').task(':build')` 로 가리킨다.
-  빌드 이름은 디렉토리 이름이다. 태스크 경로 하나만 가리킬 수 있어서 oadr-client, oadr-server 빌드 루트에
+- composite 루트에서 물린 빌드의 태스크는 `gradle.includedBuild('avob-client').task(':build')` 로 가리킨다.
+  빌드 이름은 디렉토리 이름이다. 태스크 경로 하나만 가리킬 수 있어서 avob-client, avob-server 빌드 루트에
   모듈 전체를 묶는 태스크(build, test 등)를 두었다.
-- 명령줄에서 물린 빌드의 모듈은 `:빌드이름:모듈:태스크` 로 부른다(`./gradlew :oadr-server:OpenADRServerVTN20b:bootRun`).
+- 명령줄에서 물린 빌드의 모듈은 `:빌드이름:모듈:태스크` 로 부른다(`./gradlew :avob-server:OpenADRServerVTN20b:bootRun`).
 
 ## 프로퍼티(-P)
 
@@ -369,18 +369,18 @@ def serialTests = gradle.sharedServices.registerIfAbsent('serialTests', SerialTe
 
 ```
 ./gradlew build -Pfrontend=false
-./gradlew build -PopenadrClientDir=../other/oadr-client
+./gradlew build -PopenadrClientDir=../other/avob-client
 ```
 
 ## 자주 쓰는 명령
 
 ```
 ./gradlew tasks                                   # 이 프로젝트 태스크 목록(--all 이면 전부)
-./gradlew :oadr-server:OpenADRServerVTN20b:dependencies --configuration runtimeClasspath
-./gradlew :oadr-server:OpenADRServerVTN20b:dependencyInsight --configuration runtimeClasspath --dependency amqp-client
+./gradlew :avob-server:OpenADRServerVTN20b:dependencies --configuration runtimeClasspath
+./gradlew :avob-server:OpenADRServerVTN20b:dependencyInsight --configuration runtimeClasspath --dependency amqp-client
 ./gradlew build --warning-mode all                # 없어질 문법 경고를 전부 본다
 ./gradlew test --continue                         # 실패해도 나머지 모듈까지
-./gradlew :oadr-client:OpenADRSecurity:test --rerun    # 최신이어도 다시 돌린다
+./gradlew :avob-client:OpenADRSecurity:test --rerun    # 최신이어도 다시 돌린다
 ./gradlew build --scan                            # 빌드 스캔(외부 서버로 올라간다. 필요할 때만)
 ```
 

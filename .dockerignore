@@ -15,10 +15,10 @@ cert/generate_test_cert.sh
 !docker/postgres/init-openfire.sh
 !docker/openfire/openfire.xml
 
-!oadr-server/OpenADRServerVTN20b/build/libs/OpenADRServerVTN20b.jar
-!oadr-server/DummyVEN20b/build/libs/DummyVEN20b.jar
-!oadr-server/DummyDRProgram/build/libs/DummyDRProgram.jar
-!oadr-server/OpenfireOadrPlugin/target/OpenfireOadrPlugin-openfire-plugin-assembly.jar
+!avob-server/OpenADRServerVTN20b/build/libs/OpenADRServerVTN20b.jar
+!avob-server/DummyVEN20b/build/libs/DummyVEN20b.jar
+!avob-server/DummyDRProgram/build/libs/DummyDRProgram.jar
+!avob-server/OpenfireOadrPlugin/target/OpenfireOadrPlugin-openfire-plugin-assembly.jar
 
 # 위 패턴에 메이븐 repackage 전 원본(*.jar.original)은 안 걸린다. 그래도 명시해 둔다
 **/*.jar.original

@@ -1,0 +1,7 @@
+# deploy/build.sh 가 만든 이미지 묶음
+images/
+# 이 디렉토리에서 바로 띄웠을 때 생기는 것(config/avob.env 의 기본 경로)
+data/
+backup/
+logs/
+keystore/

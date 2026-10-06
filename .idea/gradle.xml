@@ -6,28 +6,28 @@
         <compositeConfiguration>
           <compositeBuild compositeDefinitionSource="SCRIPT">
             <builds>
-              <build path="$PROJECT_DIR$/oadr-client" name="OpenADRClient">
+              <build path="$PROJECT_DIR$/avob-client" name="OpenADRClient">
                 <projects>
-                  <project path="$PROJECT_DIR$/oadr-client" />
-                  <project path="$PROJECT_DIR$/oadr-client/OpenADRHTTPClient" />
-                  <project path="$PROJECT_DIR$/oadr-client/OpenADRHTTPClient20a" />
-                  <project path="$PROJECT_DIR$/oadr-client/OpenADRHTTPClient20b" />
-                  <project path="$PROJECT_DIR$/oadr-client/OpenADRModel20a" />
-                  <project path="$PROJECT_DIR$/oadr-client/OpenADRModel20b" />
-                  <project path="$PROJECT_DIR$/oadr-client/OpenADRSecurity" />
-                  <project path="$PROJECT_DIR$/oadr-client/OpenADRXMPPClient" />
+                  <project path="$PROJECT_DIR$/avob-client" />
+                  <project path="$PROJECT_DIR$/avob-client/OpenADRHTTPClient" />
+                  <project path="$PROJECT_DIR$/avob-client/OpenADRHTTPClient20a" />
+                  <project path="$PROJECT_DIR$/avob-client/OpenADRHTTPClient20b" />
+                  <project path="$PROJECT_DIR$/avob-client/OpenADRModel20a" />
+                  <project path="$PROJECT_DIR$/avob-client/OpenADRModel20b" />
+                  <project path="$PROJECT_DIR$/avob-client/OpenADRSecurity" />
+                  <project path="$PROJECT_DIR$/avob-client/OpenADRXMPPClient" />
                 </projects>
               </build>
-              <build path="$PROJECT_DIR$/oadr-server" name="OpenADRServer">
+              <build path="$PROJECT_DIR$/avob-server" name="OpenADRServer">
                 <projects>
-                  <project path="$PROJECT_DIR$/oadr-server" />
-                  <project path="$PROJECT_DIR$/oadr-server/DummyDRProgram" />
-                  <project path="$PROJECT_DIR$/oadr-server/DummyVEN20b" />
-                  <project path="$PROJECT_DIR$/oadr-server/OpenADRServerVEN20b" />
-                  <project path="$PROJECT_DIR$/oadr-server/OpenADRServerVTN20a" />
-                  <project path="$PROJECT_DIR$/oadr-server/OpenADRServerVTN20b" />
-                  <project path="$PROJECT_DIR$/oadr-server/OpenADRServerVTNCommon" />
-                  <project path="$PROJECT_DIR$/oadr-server/OpenADRServerVTNTestSupport" />
+                  <project path="$PROJECT_DIR$/avob-server" />
+                  <project path="$PROJECT_DIR$/avob-server/DummyDRProgram" />
+                  <project path="$PROJECT_DIR$/avob-server/DummyVEN20b" />
+                  <project path="$PROJECT_DIR$/avob-server/OpenADRServerVEN20b" />
+                  <project path="$PROJECT_DIR$/avob-server/OpenADRServerVTN20a" />
+                  <project path="$PROJECT_DIR$/avob-server/OpenADRServerVTN20b" />
+                  <project path="$PROJECT_DIR$/avob-server/OpenADRServerVTNCommon" />
+                  <project path="$PROJECT_DIR$/avob-server/OpenADRServerVTNTestSupport" />
                 </projects>
               </build>
             </builds>
@@ -37,22 +37,22 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/oadr-client" />
-            <option value="$PROJECT_DIR$/oadr-client/OpenADRHTTPClient" />
-            <option value="$PROJECT_DIR$/oadr-client/OpenADRHTTPClient20a" />
-            <option value="$PROJECT_DIR$/oadr-client/OpenADRHTTPClient20b" />
-            <option value="$PROJECT_DIR$/oadr-client/OpenADRModel20a" />
-            <option value="$PROJECT_DIR$/oadr-client/OpenADRModel20b" />
-            <option value="$PROJECT_DIR$/oadr-client/OpenADRSecurity" />
-            <option value="$PROJECT_DIR$/oadr-client/OpenADRXMPPClient" />
-            <option value="$PROJECT_DIR$/oadr-server" />
-            <option value="$PROJECT_DIR$/oadr-server/DummyDRProgram" />
-            <option value="$PROJECT_DIR$/oadr-server/DummyVEN20b" />
-            <option value="$PROJECT_DIR$/oadr-server/OpenADRServerVEN20b" />
-            <option value="$PROJECT_DIR$/oadr-server/OpenADRServerVTN20a" />
-            <option value="$PROJECT_DIR$/oadr-server/OpenADRServerVTN20b" />
-            <option value="$PROJECT_DIR$/oadr-server/OpenADRServerVTNCommon" />
-            <option value="$PROJECT_DIR$/oadr-server/OpenADRServerVTNTestSupport" />
+            <option value="$PROJECT_DIR$/avob-client" />
+            <option value="$PROJECT_DIR$/avob-client/OpenADRHTTPClient" />
+            <option value="$PROJECT_DIR$/avob-client/OpenADRHTTPClient20a" />
+            <option value="$PROJECT_DIR$/avob-client/OpenADRHTTPClient20b" />
+            <option value="$PROJECT_DIR$/avob-client/OpenADRModel20a" />
+            <option value="$PROJECT_DIR$/avob-client/OpenADRModel20b" />
+            <option value="$PROJECT_DIR$/avob-client/OpenADRSecurity" />
+            <option value="$PROJECT_DIR$/avob-client/OpenADRXMPPClient" />
+            <option value="$PROJECT_DIR$/avob-server" />
+            <option value="$PROJECT_DIR$/avob-server/DummyDRProgram" />
+            <option value="$PROJECT_DIR$/avob-server/DummyVEN20b" />
+            <option value="$PROJECT_DIR$/avob-server/OpenADRServerVEN20b" />
+            <option value="$PROJECT_DIR$/avob-server/OpenADRServerVTN20a" />
+            <option value="$PROJECT_DIR$/avob-server/OpenADRServerVTN20b" />
+            <option value="$PROJECT_DIR$/avob-server/OpenADRServerVTNCommon" />
+            <option value="$PROJECT_DIR$/avob-server/OpenADRServerVTNTestSupport" />
           </set>
         </option>
       </GradleProjectSettings>
